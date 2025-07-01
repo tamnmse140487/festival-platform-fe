@@ -47,7 +47,6 @@ const SupplierListPage = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Quản lý Nhà cung cấp</h1>
@@ -63,7 +62,6 @@ const SupplierListPage = () => {
         )}
       </div>
 
-      {/* Bộ lọc */}
       <Card>
         <Card.Content>
           <div className="flex flex-col md:flex-row gap-4">
@@ -94,7 +92,6 @@ const SupplierListPage = () => {
             </select>
           </div>
 
-          {/* Kết quả */}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredSuppliers.length > 0 ? (
               filteredSuppliers.map(supplier => (
@@ -114,7 +111,6 @@ const SupplierListPage = () => {
         </Card.Content>
       </Card>
 
-      {/* Modal */}
       <Modal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
