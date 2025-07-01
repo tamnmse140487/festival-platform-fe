@@ -83,7 +83,6 @@ const CreateBoothPage = () => {
         </div>
       </div>
 
-      {/* Festival Info */}
       <Card>
         <Card.Content>
           <div className="flex items-start space-x-4">
@@ -113,7 +112,6 @@ const CreateBoothPage = () => {
         </Card.Content>
       </Card>
 
-      {/* Registration Status */}
       <Card>
         <Card.Content>
           <div className="flex items-center justify-between">
@@ -133,7 +131,6 @@ const CreateBoothPage = () => {
         </Card.Content>
       </Card>
 
-      {/* Booth Registration Form */}
       <Card>
         <Card.Header>
           <Card.Title>Thông tin đăng ký gian hàng</Card.Title>

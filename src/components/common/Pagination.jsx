@@ -57,7 +57,6 @@ const Pagination = ({
       )}
 
       <nav className="flex items-center space-x-1">
-        {/* Previous Button */}
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
@@ -67,7 +66,6 @@ const Pagination = ({
           Trước
         </button>
 
-        {/* Page Numbers */}
         <div className="flex">
           {pageNumbers.map((pageNum, index) => {
             if (pageNum === '...') {
@@ -98,7 +96,6 @@ const Pagination = ({
           })}
         </div>
 
-        {/* Next Button */}
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}

@@ -85,7 +85,6 @@ const BoothForm = ({
 
   return (
     <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
-      {/* Basic Information */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900">Thông tin cơ bản</h3>
         
@@ -178,7 +177,6 @@ const BoothForm = ({
         </div>
       </div>
 
-      {/* Business Plan */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900">Kế hoạch kinh doanh</h3>
         
@@ -218,7 +216,6 @@ const BoothForm = ({
         />
       </div>
 
-      {/* Images */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900">Hình ảnh minh họa</h3>
         
@@ -263,7 +260,6 @@ const BoothForm = ({
         </p>
       </div>
 
-      {/* Actions */}
       <div className="flex justify-end space-x-3 pt-6 border-t">
         <Button 
           type="button" 

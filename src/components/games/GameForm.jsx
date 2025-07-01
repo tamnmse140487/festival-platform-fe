@@ -57,7 +57,6 @@ const GameForm = ({
   };
 
   const onFormSubmit = (data) => {
-    // Validate questions
     const validQuestions = data.questions.filter(q => 
       q.question_text.trim() && 
       q.correct_answer.trim() &&
@@ -82,7 +81,6 @@ const GameForm = ({
 
   return (
     <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
-      {/* Game Settings */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900">Cài đặt game</h3>
         
@@ -187,7 +185,6 @@ const GameForm = ({
         </div>
       </div>
 
-      {/* Questions */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">
@@ -325,7 +322,6 @@ const GameForm = ({
         )}
       </div>
 
-      {/* Summary */}
       {fields.length > 0 && (
         <div className="p-4 bg-blue-50 rounded-lg">
           <h4 className="font-medium text-blue-900 mb-2">Tóm tắt game:</h4>
@@ -337,7 +333,6 @@ const GameForm = ({
         </div>
       )}
 
-      {/* Actions */}
       <div className="flex justify-end space-x-3 pt-6 border-t">
         <Button 
           type="button" 

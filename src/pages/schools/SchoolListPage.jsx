@@ -18,7 +18,6 @@ const SchoolListPage = () => {
 
   const itemsPerPage = 10;
 
-  // Mock data for schools
   const mockSchools = [
     {
       id: 1,
@@ -143,7 +142,6 @@ const SchoolListPage = () => {
         </Button>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <Card.Content>
@@ -202,7 +200,6 @@ const SchoolListPage = () => {
         </Card>
       </div>
 
-      {/* Filters and Search */}
       <Card>
         <Card.Content>
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
@@ -229,7 +226,6 @@ const SchoolListPage = () => {
             </div>
           </div>
 
-          {/* Schools List */}
           {paginatedSchools.length === 0 ? (
             <div className="text-center py-12">
               <School className="mx-auto h-12 w-12 text-gray-400 mb-4" />
@@ -253,7 +249,6 @@ const SchoolListPage = () => {
             </div>
           )}
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="mt-6">
               <Pagination
@@ -268,7 +263,6 @@ const SchoolListPage = () => {
         </Card.Content>
       </Card>
 
-      {/* Detail Modal */}
       <Modal
         isOpen={showDetailModal}
         onClose={() => setShowDetailModal(false)}
@@ -283,7 +277,6 @@ const SchoolListPage = () => {
         )}
       </Modal>
 
-      {/* Create Modal */}
       <Modal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}

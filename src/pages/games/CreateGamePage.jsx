@@ -74,7 +74,6 @@ const CreateGamePage = () => {
         </div>
       </div>
 
-      {/* Booth Info */}
       <Card>
         <Card.Content>
           <div className="flex items-start space-x-4">
@@ -94,7 +93,6 @@ const CreateGamePage = () => {
         </Card.Content>
       </Card>
 
-      {/* Game Guidelines */}
       <Card>
         <Card.Header>
           <Card.Title>Hướng dẫn tạo game</Card.Title>
@@ -124,7 +122,6 @@ const CreateGamePage = () => {
         </Card.Content>
       </Card>
 
-      {/* Game Creation Form */}
       <Card>
         <Card.Header>
           <Card.Title>Thông tin mini game</Card.Title>

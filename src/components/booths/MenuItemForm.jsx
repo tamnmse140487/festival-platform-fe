@@ -84,7 +84,6 @@ const MenuItemForm = ({
 
   return (
     <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
-      {/* Basic Information */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900">Thông tin món ăn</h3>
         
@@ -187,7 +186,6 @@ const MenuItemForm = ({
         </div>
       </div>
 
-      {/* Ingredients */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">Nguyên liệu</h3>
@@ -287,7 +285,6 @@ const MenuItemForm = ({
         )}
       </div>
 
-      {/* Image */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900">Hình ảnh món ăn</h3>
         
@@ -328,7 +325,6 @@ const MenuItemForm = ({
         )}
       </div>
 
-      {/* Actions */}
       <div className="flex justify-end space-x-3 pt-6 border-t">
         <Button 
           type="button" 
