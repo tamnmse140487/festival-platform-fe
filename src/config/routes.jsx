@@ -1,18 +1,18 @@
 import React from 'react';
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import FestivalListPage from "../pages/festivals/FestivalListPage";
-// import CreateFestivalPage from "../pages/festivals/CreateFestivalPage";
-// import FestivalDetailPage from "../pages/festivals/FestivalDetailPage";
-// import SupplierListPage from "../pages/suppliers/SupplierListPage";
-// import StudentGroupPage from "../pages/groups/StudentGroupPage";
-// import BoothListPage from "../pages/booths/BoothListPage";
-// import CreateBoothPage from "../pages/booths/CreateBoothPage";
-// import GameListPage from "../pages/games/GameListPage";
-// import CreateGamePage from "../pages/games/CreateGamePage";
-// import PointsPage from "../pages/points/PointsPage";
-// import ProfilePage from "../pages/profile/ProfilePage";
-// import SchoolListPage from "../pages/schools/SchoolListPage";
-// import SystemSettingsPage from "../pages/system/SystemSettingsPage";
+import CreateFestivalPage from "../pages/festivals/CreateFestivalPage";
+import FestivalDetailPage from "../pages/festivals/FestivalDetailPage";
+import SupplierListPage from "../pages/suppliers/SupplierListPage";
+import StudentGroupPage from "../pages/groups/StudentGroupPage";
+import BoothListPage from "../pages/booths/BoothListPage";
+import CreateBoothPage from "../pages/booths/CreateBoothPage";
+import GameListPage from "../pages/games/GameListPage";
+import CreateGamePage from "../pages/games/CreateGamePage";
+import PointsPage from "../pages/points/PointsPage";
+import ProfilePage from "../pages/profile/ProfilePage";
+import SchoolListPage from "../pages/schools/SchoolListPage";
+import SystemSettingsPage from "../pages/system/SystemSettingsPage";
 
 export const protectedRoutes = [
   // Dashboard
@@ -30,78 +30,78 @@ export const protectedRoutes = [
   },
   {
     path: "festivals/create",
-    // element: <CreateFestivalPage />,
+    element: <CreateFestivalPage />,
     roles: ["school_manager"]
   },
   {
     path: "festivals/:id",
-    // element: <FestivalDetailPage />,
+    element: <FestivalDetailPage />,
     roles: []
   },
 
   // Suppliers
   {
     path: "suppliers",
-    // element: <SupplierListPage />,
+    element: <SupplierListPage />,
     roles: ["admin", "school_manager", "supplier"]
   },
 
   // Groups
   {
     path: "groups",
-    // element: <StudentGroupPage />,
+    element: <StudentGroupPage />,
     roles: ["school_manager", "teacher"]
   },
 
   // Booths
   {
     path: "booths",
-    // element: <BoothListPage />,
+    element: <BoothListPage />,
     roles: ["admin", "school_manager", "teacher", "student"]
   },
   {
     path: "booths/create/:festivalId",
-    // element: <CreateBoothPage />,
+    element: <CreateBoothPage />,
     roles: ["student"]
   },
 
   // Games
   {
     path: "games",
-    // element: <GameListPage />,
+    element: <GameListPage />,
     roles: ["student", "teacher"]
   },
   {
     path: "games/create/:boothId",
-    // element: <CreateGamePage />,
+    element: <CreateGamePage />,
     roles: ["student"]
   },
 
   // Points
   {
     path: "points",
-    // element: <PointsPage />,
+    element: <PointsPage />,
     roles: ["student", "guest"]
   },
 
   // Schools
   {
     path: "schools",
-    // element: <SchoolListPage />,
+    element: <SchoolListPage />,
     roles: ["admin"]
   },
 
   // System
   {
     path: "system",
-    // element: <SystemSettingsPage />,
+    element: <SystemSettingsPage />,
     roles: ["admin"]
   },
 
   // Profile
   {
     path: "profile",
-    // element: <ProfilePage />,
+    element: <ProfilePage />,
     roles: []
   }
 ];
