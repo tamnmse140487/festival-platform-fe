@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, InputNumber, Space, Popconfirm, message } from 'antd';
+import { Table, Button, Modal, Form, Input, InputNumber, Space, Popconfirm } from 'antd';
 import { Plus, Edit, Trash2, Search, Package } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { ingredientServices } from '../../services/ingredientServices';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -11,6 +12,8 @@ const IngredientPage = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingIngredient, setEditingIngredient] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState({});
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -26,7 +29,7 @@ const IngredientPage = () => {
       setIngredients(response.data || []);
     } catch (error) {
       console.error('Error fetching ingredients:', error);
-      message.error('Không thể tải danh sách nguyên liệu');
+      toast.error('Không thể tải danh sách nguyên liệu');
     } finally {
       setLoading(false);
     }
@@ -51,17 +54,21 @@ const IngredientPage = () => {
 
   const handleDelete = async (ingredientId) => {
     try {
-      await ingredientServices.delete({ ingredientId });
-      message.success('Xóa nguyên liệu thành công');
+      setDeleteLoading(prev => ({ ...prev, [ingredientId]: true }));
+      await ingredientServices.delete({ id: ingredientId });
+      toast.success('Xóa nguyên liệu thành công');
       fetchIngredients();
     } catch (error) {
       console.error('Error deleting ingredient:', error);
-      message.error('Không thể xóa nguyên liệu');
+      toast.error('Không thể xóa nguyên liệu');
+    } finally {
+      setDeleteLoading(prev => ({ ...prev, [ingredientId]: false }));
     }
   };
 
   const handleSubmit = async (values) => {
     try {
+      setSubmitLoading(true);
       const data = {
         ...values,
         supplierId: user?.supplierId
@@ -69,13 +76,13 @@ const IngredientPage = () => {
 
       if (editingIngredient) {
         await ingredientServices.update({
-          ingredientId: editingIngredient.ingredientId,
+          id: editingIngredient.ingredientId,
           ...data
         });
-        message.success('Cập nhật nguyên liệu thành công');
+        toast.success('Cập nhật nguyên liệu thành công');
       } else {
         await ingredientServices.create(data);
-        message.success('Thêm nguyên liệu thành công');
+        toast.success('Thêm nguyên liệu thành công');
       }
 
       setModalVisible(false);
@@ -83,7 +90,9 @@ const IngredientPage = () => {
       fetchIngredients();
     } catch (error) {
       console.error('Error saving ingredient:', error);
-      message.error('Có lỗi xảy ra khi lưu nguyên liệu');
+      toast.error('Có lỗi xảy ra khi lưu nguyên liệu');
+    } finally {
+      setSubmitLoading(false);
     }
   };
 
@@ -163,12 +172,13 @@ const IngredientPage = () => {
             onConfirm={() => handleDelete(record.ingredientId)}
             okText="Xóa"
             cancelText="Hủy"
-            okButtonProps={{ danger: true }}
+            okButtonProps={{ danger: true, loading: deleteLoading[record.ingredientId] }}
           >
             <Button
               type="text"
               icon={<Trash2 className="w-4 h-4" />}
               className="text-red-600 hover:text-red-700"
+              loading={deleteLoading[record.ingredientId]}
             />
           </Popconfirm>
         </Space>
@@ -179,7 +189,6 @@ const IngredientPage = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Quản lý Nguyên liệu</h1>
           <p className="text-gray-600">
@@ -187,7 +196,6 @@ const IngredientPage = () => {
           </p>
         </div>
 
-        {/* Actions Bar */}
         <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="relative flex-1 max-w-md">
@@ -210,7 +218,6 @@ const IngredientPage = () => {
           </div>
         </div>
 
-        {/* Table */}
         <div className="bg-white rounded-lg shadow-sm border">
           <Table
             columns={columns}
@@ -243,7 +250,6 @@ const IngredientPage = () => {
           />
         </div>
 
-        {/* Modal */}
         <Modal
           title={editingIngredient ? 'Chỉnh sửa nguyên liệu' : 'Thêm nguyên liệu mới'}
           open={modalVisible}
@@ -322,6 +328,7 @@ const IngredientPage = () => {
                   setModalVisible(false);
                   form.resetFields();
                 }}
+                disabled={submitLoading}
               >
                 Hủy
               </Button>
@@ -329,6 +336,7 @@ const IngredientPage = () => {
                 type="primary"
                 htmlType="submit"
                 className="bg-blue-600 hover:bg-blue-700"
+                loading={submitLoading}
               >
                 {editingIngredient ? 'Cập nhật' : 'Thêm mới'}
               </Button>

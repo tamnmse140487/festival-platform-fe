@@ -15,8 +15,8 @@ root.render(
         toastOptions={{
           duration: 4000,
           style: {
-            background: "#363636",
-            color: "#fff",
+            color: "#363636",
+            background: "#fff",
           },
         }}
       />

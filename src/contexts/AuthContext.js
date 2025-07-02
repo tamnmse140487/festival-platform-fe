@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { authServices } from "../services/authServices";
-
+import { supplierServices } from "../services/supplierServices";
 
 const AuthContext = createContext();
 
@@ -44,6 +44,20 @@ export const AuthProvider = ({ children }) => {
 
       const { accessToken: newToken, ...userData } = response.data;
 
+      if (userData.role === "Supplier") {
+        try {
+          const supplierResponse = await supplierServices.get({
+            accountId: userData.id,
+          });
+
+          if (supplierResponse.data && supplierResponse.data.length > 0) {
+            userData.supplierId = supplierResponse.data[0].supplierId;
+          }
+        } catch (supplierError) {
+          console.error("Error fetching supplier data:", supplierError);
+        }
+      }
+
       localStorage.setItem("token", newToken);
       localStorage.setItem("user", JSON.stringify(userData));
 
@@ -54,7 +68,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return {
         success: false,
-        error: error.response?.data?.message || "Đăng nhập thất bại",
+        error: error.response?.data || "Đăng nhập thất bại",
       };
     }
   };
