@@ -13,94 +13,95 @@ import PointsPage from "../pages/points/PointsPage";
 import ProfilePage from "../pages/profile/ProfilePage";
 import SchoolListPage from "../pages/schools/SchoolListPage";
 import SystemSettingsPage from "../pages/system/SystemSettingsPage";
+import { ROLE_NAME } from '../utils/constants';
 
 export const protectedRoutes = [
   // Dashboard
   {
-    path: "dashboard",
+    path: "/app/dashboard",
     element: <DashboardPage />,
     roles: []
   },
 
   // Festivals
   {
-    path: "festivals",
+    path: "/app/festivals",
     element: <FestivalListPage />,
     roles: []
   },
   {
-    path: "festivals/create",
+    path: "/app/festivals/create",
     element: <CreateFestivalPage />,
-    roles: ["school_manager"]
+    roles: [ROLE_NAME.SCHOOL_MANAGER]
   },
   {
-    path: "festivals/:id",
+    path: "/app/festivals/:id",
     element: <FestivalDetailPage />,
     roles: []
   },
 
   // Suppliers
   {
-    path: "suppliers",
+    path: "/app/suppliers",
     element: <SupplierListPage />,
-    roles: ["admin", "school_manager", "supplier"]
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.SUPPLIER]
   },
 
   // Groups
   {
-    path: "groups",
+    path: "/app/groups",
     element: <StudentGroupPage />,
-    roles: ["school_manager", "teacher"]
+    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER]
   },
 
   // Booths
   {
-    path: "booths",
+    path: "/app/booths",
     element: <BoothListPage />,
-    roles: ["admin", "school_manager", "teacher", "student"]
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
   },
   {
-    path: "booths/create/:festivalId",
+    path: "/app/booths/create/:festivalId",
     element: <CreateBoothPage />,
-    roles: ["student"]
+    roles: [ROLE_NAME.STUDENT]
   },
 
   // Games
   {
-    path: "games",
+    path: "/app/games",
     element: <GameListPage />,
-    roles: ["student", "teacher"]
+    roles: [ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
   },
   {
-    path: "games/create/:boothId",
+    path: "/app/games/create/:boothId",
     element: <CreateGamePage />,
-    roles: ["student"]
+    roles: [ROLE_NAME.STUDENT]
   },
 
   // Points
   {
-    path: "points",
+    path: "/app/points",
     element: <PointsPage />,
-    roles: ["student", "guest"]
+    roles: [ROLE_NAME.STUDENT]
   },
 
   // Schools
   {
-    path: "schools",
+    path: "/app/schools",
     element: <SchoolListPage />,
-    roles: ["admin"]
+    roles: [ROLE_NAME.ADMIN]
   },
 
   // System
   {
-    path: "system",
+    path: "/app/system",
     element: <SystemSettingsPage />,
-    roles: ["admin"]
+    roles: [ROLE_NAME.ADMIN]
   },
 
   // Profile
   {
-    path: "profile",
+    path: "/app/profile",
     element: <ProfilePage />,
     roles: []
   }

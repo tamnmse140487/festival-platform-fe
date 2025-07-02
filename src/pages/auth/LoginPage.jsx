@@ -17,9 +17,10 @@ const LoginPage = () => {
     setIsLoading(true);
     try {
       const result = await login(data);
+      console.log("result: ", result)
       if (result.success) {
         toast.success('Đăng nhập thành công!');
-        navigate('/dashboard');
+        navigate('/app/dashboard');
       } else {
         toast.error(result.error);
       }
@@ -28,64 +29,6 @@ const LoginPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const mockLogin = async (role) => {
-    setIsLoading(true);
-    
-    const mockCredentials = {
-      'school_admin': { email: 'admin@school.edu.vn', password: 'password123' },
-      'teacher': { email: 'teacher@school.edu.vn', password: 'password123' },
-      'student': { email: 'student@school.edu.vn', password: 'password123' },
-      'supplier': { email: 'supplier@company.com', password: 'password123' }
-    };
-
-    setTimeout(() => {
-      const userData = {
-        'admin': {
-          id: 1,
-          email: 'admin@festivalhub.vn',
-          full_name: 'Nguyễn Văn An',
-          role: 'admin',
-          organization: { name: 'Festival Hub System' }
-        },
-        'school_manager': {
-          id: 2,
-          email: 'manager@school.edu.vn',
-          full_name: 'Trần Thị Bình',
-          role: 'school_manager',
-          school: { school_name: 'Trường THPT ABC' }
-        },
-        'teacher': {
-          id: 3,
-          email: 'teacher@school.edu.vn',
-          full_name: 'Lê Hoàng Nam',
-          role: 'teacher',
-          school: { school_name: 'Trường THPT ABC' }
-        },
-        'student': {
-          id: 4,
-          email: 'student@school.edu.vn',
-          full_name: 'Phạm Thị Lan',
-          role: 'student',
-          school: { school_name: 'Trường THPT ABC' }
-        },
-        'supplier': {
-          id: 5,
-          email: 'supplier@company.com',
-          full_name: 'Nguyễn Thành Đạt',
-          role: 'supplier',
-          company: { company_name: 'Công ty TNHH Thực Phẩm Sạch' }
-        }
-      };
-
-      localStorage.setItem('token', 'mock-token-123');
-      localStorage.setItem('user', JSON.stringify(userData[role]));
-      
-      toast.success(`Đăng nhập thành công với vai trò ${role}!`);
-      window.location.reload();
-      setIsLoading(false);
-    }, 1000);
   };
 
   return (
@@ -219,59 +162,6 @@ const LoginPage = () => {
               </div>
             </form>
 
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Demo với tài khoản mẫu</span>
-                </div>
-              </div>
-
-              <div className="mt-6 grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => mockLogin('admin')}
-                  disabled={isLoading}
-                  className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                >
-                  Quản trị viên
-                </button>
-                <button
-                  type="button"
-                  onClick={() => mockLogin('school_manager')}
-                  disabled={isLoading}
-                  className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                >
-                  Quản lý trường
-                </button>
-                <button
-                  type="button"
-                  onClick={() => mockLogin('teacher')}
-                  disabled={isLoading}
-                  className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                >
-                  Giáo viên
-                </button>
-                <button
-                  type="button"
-                  onClick={() => mockLogin('student')}
-                  disabled={isLoading}
-                  className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                >
-                  Học sinh
-                </button>
-                <button
-                  type="button"
-                  onClick={() => mockLogin('supplier')}
-                  disabled={isLoading}
-                  className="w-full col-span-2 inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                >
-                  Nhà cung cấp
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </div>

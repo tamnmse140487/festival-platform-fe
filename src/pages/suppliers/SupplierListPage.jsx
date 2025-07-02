@@ -6,6 +6,7 @@ import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Card from '../../components/common/Card';
 import Modal from '../../components/common/Modal';
+import { ROLE_NAME } from '../../utils/constants';
 
 const SupplierListPage = () => {
   const { hasRole } = useAuth();
@@ -51,13 +52,13 @@ const SupplierListPage = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Quản lý Nhà cung cấp</h1>
           <p className="text-gray-600">
-            {hasRole(['admin', 'school_manager'])
+            {hasRole([ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER])
               ? 'Quản lý và theo dõi các nhà cung cấp nguyên liệu.'
               : 'Xem thông tin các nhà cung cấp trong hệ thống.'
             }
           </p>
         </div>
-        {hasRole(['admin', 'school_manager']) && (
+        {hasRole([ROLE_NAME.ADMIN]) && (
           <Button icon={<Plus size={20} />}>Thêm nhà cung cấp</Button>
         )}
       </div>
@@ -99,7 +100,7 @@ const SupplierListPage = () => {
                   key={supplier.id}
                   supplier={supplier}
                   onViewDetails={() => handleViewDetails(supplier)}
-                  canManage={hasRole(['admin', 'school_manager'])}
+                  canManage={hasRole([ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER])}
                 />
               ))
             ) : (

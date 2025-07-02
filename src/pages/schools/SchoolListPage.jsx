@@ -115,15 +115,6 @@ const SchoolListPage = () => {
 
   const stats = getStatsOverview();
 
-  if (!hasRole(['admin'])) {
-    return (
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900">Không có quyền truy cập</h2>
-        <p className="text-gray-600 mt-2">Chỉ Admin mới có thể truy cập trang này.</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
