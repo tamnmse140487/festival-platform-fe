@@ -56,7 +56,7 @@ const Modal = ({
           onClick={closable ? onClose : undefined}
         />
         
-        <div className={`relative bg-white rounded-xl shadow-xl w-full ${sizeClasses[size]} max-h-[90vh] overflow-y-auto animate-scale-in`}>
+        <div className={`relative top-0 bg-white rounded-xl shadow-xl w-full ${sizeClasses[size]} max-h-[90vh] overflow-y-auto animate-scale-in`}>
           {(title || showCloseButton) && (
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               {title && (

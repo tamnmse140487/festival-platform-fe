@@ -17,7 +17,7 @@ const LoginPage = () => {
     setIsLoading(true);
     try {
       const result = await login(data);
-      console.log("result: ", result)
+
       if (result.success) {
         toast.success('Đăng nhập thành công!');
         navigate('/app/dashboard');
