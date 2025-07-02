@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { authServices } from "../services/authServices";
 import { supplierServices } from "../services/supplierServices";
+import { schoolServices } from "../services/schoolServices";
+import { ROLE_NAME } from "../utils/constants";
 
 const AuthContext = createContext();
 
@@ -40,21 +42,36 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const response = await authServices.login(credentials);
-      console.log("response: ", response);
-
       const { accessToken: newToken, ...userData } = response.data;
 
-      if (userData.role === "Supplier") {
-        try {
-          const supplierResponse = await supplierServices.get({
-            accountId: userData.id,
-          });
+      const roleFetchMap = {
+        [ROLE_NAME.SUPPLIER]: {
+          service: supplierServices,
+          field: "supplierId",
+          fieldName: "companyName",
+        },
+        [ROLE_NAME.SCHOOL_MANAGER]: {
+          service: schoolServices,
+          field: "schoolId",
+          fieldName: "schoolName",
+        },
+      };
 
-          if (supplierResponse.data && supplierResponse.data.length > 0) {
-            userData.supplierId = supplierResponse.data[0].supplierId;
+      const roleConfig = roleFetchMap[userData.role];
+      if (roleConfig) {
+        try {
+          const { service, field, fieldName } = roleConfig;
+          const roleResponse = await service.get({ accountId: userData.id });
+
+          if (
+            Array.isArray(roleResponse.data) &&
+            roleResponse.data.length > 0
+          ) {
+            userData[field] = roleResponse.data[0][field];
+            userData[fieldName] = roleResponse.data[0][fieldName];
           }
-        } catch (supplierError) {
-          console.error("Error fetching supplier data:", supplierError);
+        } catch (roleError) {
+          console.error(`Error fetching ${userData.role} data:`, roleError);
         }
       }
 
