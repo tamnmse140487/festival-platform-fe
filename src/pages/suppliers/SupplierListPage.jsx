@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Search, Eye, Store, Star, Package, TrendingUp, Phone, Mail, Check, X, Clock } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supplierServices } from '../../services/supplierServices';
+import { ingredientServices } from '../../services/ingredientServices';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Card from '../../components/common/Card';
@@ -20,6 +21,8 @@ const SupplierListPage = () => {
   const [sortBy, setSortBy] = useState('createdAt');
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [supplierIngredients, setSupplierIngredients] = useState({});
+  const [loadingIngredients, setLoadingIngredients] = useState(false);
 
   const categories = [
     { value: 'all', label: 'Tất cả danh mục' },
@@ -53,6 +56,31 @@ const SupplierListPage = () => {
       setSuppliers([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchIngredients = async (supplierId) => {
+    if (supplierIngredients[supplierId]) {
+      return supplierIngredients[supplierId];
+    }
+
+    try {
+      setLoadingIngredients(true);
+      const response = await ingredientServices.get({ supplierId });
+      const ingredients = response.data || [];
+      
+      setSupplierIngredients(prev => ({
+        ...prev,
+        [supplierId]: ingredients
+      }));
+      
+      return ingredients;
+    } catch (error) {
+      console.error('Error fetching ingredients:', error);
+      toast.error('Không thể tải danh sách nguyên liệu');
+      return [];
+    } finally {
+      setLoadingIngredients(false);
     }
   };
 
@@ -130,9 +158,10 @@ const SupplierListPage = () => {
       }
     });
 
-  const handleViewDetails = (supplier) => {
+  const handleViewDetails = async (supplier) => {
     setSelectedSupplier(supplier);
     setShowModal(true);
+    await fetchIngredients(supplier.supplierId);
   };
 
   if (loading) {
@@ -206,6 +235,7 @@ const SupplierListPage = () => {
                   onStatusUpdate={handleStatusUpdate}
                   getStatusConfig={getStatusConfig}
                   updatingSupplier={updatingSupplier}
+                  ingredients={supplierIngredients[supplier.supplierId] || []}
                 />
               ))
             ) : (
@@ -226,6 +256,8 @@ const SupplierListPage = () => {
         {selectedSupplier && (
           <SupplierDetailModal
             supplier={selectedSupplier}
+            ingredients={supplierIngredients[selectedSupplier.supplierId] || []}
+            loadingIngredients={loadingIngredients}
             onClose={() => setShowModal(false)}
             getStatusConfig={getStatusConfig}
           />
@@ -235,10 +267,11 @@ const SupplierListPage = () => {
   );
 };
 
-const SupplierCard = ({ supplier, onViewDetails, onStatusUpdate, getStatusConfig, updatingSupplier }) => {
+const SupplierCard = ({ supplier, onViewDetails, onStatusUpdate, getStatusConfig, updatingSupplier, ingredients }) => {
   const { hasRole } = useAuth();
   const statusConfig = getStatusConfig(supplier.status);
   const isUpdating = updatingSupplier === supplier.supplierId;
+  const ingredientCount = ingredients.length;
 
   return (
     <Card hover>
@@ -250,11 +283,17 @@ const SupplierCard = ({ supplier, onViewDetails, onStatusUpdate, getStatusConfig
           <div className="flex-1">
             <h3 className="font-semibold text-gray-900">{supplier.companyName}</h3>
             <p className="text-sm text-gray-500 capitalize">{supplier.category}</p>
-            <div className="flex items-center mt-2">
+            <div className="flex items-center mt-2 space-x-2">
               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusConfig.color}`}>
                 {statusConfig.icon && <span className="mr-1">{statusConfig.icon}</span>}
                 {statusConfig.label}
               </span>
+              {ingredientCount > 0 && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <Package className="w-3 h-3 mr-1" />
+                  {ingredientCount} nguyên liệu
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -310,7 +349,7 @@ const SupplierCard = ({ supplier, onViewDetails, onStatusUpdate, getStatusConfig
   );
 };
 
-const SupplierDetailModal = ({ supplier, onClose, getStatusConfig }) => {
+const SupplierDetailModal = ({ supplier, ingredients, loadingIngredients, onClose, getStatusConfig }) => {
   const statusConfig = getStatusConfig(supplier.status);
 
   return (
@@ -347,18 +386,48 @@ const SupplierDetailModal = ({ supplier, onClose, getStatusConfig }) => {
       )}
 
       <div className="border-t pt-4">
-        <h4 className="font-medium text-gray-800 mb-2">Nguyên liệu</h4>
-        {supplier.ingredients && supplier.ingredients.length > 0 ? (
-          <ul className="space-y-2">
-            {supplier.ingredients.map((ingredient, index) => (
-              <li key={index} className="flex justify-between">
-                <span>{ingredient.name}</span>
-                <span>{ingredient.price?.toLocaleString()}đ/{ingredient.unit}</span>
-              </li>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="font-medium text-gray-800">Danh sách nguyên liệu</h4>
+          <span className="text-sm text-gray-500">
+            {ingredients.length} nguyên liệu
+          </span>
+        </div>
+        
+        {loadingIngredients ? (
+          <div className="flex justify-center py-4">
+            <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : ingredients.length > 0 ? (
+          <div className="space-y-3 max-h-60 overflow-y-auto">
+            {ingredients.map((ingredient) => (
+              <div key={ingredient.ingredientId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex-1">
+                  <h5 className="font-medium text-gray-900">{ingredient.ingredientName}</h5>
+                  <p className="text-sm text-gray-600">{ingredient.description}</p>
+                  <div className="flex items-center mt-1 space-x-2">
+                    <span className="text-xs text-gray-500">
+                      Đơn vị: {ingredient.unit}
+                    </span>
+                    <span className="text-xs text-gray-400">•</span>
+                    <span className="text-xs text-gray-500">
+                      Ngày tạo: {new Date(ingredient.createdAt).toLocaleDateString('vi-VN')}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-lg font-semibold text-green-600">
+                    {ingredient.pricePerUnit?.toLocaleString('vi-VN')}đ
+                  </div>
+                  <div className="text-sm text-gray-500">/{ingredient.unit}</div>
+                </div>
+              </div>
             ))}
-          </ul>
+          </div>
         ) : (
-          <p className="text-sm text-gray-500">Chưa có nguyên liệu nào.</p>
+          <div className="text-center py-8 text-gray-500">
+            <Package className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+            <p>Nhà cung cấp chưa có nguyên liệu nào</p>
+          </div>
         )}
       </div>
 
