@@ -11,7 +11,8 @@ import {
   LogOut,
   X,
   User,
-  Settings
+  Settings,
+  ChefHat
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLE_NAME } from '../../utils/constants';
@@ -45,7 +46,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     {
       id: 'ingredients',
       label: 'Quản lý nguyên liệu',
-      icon: Store,
+      icon: ChefHat,
       path: '/app/ingredients',
       roles: [ROLE_NAME.SUPPLIER, ROLE_NAME.ADMIN]
     },
