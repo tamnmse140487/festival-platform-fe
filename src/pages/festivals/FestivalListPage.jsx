@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Plus, Eye, Edit, MapPin, Calendar, Users, Search, Filter, Grid, List } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { mockFestivals } from '../../data/mockData';
+import { ROLE_NAME } from '../../utils/constants';
 
 const FestivalListPage = () => {
   const { user, hasRole } = useAuth();
@@ -65,14 +66,14 @@ const FestivalListPage = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Quản lý Lễ hội</h1>
           <p className="text-gray-600 mt-1">
-            {hasRole(['school_manager']) 
+            {hasRole([ROLE_NAME.SCHOOL_MANAGER]) 
               ? 'Tạo và quản lý các lễ hội của trường bạn.' 
               : 'Khám phá và tham gia các lễ hội thú vị.'
             }
           </p>
         </div>
         
-        {hasRole(['school_manager']) && (
+        {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && (
           <Link
             to="/festivals/create"
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition-colors font-medium"
@@ -157,7 +158,7 @@ const FestivalListPage = () => {
                 : 'Chưa có lễ hội nào được tạo.'
               }
             </p>
-            {hasRole(['school_manager']) && !searchTerm && statusFilter === 'all' && (
+            {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && !searchTerm && statusFilter === 'all' && (
               <Link
                 to="/festivals/create"
                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -227,13 +228,13 @@ const FestivalCard = ({ festival, user }) => {
         
         <div className="flex space-x-2">
           <Link
-            to={`/festivals/${festival.id}`}
+            to={`/app/festivals/${festival.id}`}
             className="flex-1 bg-blue-50 text-blue-700 py-2 px-4 rounded-lg hover:bg-blue-100 transition-colors text-center font-medium"
           >
             <Eye size={16} className="inline mr-1" />
             Xem chi tiết
           </Link>
-          {hasRole(['school_manager']) && (
+          {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && (
             <Link
               to={`/festivals/${festival.id}/edit`}
               className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -292,7 +293,7 @@ const FestivalListItem = ({ festival, user }) => {
                   <Eye size={16} className="inline mr-1" />
                   Xem
                 </Link>
-                {hasRole(['school_manager']) && (
+                {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && (
                   <Link
                     to={`/festivals/${festival.id}/edit`}
                     className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"

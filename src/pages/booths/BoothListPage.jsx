@@ -7,6 +7,7 @@ import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Card from '../../components/common/Card';
 import Modal from '../../components/common/Modal';
+import { ROLE_NAME } from '../../utils/constants';
 
 const BoothListPage = () => {
   const { user, hasRole } = useAuth();
@@ -46,16 +47,16 @@ const BoothListPage = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Quản lý Gian hàng</h1>
           <p className="text-gray-600 mt-1">
-            {hasRole(['school_manager']) 
+            {hasRole([ROLE_NAME.SCHOOL_MANAGER]) 
               ? 'Quản lý và phê duyệt các gian hàng trong lễ hội.' 
-              : hasRole(['teacher'])
+              : hasRole([ROLE_NAME.TEACHER])
               ? 'Theo dõi gian hàng của các nhóm được phân công.'
               : 'Quản lý gian hàng của nhóm bạn.'
             }
           </p>
         </div>
         
-        {hasRole(['student']) && (
+        {hasRole([ROLE_NAME.STUDENT]) && (
           <Button icon={<Plus size={20} />}>
             Đăng ký gian hàng
           </Button>
@@ -177,7 +178,7 @@ const BoothListPage = () => {
                   key={booth.id} 
                   booth={booth} 
                   onViewDetails={handleViewDetails}
-                  hasManagePermission={hasRole(['school_manager', 'teacher'])}
+                  hasManagePermission={hasRole([ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER])}
                 />
               ))}
             </div>

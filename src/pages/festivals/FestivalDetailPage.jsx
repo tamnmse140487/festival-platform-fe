@@ -19,6 +19,7 @@ import { mockFestivals, mockBooths, mockSuppliers } from '../../data/mockData';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Modal from '../../components/common/Modal';
+import { ROLE_NAME } from '../../utils/constants';
 
 const FestivalDetailPage = () => {
   const { id } = useParams();
@@ -94,7 +95,7 @@ const FestivalDetailPage = () => {
           <Button variant="outline" icon={<Share2 size={16} />}>
             Chia sẻ
           </Button>
-          {hasRole(['school_manager']) && (
+          {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && (
             <Button icon={<Edit size={16} />}>
               Chỉnh sửa
             </Button>
@@ -233,7 +234,7 @@ const FestivalDetailPage = () => {
             </Card.Content>
           </Card>
 
-          {hasRole(['student', 'teacher']) && festival.status === 'published' && (
+          {hasRole([ROLE_NAME.STUDENT, ROLE_NAME.TEACHER]) && festival.status === 'published' && (
             <Card>
               <Card.Header>
                 <Card.Title>Tham gia lễ hội</Card.Title>
