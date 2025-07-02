@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -7,15 +7,20 @@ import {
   Users, 
   Edit, 
   Share2, 
-  Star,
   ShoppingCart,
   Store,
   Trophy,
   Clock,
   CheckCircle
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
-import { mockFestivals, mockBooths, mockSuppliers } from '../../data/mockData';
+import { festivalServices } from '../../services/festivalServices';
+import { festivalSchoolServices } from '../../services/festivalSchoolServices';
+import { festivalMapServices } from '../../services/festivalMapServices';
+import { mapLocationServices } from '../../services/mapLocationServices';
+import { festivalMenuServices } from '../../services/festivalMenuServices';
+import { menuItemServices } from '../../services/menuItemServices';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Modal from '../../components/common/Modal';
@@ -25,18 +30,92 @@ const FestivalDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, hasRole } = useAuth();
+  const [festival, setFestival] = useState(null);
+  const [festivalMap, setFestivalMap] = useState(null);
+  const [mapLocations, setMapLocations] = useState([]);
+  const [festivalMenu, setFestivalMenu] = useState(null);
+  const [menuItems, setMenuItems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
 
-  const festival = mockFestivals.find(f => f.id === parseInt(id));
-  const festivalBooths = mockBooths.filter(b => b.festival_id === parseInt(id));
-  const festivalSuppliers = mockSuppliers.slice(0, 3);
+  useEffect(() => {
+    loadFestivalData();
+  }, [id]);
+
+  const loadFestivalData = async () => {
+    try {
+      setLoading(true);
+      
+      const [
+        festivalResponse,
+        mapResponse,
+        menuResponse
+      ] = await Promise.all([
+        festivalServices.get({ id: parseInt(id) }),
+        festivalMapServices.get({ festivalId: parseInt(id) }),
+        festivalMenuServices.get({ festivalId: parseInt(id) })
+      ]);
+
+      if (festivalResponse.data && festivalResponse.data.length > 0) {
+        setFestival(festivalResponse.data[0]);
+      }
+
+      if (mapResponse.data && mapResponse.data.length > 0) {
+        const map = mapResponse.data[0];
+        setFestivalMap(map);
+        
+        const locationsResponse = await mapLocationServices.get({ mapId: map.id });
+        setMapLocations(locationsResponse.data || []);
+      }
+
+      if (menuResponse.data && menuResponse.data.length > 0) {
+        const menu = menuResponse.data[0];
+        setFestivalMenu(menu);
+        
+        const itemsResponse = await menuItemServices.get({ menuId: menu.id });
+        setMenuItems(itemsResponse.data || []);
+      }
+
+    } catch (error) {
+      console.error('Error loading festival data:', error);
+      toast.error('Không thể tải thông tin lễ hội');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async () => {
+    try {
+      setIsRegistering(true);
+      await festivalSchoolServices.create({
+        festivalId: parseInt(id),
+        schoolId: user.schoolId
+      });
+      toast.success('Đăng ký tham gia lễ hội thành công!');
+      setShowRegisterModal(false);
+    } catch (error) {
+      console.error('Error registering for festival:', error);
+      toast.error('Không thể đăng ký tham gia lễ hội');
+    } finally {
+      setIsRegistering(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   if (!festival) {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold text-gray-900">Không tìm thấy lễ hội</h2>
-        <Button onClick={() => navigate('/festivals')} className="mt-4">
+        <Button onClick={() => navigate('/app/festivals')} className="mt-4">
           Quay lại danh sách
         </Button>
       </div>
@@ -73,9 +152,8 @@ const FestivalDetailPage = () => {
 
   const tabs = [
     { id: 'overview', label: 'Tổng quan', icon: <Calendar size={16} /> },
-    { id: 'booths', label: 'Gian hàng', icon: <ShoppingCart size={16} /> },
-    { id: 'suppliers', label: 'Nhà cung cấp', icon: <Store size={16} /> },
-    { id: 'participants', label: 'Người tham gia', icon: <Users size={16} /> }
+    { id: 'map', label: 'Bản đồ', icon: <MapPin size={16} /> },
+    { id: 'menu', label: 'Thực đơn', icon: <ShoppingCart size={16} /> }
   ];
 
   return (
@@ -84,7 +162,7 @@ const FestivalDetailPage = () => {
         <div className="flex items-center space-x-4">
           <Button
             variant="ghost"
-            onClick={() => navigate('/festivals')}
+            onClick={() => navigate('/app/festivals')}
             icon={<ArrowLeft size={20} />}
           >
             Quay lại
@@ -95,8 +173,11 @@ const FestivalDetailPage = () => {
           <Button variant="outline" icon={<Share2 size={16} />}>
             Chia sẻ
           </Button>
-          {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && (
-            <Button icon={<Edit size={16} />}>
+          {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && festival.organizerSchoolId === user.schoolId && (
+            <Button 
+              icon={<Edit size={16} />}
+              onClick={() => navigate(`/app/festivals/${id}/edit`)}
+            >
               Chỉnh sửa
             </Button>
           )}
@@ -106,8 +187,8 @@ const FestivalDetailPage = () => {
       <Card className="overflow-hidden">
         <div className="relative h-64 lg:h-80">
           <img
-            src={festival.image_url}
-            alt={festival.festival_name}
+            src={festival.imageUrl || '/api/placeholder/800/400'}
+            alt={festival.festivalName}
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-black bg-opacity-40" />
@@ -116,16 +197,12 @@ const FestivalDetailPage = () => {
               {getStatusBadge(festival.status)}
               <div className="flex items-center space-x-4 text-sm">
                 <span className="flex items-center">
-                  <Users size={16} className="mr-1" />
-                  {festival.stats.participating_schools} trường
-                </span>
-                <span className="flex items-center">
                   <ShoppingCart size={16} className="mr-1" />
-                  {festival.stats.registered_booths} gian hàng
+                  {festival.maxFoodBooths + festival.maxBeverageBooths} gian hàng
                 </span>
               </div>
             </div>
-            <h1 className="text-3xl lg:text-4xl font-bold mb-2">{festival.festival_name}</h1>
+            <h1 className="text-3xl lg:text-4xl font-bold mb-2">{festival.festivalName}</h1>
             <p className="text-xl opacity-90">{festival.theme}</p>
           </div>
         </div>
@@ -153,9 +230,8 @@ const FestivalDetailPage = () => {
           </div>
 
           {activeTab === 'overview' && <OverviewTab festival={festival} />}
-          {activeTab === 'booths' && <BoothsTab booths={festivalBooths} />}
-          {activeTab === 'suppliers' && <SuppliersTab suppliers={festivalSuppliers} />}
-          {activeTab === 'participants' && <ParticipantsTab festival={festival} />}
+          {activeTab === 'map' && <MapTab festivalMap={festivalMap} mapLocations={mapLocations} />}
+          {activeTab === 'menu' && <MenuTab festivalMenu={festivalMenu} menuItems={menuItems} />}
         </div>
 
         <div className="space-y-6">
@@ -165,11 +241,6 @@ const FestivalDetailPage = () => {
             </Card.Header>
             <Card.Content>
               <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Đơn vị tổ chức</label>
-                  <p className="text-gray-900">{festival.organizer_school.school_name}</p>
-                </div>
-                
                 <div>
                   <label className="text-sm font-medium text-gray-500">Địa điểm</label>
                   <p className="text-gray-900 flex items-center">
@@ -185,12 +256,12 @@ const FestivalDetailPage = () => {
                       <Calendar size={16} className="mr-1 text-gray-400" />
                       <span className="text-sm">Bắt đầu:</span>
                     </div>
-                    <p className="ml-5">{formatDate(festival.start_date)}</p>
+                    <p className="ml-5">{formatDate(festival.startDate)}</p>
                     <div className="flex items-center mb-1 mt-2">
                       <Calendar size={16} className="mr-1 text-gray-400" />
                       <span className="text-sm">Kết thúc:</span>
                     </div>
-                    <p className="ml-5">{formatDate(festival.end_date)}</p>
+                    <p className="ml-5">{formatDate(festival.endDate)}</p>
                   </div>
                 </div>
               </div>
@@ -199,36 +270,21 @@ const FestivalDetailPage = () => {
 
           <Card>
             <Card.Header>
-              <Card.Title>Thống kê</Card.Title>
+              <Card.Title>Thống kê gian hàng</Card.Title>
             </Card.Header>
             <Card.Content>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Gian hàng đã đăng ký</span>
-                  <span className="font-semibold">{festival.stats.registered_booths}/{festival.max_booths}</span>
+                  <span className="text-gray-600">Gian hàng đồ ăn</span>
+                  <span className="font-semibold">{festival.maxFoodBooths}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Trường tham gia</span>
-                  <span className="font-semibold">{festival.stats.participating_schools}</span>
+                  <span className="text-gray-600">Gian hàng đồ uống</span>
+                  <span className="font-semibold">{festival.maxBeverageBooths}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Lượt truy cập</span>
-                  <span className="font-semibold">{festival.stats.total_visitors.toLocaleString()}</span>
-                </div>
-                
-                <div className="pt-4 border-t">
-                  <div className="mb-2">
-                    <span className="text-sm text-gray-600">Tỷ lệ lấp đầy gian hàng</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${(festival.stats.registered_booths / festival.max_booths) * 100}%` }}
-                    />
-                  </div>
-                  <span className="text-xs text-gray-500 mt-1">
-                    {Math.round((festival.stats.registered_booths / festival.max_booths) * 100)}%
-                  </span>
+                <div className="flex justify-between items-center pt-4 border-t">
+                  <span className="text-gray-600 font-medium">Tổng số gian hàng</span>
+                  <span className="font-bold text-blue-600">{festival.maxFoodBooths + festival.maxBeverageBooths}</span>
                 </div>
               </div>
             </Card.Content>
@@ -260,14 +316,21 @@ const FestivalDetailPage = () => {
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            Bạn có muốn đăng ký tham gia lễ hội "{festival.festival_name}" không?
+            Bạn có muốn đăng ký tham gia lễ hội "{festival.festivalName}" không?
           </p>
           <div className="flex space-x-3">
-            <Button fullWidth>Xác nhận đăng ký</Button>
+            <Button 
+              fullWidth
+              loading={isRegistering}
+              onClick={handleRegister}
+            >
+              Xác nhận đăng ký
+            </Button>
             <Button 
               variant="outline" 
               fullWidth
               onClick={() => setShowRegisterModal(false)}
+              disabled={isRegistering}
             >
               Hủy
             </Button>
@@ -299,7 +362,7 @@ const OverviewTab = ({ festival }) => (
             <div>
               <h4 className="font-medium text-blue-900">Mở đăng ký</h4>
               <p className="text-blue-700 text-sm">
-                {new Date(festival.registration_start_date).toLocaleDateString('vi-VN')}
+                {new Date(festival.registrationStartDate).toLocaleDateString('vi-VN')}
               </p>
             </div>
             <Calendar className="w-8 h-8 text-blue-600" />
@@ -309,7 +372,7 @@ const OverviewTab = ({ festival }) => (
             <div>
               <h4 className="font-medium text-red-900">Đóng đăng ký</h4>
               <p className="text-red-700 text-sm">
-                {new Date(festival.registration_end_date).toLocaleDateString('vi-VN')}
+                {new Date(festival.registrationEndDate).toLocaleDateString('vi-VN')}
               </p>
             </div>
             <Clock className="w-8 h-8 text-red-600" />
@@ -320,139 +383,128 @@ const OverviewTab = ({ festival }) => (
   </div>
 );
 
-const BoothsTab = ({ booths }) => (
-  <div className="space-y-4">
-    {booths.length === 0 ? (
+const MapTab = ({ festivalMap, mapLocations }) => (
+  <div className="space-y-6">
+    {festivalMap ? (
+      <>
+        <Card>
+          <Card.Header>
+            <Card.Title>{festivalMap.mapName}</Card.Title>
+            <Card.Description>Loại: {festivalMap.mapType}</Card.Description>
+          </Card.Header>
+          <Card.Content>
+            {festivalMap.mapUrl && (
+              <img
+                src={festivalMap.mapUrl}
+                alt={festivalMap.mapName}
+                className="w-full h-64 object-cover rounded-lg"
+              />
+            )}
+          </Card.Content>
+        </Card>
+
+        <Card>
+          <Card.Header>
+            <Card.Title>Vị trí trên bản đồ</Card.Title>
+          </Card.Header>
+          <Card.Content>
+            {mapLocations.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {mapLocations.map((location) => (
+                  <div key={location.id} className="p-4 border border-gray-200 rounded-lg">
+                    <h4 className="font-medium text-gray-900">{location.locationName}</h4>
+                    <p className="text-sm text-gray-600">Loại: {location.locationType}</p>
+                    {location.coordinates && (
+                      <p className="text-sm text-gray-600">Tọa độ: {location.coordinates}</p>
+                    )}
+                    <span className={`inline-block mt-2 px-2 py-1 rounded-full text-xs ${
+                      location.isOccupied 
+                        ? 'bg-red-100 text-red-800' 
+                        : 'bg-green-100 text-green-800'
+                    }`}>
+                      {location.isOccupied ? 'Đã sử dụng' : 'Còn trống'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-600">Chưa có vị trí nào được thiết lập.</p>
+            )}
+          </Card.Content>
+        </Card>
+      </>
+    ) : (
       <Card>
         <Card.Content>
           <div className="text-center py-8">
-            <ShoppingCart className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có gian hàng nào</h3>
-            <p className="text-gray-600">Các gian hàng sẽ hiển thị ở đây khi được đăng ký.</p>
+            <MapPin className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có bản đồ</h3>
+            <p className="text-gray-600">Bản đồ lễ hội chưa được thiết lập.</p>
           </div>
         </Card.Content>
       </Card>
-    ) : (
-      booths.map((booth) => (
-        <Card key={booth.id} hover>
-          <Card.Content>
-            <div className="flex items-start space-x-4">
-              <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
-                <ShoppingCart className="w-8 h-8 text-blue-600" />
-              </div>
-              
-              <div className="flex-1">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{booth.booth_name}</h3>
-                    <p className="text-gray-600 mb-2">{booth.description}</p>
-                    <div className="flex items-center space-x-4 text-sm text-gray-500">
-                      <span>Vị trí: {booth.location.location_name}</span>
-                      <span>Loại: {booth.booth_type}</span>
-                      <span>Nhóm: {booth.group.group_name}</span>
-                    </div>
-                  </div>
-                  
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    booth.status === 'approved' ? 'bg-green-100 text-green-800' :
-                    booth.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-red-100 text-red-800'
-                  }`}>
-                    {booth.status === 'approved' ? 'Đã duyệt' :
-                     booth.status === 'pending' ? 'Chờ duyệt' : 'Từ chối'}
-                  </span>
-                </div>
-                
-                {booth.status === 'approved' && (
-                  <div className="mt-4 flex items-center space-x-4 text-sm">
-                    <span className="flex items-center text-green-600">
-                      <Star size={14} className="mr-1" />
-                      {booth.points_balance} điểm
-                    </span>
-                    <span className="text-gray-600">
-                      {booth.menu_items_count} món ăn
-                    </span>
-                    <span className="text-gray-600">
-                      {booth.total_orders} đơn hàng
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </Card.Content>
-        </Card>
-      ))
     )}
   </div>
 );
 
-const SuppliersTab = ({ suppliers }) => (
-  <div className="space-y-4">
-    {suppliers.map((supplier) => (
-      <Card key={supplier.id} hover>
-        <Card.Content>
-          <div className="flex items-start space-x-4">
-            <div className="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center">
-              <Store className="w-8 h-8 text-green-600" />
-            </div>
-            
-            <div className="flex-1">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{supplier.company_name}</h3>
-                  <p className="text-gray-600 mb-2">{supplier.category}</p>
-                  <div className="flex items-center space-x-4 text-sm text-gray-500">
-                    <span className="flex items-center">
-                      <Star size={14} className="mr-1 text-yellow-400" />
-                      {supplier.rating}
-                    </span>
-                    <span>{supplier.total_ingredients} nguyên liệu</span>
-                    <span>{supplier.total_orders} đơn hàng</span>
+const MenuTab = ({ festivalMenu, menuItems }) => (
+  <div className="space-y-6">
+    {festivalMenu ? (
+      <>
+        <Card>
+          <Card.Header>
+            <Card.Title>{festivalMenu.menuName}</Card.Title>
+            <Card.Description>{festivalMenu.description}</Card.Description>
+          </Card.Header>
+        </Card>
+
+        <Card>
+          <Card.Header>
+            <Card.Title>Danh sách món ăn/đồ uống</Card.Title>
+          </Card.Header>
+          <Card.Content>
+            {menuItems.length > 0 ? (
+              <div className="space-y-4">
+                {menuItems.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                    <div>
+                      <h4 className="font-medium text-gray-900">{item.itemName}</h4>
+                      <p className="text-sm text-gray-600">{item.description}</p>
+                      <span className={`inline-block mt-1 px-2 py-1 rounded-full text-xs ${
+                        item.itemType === 'food' 
+                          ? 'bg-orange-100 text-orange-800' 
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {item.itemType === 'food' ? 'Đồ ăn' : 'Đồ uống'}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-gray-900">
+                        {item.basePrice.toLocaleString('vi-VN')} ₫
+                      </p>
+                      <p className="text-sm text-gray-600">Giá cơ bản</p>
+                    </div>
                   </div>
-                </div>
-                
-                <Button variant="outline" size="sm">
-                  Xem chi tiết
-                </Button>
+                ))}
               </div>
-            </div>
+            ) : (
+              <p className="text-gray-600">Chưa có món ăn nào được thêm vào thực đơn.</p>
+            )}
+          </Card.Content>
+        </Card>
+      </>
+    ) : (
+      <Card>
+        <Card.Content>
+          <div className="text-center py-8">
+            <ShoppingCart className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có thực đơn</h3>
+            <p className="text-gray-600">Thực đơn lễ hội chưa được thiết lập.</p>
           </div>
         </Card.Content>
       </Card>
-    ))}
+    )}
   </div>
-);
-
-const ParticipantsTab = ({ festival }) => (
-  <Card>
-    <Card.Header>
-      <Card.Title>Thống kê người tham gia</Card.Title>
-    </Card.Header>
-    <Card.Content>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="text-center p-6 bg-blue-50 rounded-lg">
-          <div className="text-3xl font-bold text-blue-600 mb-2">
-            {festival.stats.participating_schools}
-          </div>
-          <div className="text-blue-800 font-medium">Trường tham gia</div>
-        </div>
-        
-        <div className="text-center p-6 bg-green-50 rounded-lg">
-          <div className="text-3xl font-bold text-green-600 mb-2">
-            {festival.stats.registered_booths}
-          </div>
-          <div className="text-green-800 font-medium">Gian hàng đăng ký</div>
-        </div>
-        
-        <div className="text-center p-6 bg-purple-50 rounded-lg">
-          <div className="text-3xl font-bold text-purple-600 mb-2">
-            {festival.stats.total_visitors.toLocaleString()}
-          </div>
-          <div className="text-purple-800 font-medium">Lượt quan tâm</div>
-        </div>
-      </div>
-    </Card.Content>
-  </Card>
 );
 
 export default FestivalDetailPage;

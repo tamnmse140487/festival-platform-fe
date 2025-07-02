@@ -2,6 +2,7 @@ import React from 'react';
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import FestivalListPage from "../pages/festivals/FestivalListPage";
 import CreateFestivalPage from "../pages/festivals/CreateFestivalPage";
+import EditFestivalPage  from "../pages/festivals/EditFestivalPage";
 import FestivalDetailPage from "../pages/festivals/FestivalDetailPage";
 import SupplierListPage from "../pages/suppliers/SupplierListPage";
 import StudentGroupPage from "../pages/groups/StudentGroupPage";
@@ -33,6 +34,11 @@ export const protectedRoutes = [
   {
     path: "/app/festivals/create",
     element: <CreateFestivalPage />,
+    roles: [ROLE_NAME.SCHOOL_MANAGER]
+  },
+  {
+    path: "/app/festivals/:id/edit",
+    element: <EditFestivalPage />,
     roles: [ROLE_NAME.SCHOOL_MANAGER]
   },
   {
