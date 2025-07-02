@@ -34,13 +34,6 @@ api.interceptors.response.use(
   }
 );
 
-export const authAPI = {
-  login: (credentials) => api.post('/auth/login', credentials),
-  register: (userData) => api.post('/auth/register', userData),
-  refreshToken: () => api.post('/auth/refresh'),
-  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
-  resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
-};
 
 export const festivalAPI = {
   getAll: (params) => api.get('/festivals', { params }),
@@ -50,15 +43,6 @@ export const festivalAPI = {
   delete: (id) => api.delete(`/festivals/${id}`),
   register: (festivalId, data) => api.post(`/festivals/${festivalId}/register`, data),
   getRegistrations: (festivalId) => api.get(`/festivals/${festivalId}/registrations`),
-};
-
-export const supplierAPI = {
-  getAll: (params) => api.get('/suppliers', { params }),
-  getById: (id) => api.get(`/suppliers/${id}`),
-  create: (data) => api.post('/suppliers', data),
-  update: (id, data) => api.put(`/suppliers/${id}`, data),
-  delete: (id) => api.delete(`/suppliers/${id}`),
-  getIngredients: (id) => api.get(`/suppliers/${id}/ingredients`),
 };
 
 export const ingredientAPI = {

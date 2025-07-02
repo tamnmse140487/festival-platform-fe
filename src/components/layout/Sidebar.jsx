@@ -40,7 +40,14 @@ const Sidebar = ({ isOpen, onClose }) => {
       label: 'Nhà cung cấp',
       icon: Store,
       path: '/app/suppliers',
-      roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.SUPPLIER]
+      roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER]
+    },
+    {
+      id: 'ingredients',
+      label: 'Quản lý nguyên liệu',
+      icon: Store,
+      path: '/app/ingredients',
+      roles: [ROLE_NAME.SUPPLIER, ROLE_NAME.ADMIN]
     },
     {
       id: 'groups',

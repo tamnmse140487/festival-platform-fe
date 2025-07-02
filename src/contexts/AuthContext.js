@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { authAPI } from "../services/api";
+import { authServices } from "../services/authServices";
+
 
 const AuthContext = createContext();
 
@@ -38,7 +39,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const response = await authAPI.login(credentials);
+      const response = await authServices.login(credentials);
       console.log("response: ", response);
 
       const { accessToken: newToken, ...userData } = response.data;
@@ -60,7 +61,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await authAPI.register(userData);
+      const response = await authServices.register(userData);
       return { success: true, data: response.data };
     } catch (error) {
       return {

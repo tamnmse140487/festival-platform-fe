@@ -13,6 +13,7 @@ import PointsPage from "../pages/points/PointsPage";
 import ProfilePage from "../pages/profile/ProfilePage";
 import SchoolListPage from "../pages/schools/SchoolListPage";
 import SystemSettingsPage from "../pages/system/SystemSettingsPage";
+import IngredientPage from "../pages/ingredient/IngredientPage";
 import { ROLE_NAME } from '../utils/constants';
 
 export const protectedRoutes = [
@@ -104,5 +105,12 @@ export const protectedRoutes = [
     path: "/app/profile",
     element: <ProfilePage />,
     roles: []
-  }
+  },
+
+  // Ingredient
+  {
+    path: "/app/ingredients",
+    element: <IngredientPage />,
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPPLIER]
+  },
 ];
