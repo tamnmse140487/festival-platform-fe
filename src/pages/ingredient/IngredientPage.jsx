@@ -187,163 +187,161 @@ const IngredientPage = () => {
   ];
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Quản lý Nguyên liệu</h1>
-          <p className="text-gray-600">
-            Quản lý danh sách nguyên liệu mà bạn cung cấp
-          </p>
-        </div>
+    <div className="space-y-6">
+      <div className="">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Quản lý Nguyên liệu</h1>
+        <p className="text-gray-600">
+          Quản lý danh sách nguyên liệu mà bạn cung cấp
+        </p>
+      </div>
 
-        <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder="Tìm kiếm nguyên liệu..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+      <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              placeholder="Tìm kiếm nguyên liệu..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Button
+            type="primary"
+            icon={<Plus className="w-4 h-4" />}
+            onClick={handleCreate}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            Thêm nguyên liệu
+          </Button>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border">
+        <Table
+          columns={columns}
+          dataSource={filteredIngredients}
+          rowKey="ingredientId"
+          loading={loading}
+          pagination={{
+            total: filteredIngredients.length,
+            pageSize: 10,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total, range) =>
+              `${range[0]}-${range[1]} của ${total} nguyên liệu`,
+          }}
+          locale={{
+            emptyText: (
+              <div className="py-8 text-center">
+                <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">Chưa có nguyên liệu nào</p>
+                <Button
+                  type="link"
+                  onClick={handleCreate}
+                  className="text-blue-600"
+                >
+                  Thêm nguyên liệu đầu tiên
+                </Button>
+              </div>
+            ),
+          }}
+        />
+      </div>
+
+      <Modal
+        title={editingIngredient ? 'Chỉnh sửa nguyên liệu' : 'Thêm nguyên liệu mới'}
+        open={modalVisible}
+        onCancel={() => {
+          setModalVisible(false);
+          form.resetFields();
+        }}
+        footer={null}
+        width={600}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          className="mt-4"
+        >
+          <Form.Item
+            label="Tên nguyên liệu"
+            name="ingredientName"
+            rules={[
+              { required: true, message: 'Vui lòng nhập tên nguyên liệu' },
+              { min: 2, message: 'Tên nguyên liệu phải có ít nhất 2 ký tự' }
+            ]}
+          >
+            <Input
+              placeholder="Nhập tên nguyên liệu"
+              prefix={<Package className="w-4 h-4 text-gray-400" />}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Mô tả"
+            name="description"
+            rules={[
+              { required: true, message: 'Vui lòng nhập mô tả' }
+            ]}
+          >
+            <Input.TextArea
+              placeholder="Nhập mô tả chi tiết về nguyên liệu"
+              rows={3}
+            />
+          </Form.Item>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Form.Item
+              label="Đơn vị"
+              name="unit"
+              rules={[
+                { required: true, message: 'Vui lòng nhập đơn vị' }
+              ]}
+            >
+              <Input placeholder="VD: kg, lít, gói..." />
+            </Form.Item>
+
+            <Form.Item
+              label="Giá/Đơn vị (VNĐ)"
+              name="pricePerUnit"
+              rules={[
+                { required: true, message: 'Vui lòng nhập giá' },
+                { type: 'number', min: 0, message: 'Giá phải lớn hơn 0' }
+              ]}
+            >
+              <InputNumber
+                placeholder="Nhập giá"
+                formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
+                className="w-full"
+                min={0}
               />
-            </div>
+            </Form.Item>
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-4 border-t">
+            <Button
+              onClick={() => {
+                setModalVisible(false);
+                form.resetFields();
+              }}
+              disabled={submitLoading}
+            >
+              Hủy
+            </Button>
             <Button
               type="primary"
-              icon={<Plus className="w-4 h-4" />}
-              onClick={handleCreate}
+              htmlType="submit"
               className="bg-blue-600 hover:bg-blue-700"
+              loading={submitLoading}
             >
-              Thêm nguyên liệu
+              {editingIngredient ? 'Cập nhật' : 'Thêm mới'}
             </Button>
           </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border">
-          <Table
-            columns={columns}
-            dataSource={filteredIngredients}
-            rowKey="ingredientId"
-            loading={loading}
-            pagination={{
-              total: filteredIngredients.length,
-              pageSize: 10,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} của ${total} nguyên liệu`,
-            }}
-            locale={{
-              emptyText: (
-                <div className="py-8 text-center">
-                  <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">Chưa có nguyên liệu nào</p>
-                  <Button
-                    type="link"
-                    onClick={handleCreate}
-                    className="text-blue-600"
-                  >
-                    Thêm nguyên liệu đầu tiên
-                  </Button>
-                </div>
-              ),
-            }}
-          />
-        </div>
-
-        <Modal
-          title={editingIngredient ? 'Chỉnh sửa nguyên liệu' : 'Thêm nguyên liệu mới'}
-          open={modalVisible}
-          onCancel={() => {
-            setModalVisible(false);
-            form.resetFields();
-          }}
-          footer={null}
-          width={600}
-        >
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleSubmit}
-            className="mt-4"
-          >
-            <Form.Item
-              label="Tên nguyên liệu"
-              name="ingredientName"
-              rules={[
-                { required: true, message: 'Vui lòng nhập tên nguyên liệu' },
-                { min: 2, message: 'Tên nguyên liệu phải có ít nhất 2 ký tự' }
-              ]}
-            >
-              <Input
-                placeholder="Nhập tên nguyên liệu"
-                prefix={<Package className="w-4 h-4 text-gray-400" />}
-              />
-            </Form.Item>
-
-            <Form.Item
-              label="Mô tả"
-              name="description"
-              rules={[
-                { required: true, message: 'Vui lòng nhập mô tả' }
-              ]}
-            >
-              <Input.TextArea
-                placeholder="Nhập mô tả chi tiết về nguyên liệu"
-                rows={3}
-              />
-            </Form.Item>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Form.Item
-                label="Đơn vị"
-                name="unit"
-                rules={[
-                  { required: true, message: 'Vui lòng nhập đơn vị' }
-                ]}
-              >
-                <Input placeholder="VD: kg, lít, gói..." />
-              </Form.Item>
-
-              <Form.Item
-                label="Giá/Đơn vị (VNĐ)"
-                name="pricePerUnit"
-                rules={[
-                  { required: true, message: 'Vui lòng nhập giá' },
-                  { type: 'number', min: 0, message: 'Giá phải lớn hơn 0' }
-                ]}
-              >
-                <InputNumber
-                  placeholder="Nhập giá"
-                  formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
-                  className="w-full"
-                  min={0}
-                />
-              </Form.Item>
-            </div>
-
-            <div className="flex justify-end space-x-2 pt-4 border-t">
-              <Button
-                onClick={() => {
-                  setModalVisible(false);
-                  form.resetFields();
-                }}
-                disabled={submitLoading}
-              >
-                Hủy
-              </Button>
-              <Button
-                type="primary"
-                htmlType="submit"
-                className="bg-blue-600 hover:bg-blue-700"
-                loading={submitLoading}
-              >
-                {editingIngredient ? 'Cập nhật' : 'Thêm mới'}
-              </Button>
-            </div>
-          </Form>
-        </Modal>
-      </div>
+        </Form>
+      </Modal>
     </div>
   );
 };
