@@ -2,41 +2,42 @@ import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Calendar, ShoppingCart, School, Store, Users, TrendingUp, Clock, Star } from 'lucide-react';
 import { mockFestivals, mockBooths, mockStudentGroups, mockSuppliers } from '../../data/mockData';
+import { ROLE_NAME } from '../../utils/constants';
 
 const DashboardPage = () => {
   const { user } = useAuth();
 
   const getStatsForRole = () => {
     switch (user?.role) {
-      case 'admin':
+      case ROLE_NAME.ADMIN:
         return [
           { label: 'Tổng số trường', value: '156', icon: School, color: 'bg-blue-500', trend: '+12 tháng này' },
           { label: 'Lễ hội tổng', value: '234', icon: Calendar, color: 'bg-green-500', trend: '+18 mới' },
           { label: 'Người dùng hoạt động', value: '12.5K', icon: Users, color: 'bg-purple-500', trend: '+8.5%' },
           { label: 'Doanh thu hệ thống', value: '2.8B', icon: TrendingUp, color: 'bg-orange-500', trend: '+23%' }
         ];
-      case 'school_manager':
+      case ROLE_NAME.SCHOOL_MANAGER:
         return [
           { label: 'Lễ hội đang tổ chức', value: '2', icon: Calendar, color: 'bg-blue-500', trend: '+1 tuần này' },
           { label: 'Gian hàng hoạt động', value: '18', icon: ShoppingCart, color: 'bg-green-500', trend: '+3 mới' },
           { label: 'Nhóm học sinh', value: '12', icon: Users, color: 'bg-purple-500', trend: '+2 nhóm' },
           { label: 'Doanh thu', value: '25.6M', icon: TrendingUp, color: 'bg-orange-500', trend: '+15%' }
         ];
-      case 'teacher':
+      case ROLE_NAME.TEACHER:
         return [
           { label: 'Nhóm đang quản lý', value: '3', icon: Users, color: 'bg-blue-500', trend: 'Hoạt động tốt' },
           { label: 'Gian hàng cần duyệt', value: '2', icon: Clock, color: 'bg-yellow-500', trend: 'Chờ xử lý' },
           { label: 'Lễ hội tham gia', value: '1', icon: Calendar, color: 'bg-green-500', trend: 'Đang diễn ra' },
           { label: 'Học sinh tham gia', value: '18', icon: School, color: 'bg-purple-500', trend: '+6 mới' }
         ];
-      case 'student':
+      case ROLE_NAME.STUDENT:
         return [
           { label: 'Điểm tích lũy', value: '1,250', icon: Star, color: 'bg-yellow-500', trend: '+50 hôm nay' },
           { label: 'Đơn hàng đã mua', value: '8', icon: ShoppingCart, color: 'bg-green-500', trend: '+2 mới' },
           { label: 'Game đã chơi', value: '15', icon: Calendar, color: 'bg-blue-500', trend: '+3 game' },
           { label: 'Gian hàng yêu thích', value: '5', icon: Store, color: 'bg-purple-500', trend: 'Theo dõi' }
         ];
-      case 'supplier':
+      case ROLE_NAME.SUPPLIER:
         return [
           { label: 'Đơn hàng mới', value: '12', icon: ShoppingCart, color: 'bg-blue-500', trend: '+4 hôm nay' },
           { label: 'Nguyên liệu cung cấp', value: '45', icon: Store, color: 'bg-green-500', trend: '+3 mới' },
@@ -50,119 +51,119 @@ const DashboardPage = () => {
 
   const getRecentActivities = () => {
     switch (user?.role) {
-      case 'admin':
+      case ROLE_NAME.ADMIN:
         return [
-          { 
-            action: 'Trường THPT DEF đã đăng ký tham gia hệ thống', 
-            time: '1 giờ trước', 
+          {
+            action: 'Trường THPT DEF đã đăng ký tham gia hệ thống',
+            time: '1 giờ trước',
             type: 'success',
             icon: <School size={16} />
           },
-          { 
-            action: 'Lễ hội "Ngày Hội Khoa Học" được tạo tại TP.HCM', 
-            time: '3 giờ trước', 
+          {
+            action: 'Lễ hội "Ngày Hội Khoa Học" được tạo tại TP.HCM',
+            time: '3 giờ trước',
             type: 'info',
             icon: <Calendar size={16} />
           },
-          { 
-            action: 'Nhà cung cấp "Thực Phẩm An Toàn" được phê duyệt', 
-            time: '5 giờ trước', 
+          {
+            action: 'Nhà cung cấp "Thực Phẩm An Toàn" được phê duyệt',
+            time: '5 giờ trước',
             type: 'success',
             icon: <Store size={16} />
           },
-          { 
-            action: 'Cập nhật bảo mật hệ thống thành công', 
-            time: '1 ngày trước', 
+          {
+            action: 'Cập nhật bảo mật hệ thống thành công',
+            time: '1 ngày trước',
             type: 'info',
             icon: <Users size={16} />
           }
         ];
-      case 'school_manager':
+      case ROLE_NAME.SCHOOL_MANAGER:
         return [
-          { 
-            action: 'Gian hàng "Bánh Mì Sài Gòn" đã được phê duyệt', 
-            time: '2 giờ trước', 
+          {
+            action: 'Gian hàng "Bánh Mì Sài Gòn" đã được phê duyệt',
+            time: '2 giờ trước',
             type: 'success',
             icon: <ShoppingCart size={16} />
           },
-          { 
-            action: 'Nhóm Coffee Lovers đã đăng ký tham gia lễ hội', 
-            time: '4 giờ trước', 
+          {
+            action: 'Nhóm Coffee Lovers đã đăng ký tham gia lễ hội',
+            time: '4 giờ trước',
             type: 'info',
             icon: <Users size={16} />
           },
-          { 
-            action: 'Nhà cung cấp mới đã được duyệt tham gia', 
-            time: '1 ngày trước', 
+          {
+            action: 'Nhà cung cấp mới đã được duyệt tham gia',
+            time: '1 ngày trước',
             type: 'info',
             icon: <Store size={16} />
           },
-          { 
-            action: 'Lễ hội Ẩm Thực Xuân đã bắt đầu nhận đăng ký', 
-            time: '2 ngày trước', 
+          {
+            action: 'Lễ hội Ẩm Thực Xuân đã bắt đầu nhận đăng ký',
+            time: '2 ngày trước',
             type: 'success',
             icon: <Calendar size={16} />
           }
         ];
-      case 'teacher':
+      case ROLE_NAME.TEACHER:
         return [
-          { 
-            action: 'Nhóm 12A1 đã nộp kế hoạch gian hàng', 
-            time: '1 giờ trước', 
+          {
+            action: 'Nhóm 12A1 đã nộp kế hoạch gian hàng',
+            time: '1 giờ trước',
             type: 'info',
             icon: <Users size={16} />
           },
-          { 
-            action: 'Cần duyệt gian hàng "Trà Sữa Teen"', 
-            time: '3 giờ trước', 
+          {
+            action: 'Cần duyệt gian hàng "Trà Sữa Teen"',
+            time: '3 giờ trước',
             type: 'warning',
             icon: <Clock size={16} />
           },
-          { 
-            action: 'Học sinh Nguyễn Văn A đã tham gia nhóm', 
-            time: '5 giờ trước', 
+          {
+            action: 'Học sinh Nguyễn Văn A đã tham gia nhóm',
+            time: '5 giờ trước',
             type: 'info',
             icon: <School size={16} />
           }
         ];
-      case 'student':
+      case ROLE_NAME.STUDENT:
         return [
-          { 
-            action: 'Nhận được 50 điểm từ game "Đố vui ẩm thực"', 
-            time: '30 phút trước', 
+          {
+            action: 'Nhận được 50 điểm từ game "Đố vui ẩm thực"',
+            time: '30 phút trước',
             type: 'success',
             icon: <Star size={16} />
           },
-          { 
-            action: 'Mua bánh mì thịt nướng tại gian hàng ABC', 
-            time: '2 giờ trước', 
+          {
+            action: 'Mua bánh mì thịt nướng tại gian hàng ABC',
+            time: '2 giờ trước',
             type: 'info',
             icon: <ShoppingCart size={16} />
           },
-          { 
-            action: 'Tham gia nhóm "Coffee Lovers"', 
-            time: '1 ngày trước', 
+          {
+            action: 'Tham gia nhóm "Coffee Lovers"',
+            time: '1 ngày trước',
             type: 'info',
             icon: <Users size={16} />
           }
         ];
-      case 'supplier':
+      case ROLE_NAME.SUPPLIER:
         return [
-          { 
-            action: 'Nhận đơn hàng 50kg thịt bò từ gian hàng XYZ', 
-            time: '1 giờ trước', 
+          {
+            action: 'Nhận đơn hàng 50kg thịt bò từ gian hàng XYZ',
+            time: '1 giờ trước',
             type: 'success',
             icon: <ShoppingCart size={16} />
           },
-          { 
-            action: 'Cập nhật giá nguyên liệu tháng 3', 
-            time: '4 giờ trước', 
+          {
+            action: 'Cập nhật giá nguyên liệu tháng 3',
+            time: '4 giờ trước',
             type: 'info',
             icon: <Store size={16} />
           },
-          { 
-            action: 'Đăng ký tham gia lễ hội mới', 
-            time: '2 ngày trước', 
+          {
+            action: 'Đăng ký tham gia lễ hội mới',
+            time: '2 ngày trước',
             type: 'info',
             icon: <Calendar size={16} />
           }
@@ -225,11 +226,10 @@ const DashboardPage = () => {
             <div className="space-y-4">
               {activities.map((activity, index) => (
                 <div key={index} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
-                  <div className={`p-2 rounded-lg ${
-                    activity.type === 'success' ? 'bg-green-100 text-green-600' :
-                    activity.type === 'warning' ? 'bg-yellow-100 text-yellow-600' :
-                    'bg-blue-100 text-blue-600'
-                  }`}>
+                  <div className={`p-2 rounded-lg ${activity.type === 'success' ? 'bg-green-100 text-green-600' :
+                      activity.type === 'warning' ? 'bg-yellow-100 text-yellow-600' :
+                        'bg-blue-100 text-blue-600'
+                    }`}>
                     {activity.icon}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -247,9 +247,9 @@ const DashboardPage = () => {
               <div className="space-y-4">
                 {mockFestivals.filter(f => f.status === 'published').slice(0, 2).map(festival => (
                   <div key={festival.id} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
-                    <img 
-                      src={festival.image_url} 
-                      alt={festival.festival_name} 
+                    <img
+                      src={festival.image_url}
+                      alt={festival.festival_name}
                       className="w-16 h-16 rounded-lg object-cover"
                     />
                     <div className="flex-1">

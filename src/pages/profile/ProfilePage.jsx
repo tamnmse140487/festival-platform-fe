@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Card from '../../components/common/Card';
+import { getRoleDisplayName } from '../../utils/helpers';
 
 const ProfilePage = () => {
   const { user } = useAuth();
@@ -32,18 +33,6 @@ const ProfilePage = () => {
     setProfileData(prev => ({ ...prev, [field]: value }));
   };
 
-  const getRoleDisplayName = (role) => {
-    const roleNames = {
-      'admin': 'Quản trị viên',
-      'school_manager': 'Quản lý trường',
-      'teacher': 'Giáo viên',
-      'student': 'Học sinh',
-      'supplier': 'Nhà cung cấp',
-      'guest': 'Khách'
-    };
-    return roleNames[role] || 'Người dùng';
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -68,7 +57,7 @@ const ProfilePage = () => {
                     <Camera size={16} />
                   </button>
                 </div>
-                
+
                 <h3 className="text-lg font-semibold text-gray-900 mb-1">
                   {user?.full_name}
                 </h3>
@@ -78,7 +67,7 @@ const ProfilePage = () => {
                 <p className="text-gray-500 text-xs">
                   {user?.school?.school_name || user?.company?.company_name || user?.organization?.name}
                 </p>
-                
+
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <div className="text-center">
                     <p className="text-xs text-gray-500">Tham gia từ</p>
@@ -100,11 +89,10 @@ const ProfilePage = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                      activeTab === tab.id
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
+                    className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                      }`}
                   >
                     {tab.icon}
                     <span className="ml-2">{tab.label}</span>
@@ -115,7 +103,7 @@ const ProfilePage = () => {
 
             <Card.Content>
               {activeTab === 'profile' && (
-                <ProfileTab 
+                <ProfileTab
                   profileData={profileData}
                   isEditing={isEditing}
                   onEdit={() => setIsEditing(true)}
@@ -189,11 +177,7 @@ const ProfileTab = ({ profileData, isEditing, onEdit, onSave, onCancel, onChange
           <div className="flex items-center space-x-2 px-4 py-2 bg-gray-50 rounded-lg">
             <Shield size={20} className="text-gray-400" />
             <span className="text-gray-700">
-              {user?.role === 'admin' && 'Quản trị viên'}
-              {user?.role === 'school_manager' && 'Quản lý trường'}
-              {user?.role === 'teacher' && 'Giáo viên'}
-              {user?.role === 'student' && 'Học sinh'}
-              {user?.role === 'supplier' && 'Nhà cung cấp'}
+              {getRoleDisplayName(user?.role)}
             </span>
           </div>
         </div>
@@ -368,9 +352,9 @@ const NotificationsTab = () => {
               <p className="text-sm text-gray-600">{setting.description}</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                className="sr-only peer" 
+              <input
+                type="checkbox"
+                className="sr-only peer"
                 defaultChecked={setting.enabled}
               />
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>

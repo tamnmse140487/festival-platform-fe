@@ -6,6 +6,7 @@ import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Card from '../../components/common/Card';
 import Modal from '../../components/common/Modal';
+import { ROLE_NAME } from '../../utils/constants';
 
 const StudentGroupPage = () => {
   const { user, hasRole } = useAuth();
@@ -33,14 +34,14 @@ const StudentGroupPage = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Quản lý Nhóm học sinh</h1>
           <p className="text-gray-600 mt-1">
-            {hasRole(['school_manager']) 
+            {hasRole([ROLE_NAME.SCHOOL_MANAGER]) 
               ? 'Quản lý tất cả nhóm học sinh trong trường.' 
               : 'Quản lý các nhóm học sinh được phân công.'
             }
           </p>
         </div>
         
-        {hasRole(['school_manager', 'teacher']) && (
+        {hasRole([ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER]) && (
           <Button 
             icon={<Plus size={20} />}
             onClick={() => setShowCreateModal(true)}
@@ -85,7 +86,7 @@ const StudentGroupPage = () => {
                   : 'Chưa có nhóm học sinh nào được tạo.'
                 }
               </p>
-              {hasRole(['school_manager', 'teacher']) && (
+              {hasRole([ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER]) && (
                 <Button 
                   onClick={() => setShowCreateModal(true)}
                   icon={<Plus size={16} />}
@@ -101,7 +102,7 @@ const StudentGroupPage = () => {
                   key={group.id} 
                   group={group} 
                   onViewDetails={handleViewDetails}
-                  hasManagePermission={hasRole(['school_manager', 'teacher'])}
+                  hasManagePermission={hasRole([ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER])}
                 />
               ))}
             </div>

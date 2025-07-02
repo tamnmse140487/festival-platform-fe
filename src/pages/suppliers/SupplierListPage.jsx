@@ -1,42 +1,132 @@
-import React, { useState } from 'react';
-import { Plus, Search, Eye, Store, Star, Package, TrendingUp, Phone, Mail } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Search, Eye, Store, Star, Package, TrendingUp, Phone, Mail, Check, X, Clock } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { mockSuppliers, mockIngredients } from '../../data/mockData';
+import { supplierServices } from '../../services/supplierServices';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Card from '../../components/common/Card';
 import Modal from '../../components/common/Modal';
+import { ROLE_NAME } from '../../utils/constants';
+import { toast } from 'react-hot-toast';
 
 const SupplierListPage = () => {
   const { hasRole } = useAuth();
+  const [suppliers, setSuppliers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [updatingSupplier, setUpdatingSupplier] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('rating');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('createdAt');
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
   const categories = [
     { value: 'all', label: 'Tất cả danh mục' },
-    { value: 'Rau củ quả tươi', label: 'Rau củ quả tươi' },
-    { value: 'Gia vị và đồ ướp', label: 'Gia vị và đồ ướp' },
-    { value: 'Thịt tươi sống', label: 'Thịt tươi sống' },
-    { value: 'Đồ khô', label: 'Đồ khô' },
-    { value: 'Gia công', label: 'Thực phẩm gia công' }
+    { value: 'food', label: 'Thực phẩm & Đồ uống' },
+    { value: 'decoration', label: 'Trang trí' },
+    { value: 'sound', label: 'Âm thanh & Ánh sáng' },
+    { value: 'entertainment', label: 'Giải trí' },
+    { value: 'security', label: 'Bảo vệ' },
+    { value: 'other', label: 'Khác' }
   ];
 
-  const filteredSuppliers = mockSuppliers
+  const statusOptions = [
+    { value: 'all', label: 'Tất cả trạng thái' },
+    { value: 'pending', label: 'Chờ duyệt' },
+    { value: 'approved', label: 'Đã duyệt' },
+    { value: 'rejected', label: 'Từ chối' }
+  ];
+
+  useEffect(() => {
+    fetchSuppliers();
+  }, []);
+
+  const fetchSuppliers = async () => {
+    try {
+      setLoading(true);
+      const response = await supplierServices.get();
+      setSuppliers(response.data || []);
+    } catch (error) {
+      console.error('Error fetching suppliers:', error);
+      toast.error('Không thể tải danh sách nhà cung cấp');
+      setSuppliers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStatusUpdate = async (supplierId, newStatus) => {
+    try {
+      setUpdatingSupplier(supplierId);
+      await supplierServices.update({ 
+        supplierId: supplierId, 
+        status: newStatus 
+      });
+      
+      setSuppliers(prev => prev.map(supplier => 
+        supplier.supplierId === supplierId 
+          ? { ...supplier, status: newStatus }
+          : supplier
+      ));
+      
+      toast.success(`Đã ${newStatus === 'approved' ? 'phê duyệt' : 'từ chối'} nhà cung cấp`);
+    } catch (error) {
+      console.error('Error updating supplier status:', error);
+      toast.error('Có lỗi xảy ra khi cập nhật trạng thái');
+    } finally {
+      setUpdatingSupplier(null);
+    }
+  };
+
+  const getStatusConfig = (status) => {
+    switch (status) {
+      case 'pending':
+        return { 
+          label: 'Chờ duyệt', 
+          color: 'bg-yellow-100 text-yellow-800',
+          icon: <Clock size={14} />
+        };
+      case 'approved':
+        return { 
+          label: 'Đã duyệt', 
+          color: 'bg-green-100 text-green-800',
+          icon: <Check size={14} />
+        };
+      case 'rejected':
+        return { 
+          label: 'Từ chối', 
+          color: 'bg-red-100 text-red-800',
+          icon: <X size={14} />
+        };
+      default:
+        return { 
+          label: status, 
+          color: 'bg-gray-100 text-gray-800',
+          icon: null
+        };
+    }
+  };
+
+  const filteredSuppliers = suppliers
     .filter(supplier => {
-      const matchesSearch = supplier.company_name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = supplier.companyName.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = categoryFilter === 'all' || supplier.category === categoryFilter;
-      return matchesSearch && matchesCategory;
+      const matchesStatus = statusFilter === 'all' || supplier.status === statusFilter;
+      return matchesSearch && matchesCategory && matchesStatus;
     })
     .sort((a, b) => {
       switch (sortBy) {
-        case 'rating': return b.rating - a.rating;
-        case 'name': return a.company_name.localeCompare(b.company_name);
-        case 'orders': return b.total_orders - a.total_orders;
-        case 'ingredients': return b.total_ingredients - a.total_ingredients;
-        default: return 0;
+        case 'companyName': 
+          return a.companyName.localeCompare(b.companyName);
+        case 'createdAt': 
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        case 'rating': 
+          return (b.rating || 0) - (a.rating || 0);
+        case 'status':
+          return a.status.localeCompare(b.status);
+        default: 
+          return 0;
       }
     });
 
@@ -45,28 +135,33 @@ const SupplierListPage = () => {
     setShowModal(true);
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Quản lý Nhà cung cấp</h1>
           <p className="text-gray-600">
-            {hasRole(['admin', 'school_manager'])
+            {hasRole([ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER])
               ? 'Quản lý và theo dõi các nhà cung cấp nguyên liệu.'
               : 'Xem thông tin các nhà cung cấp trong hệ thống.'
             }
           </p>
         </div>
-        {hasRole(['admin', 'school_manager']) && (
-          <Button icon={<Plus size={20} />}>Thêm nhà cung cấp</Button>
-        )}
       </div>
 
       <Card>
         <Card.Content>
           <div className="flex flex-col md:flex-row gap-4">
             <Input
-              placeholder="Tìm kiếm..."
+              placeholder="Tìm kiếm tên công ty..."
               leftIcon={<Search size={20} />}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -82,24 +177,35 @@ const SupplierListPage = () => {
             </select>
             <select
               className="border rounded px-3 py-2"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              {statusOptions.map(status => (
+                <option key={status.value} value={status.value}>{status.label}</option>
+              ))}
+            </select>
+            <select
+              className="border rounded px-3 py-2"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
             >
+              <option value="createdAt">Mới nhất</option>
+              <option value="companyName">Tên A-Z</option>
               <option value="rating">Đánh giá cao</option>
-              <option value="name">Tên A-Z</option>
-              <option value="orders">Nhiều đơn hàng</option>
-              <option value="ingredients">Nhiều nguyên liệu</option>
+              <option value="status">Trạng thái</option>
             </select>
           </div>
 
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredSuppliers.length > 0 ? (
               filteredSuppliers.map(supplier => (
                 <SupplierCard
-                  key={supplier.id}
+                  key={supplier.supplierId}
                   supplier={supplier}
                   onViewDetails={() => handleViewDetails(supplier)}
-                  canManage={hasRole(['admin', 'school_manager'])}
+                  onStatusUpdate={handleStatusUpdate}
+                  getStatusConfig={getStatusConfig}
+                  updatingSupplier={updatingSupplier}
                 />
               ))
             ) : (
@@ -121,6 +227,7 @@ const SupplierListPage = () => {
           <SupplierDetailModal
             supplier={selectedSupplier}
             onClose={() => setShowModal(false)}
+            getStatusConfig={getStatusConfig}
           />
         )}
       </Modal>
@@ -128,8 +235,10 @@ const SupplierListPage = () => {
   );
 };
 
-const SupplierCard = ({ supplier, onViewDetails, canManage }) => {
-  const ingredients = mockIngredients.filter(ing => ing.supplier_id === supplier.id);
+const SupplierCard = ({ supplier, onViewDetails, onStatusUpdate, getStatusConfig, updatingSupplier }) => {
+  const { hasRole } = useAuth();
+  const statusConfig = getStatusConfig(supplier.status);
+  const isUpdating = updatingSupplier === supplier.supplierId;
 
   return (
     <Card hover>
@@ -139,58 +248,120 @@ const SupplierCard = ({ supplier, onViewDetails, canManage }) => {
             <Store className="text-blue-600" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-gray-900">{supplier.company_name}</h3>
-            <p className="text-sm text-gray-500">{supplier.category}</p>
-            <div className="flex text-xs text-gray-500 mt-2 space-x-4">
-              <span><Star className="inline h-3 w-3 text-yellow-400 mr-1" />{supplier.rating}</span>
-              <span><Package className="inline h-3 w-3 mr-1" />{supplier.total_ingredients} nguyên liệu</span>
-              <span><TrendingUp className="inline h-3 w-3 mr-1" />{supplier.total_orders} đơn hàng</span>
+            <h3 className="font-semibold text-gray-900">{supplier.companyName}</h3>
+            <p className="text-sm text-gray-500 capitalize">{supplier.category}</p>
+            <div className="flex items-center mt-2">
+              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusConfig.color}`}>
+                {statusConfig.icon && <span className="mr-1">{statusConfig.icon}</span>}
+                {statusConfig.label}
+              </span>
             </div>
           </div>
         </div>
 
         <div className="text-sm text-gray-600 space-y-1 mb-4">
-          <div><Phone className="inline h-4 w-4 mr-1 text-gray-400" />{supplier.account?.phone_number}</div>
-          <div><Mail className="inline h-4 w-4 mr-1 text-gray-400" />{supplier.account?.email}</div>
+          <div><Phone className="inline h-4 w-4 mr-1 text-gray-400" />{supplier.contactInfo}</div>
+          <div className="truncate"><Mail className="inline h-4 w-4 mr-1 text-gray-400" />{supplier.businessLicense}</div>
+          <div className="text-xs text-gray-500">
+            Đăng ký: {new Date(supplier.createdAt).toLocaleDateString('vi-VN')}
+          </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="space-y-2">
           <Button size="sm" variant="outline" fullWidth onClick={onViewDetails} icon={<Eye size={16} />}>
             Chi tiết
           </Button>
-          {canManage && <Button size="sm" fullWidth>Quản lý</Button>}
+          
+          {hasRole([ROLE_NAME.ADMIN]) && supplier.status === 'pending' && (
+            <div className="flex gap-2">
+              <Button 
+                size="sm" 
+                variant="success" 
+                fullWidth 
+                disabled={isUpdating}
+                onClick={() => onStatusUpdate(supplier.supplierId, 'approved')}
+                icon={isUpdating ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <Check size={16} />
+                )}
+              >
+                {isUpdating ? 'Đang xử lý...' : 'Duyệt'}
+              </Button>
+              <Button 
+                size="sm" 
+                variant="danger" 
+                fullWidth 
+                disabled={isUpdating}
+                onClick={() => onStatusUpdate(supplier.supplierId, 'rejected')}
+                icon={isUpdating ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <X size={16} />
+                )}
+              >
+                {isUpdating ? 'Đang xử lý...' : 'Từ chối'}
+              </Button>
+            </div>
+          )}
         </div>
       </Card.Content>
     </Card>
   );
 };
 
-const SupplierDetailModal = ({ supplier, onClose }) => {
-  const ingredients = mockIngredients.filter(ing => ing.supplier_id === supplier.id);
+const SupplierDetailModal = ({ supplier, onClose, getStatusConfig }) => {
+  const statusConfig = getStatusConfig(supplier.status);
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900">{supplier.company_name}</h3>
-      <div className="text-sm space-y-1">
-        <p><strong>Danh mục:</strong> {supplier.category}</p>
-        <p><strong>Đánh giá:</strong> {supplier.rating}/5</p>
-        <p><strong>Địa chỉ:</strong> {supplier.address}</p>
+      <div className="flex justify-between items-start">
+        <h3 className="text-lg font-semibold text-gray-900">{supplier.companyName}</h3>
+        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusConfig.color}`}>
+          {statusConfig.icon && <span className="mr-1">{statusConfig.icon}</span>}
+          {statusConfig.label}
+        </span>
       </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div className="space-y-2">
+          <p><strong>Danh mục:</strong> <span className="capitalize">{supplier.category}</span></p>
+          <p><strong>Giấy phép KD:</strong> {supplier.businessLicense}</p>
+          <p><strong>Địa chỉ:</strong> {supplier.address}</p>
+          <p><strong>Liên hệ:</strong> {supplier.contactInfo}</p>
+        </div>
+        <div className="space-y-2">
+          <p><strong>Đánh giá:</strong> {supplier.rating ? `${supplier.rating}/5` : 'Chưa có'}</p>
+          <p><strong>Ngày đăng ký:</strong> {new Date(supplier.createdAt).toLocaleDateString('vi-VN')}</p>
+          {supplier.updatedAt && (
+            <p><strong>Cập nhật:</strong> {new Date(supplier.updatedAt).toLocaleDateString('vi-VN')}</p>
+          )}
+        </div>
+      </div>
+
+      {supplier.note && (
+        <div className="border-t pt-4">
+          <h4 className="font-medium text-gray-800 mb-2">Ghi chú</h4>
+          <p className="text-sm text-gray-600">{supplier.note}</p>
+        </div>
+      )}
+
       <div className="border-t pt-4">
         <h4 className="font-medium text-gray-800 mb-2">Nguyên liệu</h4>
-        {ingredients.length === 0 ? (
-          <p className="text-sm text-gray-500">Không có nguyên liệu.</p>
-        ) : (
+        {supplier.ingredients && supplier.ingredients.length > 0 ? (
           <ul className="space-y-2">
-            {ingredients.map(ing => (
-              <li key={ing.id} className="flex justify-between">
-                <span>{ing.ingredient_name}</span>
-                <span>{ing.price_per_unit.toLocaleString()}đ/{ing.unit}</span>
+            {supplier.ingredients.map((ingredient, index) => (
+              <li key={index} className="flex justify-between">
+                <span>{ingredient.name}</span>
+                <span>{ingredient.price?.toLocaleString()}đ/{ingredient.unit}</span>
               </li>
             ))}
           </ul>
+        ) : (
+          <p className="text-sm text-gray-500">Chưa có nguyên liệu nào.</p>
         )}
       </div>
+
       <div className="flex justify-end pt-4 border-t">
         <Button variant="outline" onClick={onClose}>Đóng</Button>
       </div>

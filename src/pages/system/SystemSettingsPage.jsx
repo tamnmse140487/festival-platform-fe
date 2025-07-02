@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Card from '../../components/common/Card';
+import { ROLE_NAME } from '../../utils/constants';
 
 const SystemSettingsPage = () => {
   const { hasRole } = useAuth();
@@ -19,14 +20,6 @@ const SystemSettingsPage = () => {
     { id: 'localization', label: 'Ngôn ngữ', icon: <Globe size={16} /> }
   ];
 
-  if (!hasRole(['admin'])) {
-    return (
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900">Không có quyền truy cập</h2>
-        <p className="text-gray-600 mt-2">Chỉ Admin mới có thể truy cập cài đặt hệ thống.</p>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -46,11 +39,10 @@ const SystemSettingsPage = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === tab.id
+                className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
+                  }`}
               >
                 {tab.icon}
                 <span className="ml-2">{tab.label}</span>
@@ -102,16 +94,16 @@ const GeneralSettings = ({ isLoading, setIsLoading }) => {
           <Input
             label="Tên hệ thống"
             value={settings.site_name}
-            onChange={(e) => setSettings({...settings, site_name: e.target.value})}
+            onChange={(e) => setSettings({ ...settings, site_name: e.target.value })}
           />
-          
+
           <Input
             label="Email quản trị"
             type="email"
             value={settings.admin_email}
-            onChange={(e) => setSettings({...settings, admin_email: e.target.value})}
+            onChange={(e) => setSettings({ ...settings, admin_email: e.target.value })}
           />
-          
+
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Mô tả hệ thống
@@ -120,7 +112,7 @@ const GeneralSettings = ({ isLoading, setIsLoading }) => {
               rows={3}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={settings.site_description}
-              onChange={(e) => setSettings({...settings, site_description: e.target.value})}
+              onChange={(e) => setSettings({ ...settings, site_description: e.target.value })}
             />
           </div>
         </div>
@@ -137,10 +129,10 @@ const GeneralSettings = ({ isLoading, setIsLoading }) => {
               type="number"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={settings.max_upload_size}
-              onChange={(e) => setSettings({...settings, max_upload_size: e.target.value})}
+              onChange={(e) => setSettings({ ...settings, max_upload_size: e.target.value })}
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Múi giờ
@@ -148,14 +140,14 @@ const GeneralSettings = ({ isLoading, setIsLoading }) => {
             <select
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={settings.timezone}
-              onChange={(e) => setSettings({...settings, timezone: e.target.value})}
+              onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
             >
               <option value="Asia/Ho_Chi_Minh">Việt Nam (UTC+7)</option>
               <option value="Asia/Bangkok">Bangkok (UTC+7)</option>
               <option value="Asia/Singapore">Singapore (UTC+8)</option>
             </select>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Định dạng ngày
@@ -163,14 +155,14 @@ const GeneralSettings = ({ isLoading, setIsLoading }) => {
             <select
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={settings.date_format}
-              onChange={(e) => setSettings({...settings, date_format: e.target.value})}
+              onChange={(e) => setSettings({ ...settings, date_format: e.target.value })}
             >
               <option value="dd/MM/yyyy">dd/MM/yyyy</option>
               <option value="MM/dd/yyyy">MM/dd/yyyy</option>
               <option value="yyyy-MM-dd">yyyy-MM-dd</option>
             </select>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Đơn vị tiền tệ
@@ -178,7 +170,7 @@ const GeneralSettings = ({ isLoading, setIsLoading }) => {
             <select
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={settings.currency}
-              onChange={(e) => setSettings({...settings, currency: e.target.value})}
+              onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
             >
               <option value="VND">Việt Nam Đồng (VND)</option>
               <option value="USD">US Dollar (USD)</option>
@@ -196,11 +188,11 @@ const GeneralSettings = ({ isLoading, setIsLoading }) => {
             <p className="text-sm text-gray-600">Hệ thống sẽ hiển thị trang bảo trì cho tất cả người dùng</p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
-            <input 
-              type="checkbox" 
-              className="sr-only peer" 
+            <input
+              type="checkbox"
+              className="sr-only peer"
               checked={settings.maintenance_mode}
-              onChange={(e) => setSettings({...settings, maintenance_mode: e.target.checked})}
+              onChange={(e) => setSettings({ ...settings, maintenance_mode: e.target.checked })}
             />
             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
           </label>
@@ -243,12 +235,12 @@ const DatabaseSettings = ({ isLoading, setIsLoading }) => {
             <div className="text-2xl font-bold text-green-600 mb-2">Hoạt động</div>
             <div className="text-green-800 font-medium">Kết nối DB</div>
           </div>
-          
+
           <div className="text-center p-6 bg-blue-50 rounded-lg">
             <div className="text-2xl font-bold text-blue-600 mb-2">2.4 GB</div>
             <div className="text-blue-800 font-medium">Kích thước DB</div>
           </div>
-          
+
           <div className="text-center p-6 bg-purple-50 rounded-lg">
             <div className="text-2xl font-bold text-purple-600 mb-2">15,432</div>
             <div className="text-purple-800 font-medium">Tổng bản ghi</div>
@@ -266,7 +258,7 @@ const DatabaseSettings = ({ isLoading, setIsLoading }) => {
                 <p className="text-sm text-gray-600">{backupStatus.last_backup}</p>
                 <p className="text-sm text-gray-600">Kích thước: {backupStatus.backup_size}</p>
               </div>
-              <Button 
+              <Button
                 onClick={handleBackup}
                 loading={isLoading}
                 icon={<Database size={16} />}
@@ -283,16 +275,16 @@ const DatabaseSettings = ({ isLoading, setIsLoading }) => {
                 <p className="text-sm text-gray-600">Sao lưu dữ liệu theo lịch trình</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  className="sr-only peer" 
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
                   checked={backupStatus.auto_backup}
-                  onChange={(e) => setBackupStatus({...backupStatus, auto_backup: e.target.checked})}
+                  onChange={(e) => setBackupStatus({ ...backupStatus, auto_backup: e.target.checked })}
                 />
                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
               </label>
             </div>
-            
+
             {backupStatus.auto_backup && (
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -301,7 +293,7 @@ const DatabaseSettings = ({ isLoading, setIsLoading }) => {
                 <select
                   className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={backupStatus.backup_frequency}
-                  onChange={(e) => setBackupStatus({...backupStatus, backup_frequency: e.target.value})}
+                  onChange={(e) => setBackupStatus({ ...backupStatus, backup_frequency: e.target.value })}
                 >
                   <option value="hourly">Mỗi giờ</option>
                   <option value="daily">Hằng ngày</option>
@@ -341,7 +333,7 @@ const SecuritySettings = ({ isLoading, setIsLoading }) => {
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Cài đặt bảo mật</h3>
-        
+
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
             <div>
@@ -349,11 +341,11 @@ const SecuritySettings = ({ isLoading, setIsLoading }) => {
               <p className="text-sm text-gray-600">Yêu cầu tất cả người dùng bật 2FA</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                className="sr-only peer" 
+              <input
+                type="checkbox"
+                className="sr-only peer"
                 checked={securitySettings.require_2fa}
-                onChange={(e) => setSecuritySettings({...securitySettings, require_2fa: e.target.checked})}
+                onChange={(e) => setSecuritySettings({ ...securitySettings, require_2fa: e.target.checked })}
               />
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
             </label>
@@ -368,10 +360,10 @@ const SecuritySettings = ({ isLoading, setIsLoading }) => {
                 type="number"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={securitySettings.session_timeout}
-                onChange={(e) => setSecuritySettings({...securitySettings, session_timeout: e.target.value})}
+                onChange={(e) => setSecuritySettings({ ...securitySettings, session_timeout: e.target.value })}
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Độ dài mật khẩu tối thiểu
@@ -380,10 +372,10 @@ const SecuritySettings = ({ isLoading, setIsLoading }) => {
                 type="number"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={securitySettings.password_min_length}
-                onChange={(e) => setSecuritySettings({...securitySettings, password_min_length: e.target.value})}
+                onChange={(e) => setSecuritySettings({ ...securitySettings, password_min_length: e.target.value })}
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Số lần đăng nhập sai tối đa
@@ -392,10 +384,10 @@ const SecuritySettings = ({ isLoading, setIsLoading }) => {
                 type="number"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={securitySettings.max_login_attempts}
-                onChange={(e) => setSecuritySettings({...securitySettings, max_login_attempts: e.target.value})}
+                onChange={(e) => setSecuritySettings({ ...securitySettings, max_login_attempts: e.target.value })}
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Thời gian khóa tài khoản (phút)
@@ -404,7 +396,7 @@ const SecuritySettings = ({ isLoading, setIsLoading }) => {
                 type="number"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={securitySettings.lockout_duration}
-                onChange={(e) => setSecuritySettings({...securitySettings, lockout_duration: e.target.value})}
+                onChange={(e) => setSecuritySettings({ ...securitySettings, lockout_duration: e.target.value })}
               />
             </div>
           </div>
@@ -417,7 +409,7 @@ const SecuritySettings = ({ isLoading, setIsLoading }) => {
               type="number"
               className="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={securitySettings.api_rate_limit}
-              onChange={(e) => setSecuritySettings({...securitySettings, api_rate_limit: e.target.value})}
+              onChange={(e) => setSecuritySettings({ ...securitySettings, api_rate_limit: e.target.value })}
             />
           </div>
         </div>

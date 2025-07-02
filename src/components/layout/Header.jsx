@@ -1,6 +1,7 @@
 import React from 'react';
 import { Menu, Bell, User } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { getRoleDisplayName } from '../../utils/helpers';
 
 const Header = ({ onMenuClick }) => {
   const { user } = useAuth();
@@ -42,16 +43,5 @@ const Header = ({ onMenuClick }) => {
   );
 };
 
-const getRoleDisplayName = (role) => {
-  const roleNames = {
-    'admin': 'Quản trị viên',
-    'school_manager': 'Quản lý trường',
-    'teacher': 'Giáo viên',
-    'student': 'Học sinh',
-    'supplier': 'Nhà cung cấp',
-    'guest': 'Khách'
-  };
-  return roleNames[role] || 'Người dùng';
-};
 
 export default Header;
