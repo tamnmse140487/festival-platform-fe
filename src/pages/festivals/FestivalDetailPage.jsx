@@ -11,7 +11,8 @@ import {
   Store,
   Trophy,
   Clock,
-  CheckCircle
+  CheckCircle,
+  Image as ImageIcon
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
@@ -21,6 +22,7 @@ import { festivalMapServices } from '../../services/festivalMapServices';
 import { mapLocationServices } from '../../services/mapLocationServices';
 import { festivalMenuServices } from '../../services/festivalMenuServices';
 import { menuItemServices } from '../../services/menuItemServices';
+import { imageServices } from '../../services/imageServices';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Modal from '../../components/common/Modal';
@@ -28,9 +30,43 @@ import { ROLE_NAME } from '../../utils/constants';
 
 const FestivalDetailPage = () => {
   const { id } = useParams();
+
+const ImagesTab = ({ festivalImages }) => (
+  <div className="space-y-6">
+    <Card>
+      <Card.Header>
+        <Card.Title>Hình ảnh lễ hội</Card.Title>
+        <Card.Description>Tất cả hình ảnh của lễ hội</Card.Description>
+      </Card.Header>
+      <Card.Content>
+        {festivalImages.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {festivalImages.map((image, index) => (
+              <div key={image.id || index} className="relative group">
+                <img
+                  src={image.imageUrl}
+                  alt={image.imageName || `Festival image ${index + 1}`}
+                  className="w-full h-48 object-cover rounded-lg transition-transform group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity rounded-lg" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <ImageIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có hình ảnh</h3>
+            <p className="text-gray-600">Lễ hội chưa có hình ảnh nào được tải lên.</p>
+          </div>
+        )}
+      </Card.Content>
+    </Card>
+  </div>
+);
   const navigate = useNavigate();
   const { user, hasRole } = useAuth();
   const [festival, setFestival] = useState(null);
+  const [festivalImages, setFestivalImages] = useState([]);
   const [festivalMap, setFestivalMap] = useState(null);
   const [mapLocations, setMapLocations] = useState([]);
   const [festivalMenu, setFestivalMenu] = useState(null);
@@ -50,16 +86,22 @@ const FestivalDetailPage = () => {
       
       const [
         festivalResponse,
+        festivalImagesResponse,
         mapResponse,
         menuResponse
       ] = await Promise.all([
         festivalServices.get({ id: parseInt(id) }),
+        imageServices.get({ festivalId: parseInt(id) }),
         festivalMapServices.get({ festivalId: parseInt(id) }),
         festivalMenuServices.get({ festivalId: parseInt(id) })
       ]);
 
       if (festivalResponse.data && festivalResponse.data.length > 0) {
         setFestival(festivalResponse.data[0]);
+      }
+
+      if (festivalImagesResponse.data) {
+        setFestivalImages(festivalImagesResponse.data);
       }
 
       if (mapResponse.data && mapResponse.data.length > 0) {
@@ -152,6 +194,7 @@ const FestivalDetailPage = () => {
 
   const tabs = [
     { id: 'overview', label: 'Tổng quan', icon: <Calendar size={16} /> },
+    { id: 'images', label: 'Hình ảnh', icon: <ImageIcon size={16} /> },
     { id: 'map', label: 'Bản đồ', icon: <MapPin size={16} /> },
     { id: 'menu', label: 'Thực đơn', icon: <ShoppingCart size={16} /> }
   ];
@@ -187,7 +230,7 @@ const FestivalDetailPage = () => {
       <Card className="overflow-hidden">
         <div className="relative h-64 lg:h-80">
           <img
-            src={festival.imageUrl || '/api/placeholder/800/400'}
+            src={festivalImages.length > 0 ? festivalImages[0].imageUrl : '/api/placeholder/800/400'}
             alt={festival.festivalName}
             className="w-full h-full object-cover"
           />
@@ -230,6 +273,7 @@ const FestivalDetailPage = () => {
           </div>
 
           {activeTab === 'overview' && <OverviewTab festival={festival} />}
+          {activeTab === 'images' && <ImagesTab festivalImages={festivalImages} />}
           {activeTab === 'map' && <MapTab festivalMap={festivalMap} mapLocations={mapLocations} />}
           {activeTab === 'menu' && <MenuTab festivalMenu={festivalMenu} menuItems={menuItems} />}
         </div>

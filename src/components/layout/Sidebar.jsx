@@ -57,6 +57,13 @@ const Sidebar = ({ isOpen, onClose }) => {
       roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER]
     },
     {
+      id: 'my-groups',
+      label: 'Nhóm cá nhân',
+      icon: Users,
+      path: '/app/my-groups',
+      roles: [ROLE_NAME.STUDENT]
+    },
+    {
       id: 'booths',
       label: 'Gian hàng',
       icon: ShoppingCart,
@@ -147,10 +154,10 @@ const Sidebar = ({ isOpen, onClose }) => {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 truncate">
-              {user?.full_name || user?.name}
+              {user?.fullName}
             </p>
             <p className="text-xs text-gray-500 truncate">
-              {user?.school?.school_name || 'Festival Hub'}
+              {user?.schoolName || user?.companyName || 'Festival Hub'}
             </p>
           </div>
         </div>

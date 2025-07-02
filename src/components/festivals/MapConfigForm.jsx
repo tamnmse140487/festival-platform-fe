@@ -1,10 +1,11 @@
 import React from 'react';
-import { Map, Plus, Trash2 } from 'lucide-react';
+import { Map, Plus, Trash2, Upload } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import Input from '../common/Input';
 import Button from '../common/Button';
 import Card from '../common/Card';
 
-const MapConfigForm = ({ register, errors, mapLocations, setMapLocations }) => {
+const MapConfigForm = ({ register, errors, mapLocations, setMapLocations, selectedMapImage, previewMapImage, onMapImageChange }) => {
   const addLocation = () => {
     setMapLocations([...mapLocations, { locationName: '', locationType: 'booth', coordinates: '' }]);
   };
@@ -20,6 +21,24 @@ const MapConfigForm = ({ register, errors, mapLocations, setMapLocations }) => {
       i === index ? { ...location, [field]: value } : location
     );
     setMapLocations(updated);
+  };
+
+  const handleMapImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Kích thước ảnh không được vượt quá 5MB');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (e) => onMapImageChange(file, e.target.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeMapImage = () => {
+    onMapImageChange(null, null);
   };
 
   return (
@@ -59,6 +78,47 @@ const MapConfigForm = ({ register, errors, mapLocations, setMapLocations }) => {
                 <p className="mt-1 text-sm text-red-600">{errors.mapType.message}</p>
               )}
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Ảnh bản đồ
+            </label>
+            {previewMapImage ? (
+              <div className="relative">
+                <img
+                  src={previewMapImage}
+                  alt="Map Preview"
+                  className="w-full h-48 object-cover rounded-lg"
+                />
+                <button
+                  type="button"
+                  onClick={removeMapImage}
+                  className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                >
+                  ×
+                </button>
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                <div className="mt-4">
+                  <label htmlFor="map-image-upload" className="cursor-pointer">
+                    <span className="text-sm font-medium text-blue-600 hover:text-blue-500">
+                      Tải lên ảnh bản đồ
+                    </span>
+                    <input
+                      id="map-image-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleMapImageChange}
+                      className="hidden"
+                    />
+                  </label>
+                  <p className="text-xs text-gray-500 mt-1">PNG, JPG tối đa 5MB</p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div>

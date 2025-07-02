@@ -2,7 +2,7 @@ import React from 'react';
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import FestivalListPage from "../pages/festivals/FestivalListPage";
 import CreateFestivalPage from "../pages/festivals/CreateFestivalPage";
-import EditFestivalPage  from "../pages/festivals/EditFestivalPage";
+import EditFestivalPage from "../pages/festivals/EditFestivalPage";
 import FestivalDetailPage from "../pages/festivals/FestivalDetailPage";
 import SupplierListPage from "../pages/suppliers/SupplierListPage";
 import StudentGroupPage from "../pages/groups/StudentGroupPage";
@@ -16,6 +16,7 @@ import SchoolListPage from "../pages/schools/SchoolListPage";
 import SystemSettingsPage from "../pages/system/SystemSettingsPage";
 import IngredientPage from "../pages/ingredient/IngredientPage";
 import { ROLE_NAME } from '../utils/constants';
+import MyStudentGroupPage from '../pages/groups/MyStudentGroupPage';
 
 export const protectedRoutes = [
   // Dashboard
@@ -58,7 +59,12 @@ export const protectedRoutes = [
   {
     path: "/app/groups",
     element: <StudentGroupPage />,
-    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER]
+    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
+  },
+  {
+    path: "/app/my-groups",
+    element: <MyStudentGroupPage />,
+    roles: [ROLE_NAME.STUDENT]
   },
 
   // Booths

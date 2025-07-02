@@ -10,22 +10,23 @@ import { festivalMapServices } from '../../services/festivalMapServices';
 import { mapLocationServices } from '../../services/mapLocationServices';
 import { festivalMenuServices } from '../../services/festivalMenuServices';
 import { menuItemServices } from '../../services/menuItemServices';
-import { uploadService } from '../../services/uploadServices'; 
+import { uploadService } from '../../services/uploadServices';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import BasicInfoForm from '../../components/festivals/BasicInfoForm';
 import DateTimeForm from '../../components/festivals/DateTimeForm';
 import BoothConfigForm from '../../components/festivals/BoothConfigForm';
-import ImageUploadForm from '../../components/festivals/ImageUploadForm';
+import FestivalImageUploadForm from '../../components/festivals/FestivalImageUploadForm';
 import MapConfigForm from '../../components/festivals/MapConfigForm';
-import MenuConfigForm from '../../components/festivals/MenuConfigForm'; 
+import MenuConfigForm from '../../components/festivals/MenuConfigForm';
 
 const CreateFestivalPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [previewImage, setPreviewImage] = useState(null);
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [selectedMapImage, setSelectedMapImage] = useState(null);
+  const [previewMapImage, setPreviewMapImage] = useState(null);
   const [mapLocations, setMapLocations] = useState([
     { locationName: '', locationType: 'booth', coordinates: '' }
   ]);
@@ -52,20 +53,19 @@ const CreateFestivalPage = () => {
     }
   });
 
-  const handleImageChange = (file, preview) => {
-    setSelectedImage(file);
-    setPreviewImage(preview);
+  const handleImageChange = (images) => {
+    setSelectedImages(images);
+  };
+
+  const handleMapImageChange = (file, preview) => {
+    setSelectedMapImage(file);
+    setPreviewMapImage(preview);
   };
 
   const onSubmit = async (data) => {
     setIsLoading(true);
     
     try {
-      let imageUrl = '';
-      if (selectedImage) {
-        imageUrl = await uploadService.uploadImage(selectedImage, 'festivals');
-      }
-
       const festivalData = {
         organizerSchoolId: user.schoolId,
         festivalName: data.festivalName,
@@ -77,23 +77,33 @@ const CreateFestivalPage = () => {
         registrationEndDate: new Date(data.registrationEndDate).toISOString(),
         location: data.location,
         maxFoodBooths: parseInt(data.maxFoodBooths) || 0,
-        maxBeverageBooths: parseInt(data.maxBeverageBooths) || 0,
-        imageUrl: imageUrl
+        maxBeverageBooths: parseInt(data.maxBeverageBooths) || 0
       };
 
       const festivalResponse = await festivalServices.create(festivalData);
       const festivalId = festivalResponse.data.id;
+
+      if (selectedImages.length > 0) {
+        for (const imageFile of selectedImages) {
+          await uploadService.uploadFestivalImage(imageFile, festivalId);
+        }
+      }
 
       await festivalSchoolServices.create({
         festivalId: festivalId,
         schoolId: user.schoolId
       });
 
+      let mapUrl = '';
+      if (selectedMapImage) {
+        mapUrl = await uploadService.uploadImage(selectedMapImage, 'maps');
+      }
+
       const mapData = {
         festivalId: festivalId,
         mapName: data.mapName,
         mapType: data.mapType,
-        mapUrl: imageUrl
+        mapUrl: mapUrl
       };
       const mapResponse = await festivalMapServices.create(mapData);
       const mapId = mapResponse.data.id;
@@ -120,13 +130,17 @@ const CreateFestivalPage = () => {
 
       for (const item of menuItems) {
         if (item.itemName.trim()) {
-          await menuItemServices.create({
+          const menuItemResponse = await menuItemServices.create({
             menuId: menuId,
             itemName: item.itemName,
             description: item.description,
             itemType: item.itemType,
             basePrice: parseFloat(item.basePrice) || 0
           });
+
+          if (item.image) {
+            await uploadService.uploadMenuItemImage(item.image, menuItemResponse.data.id);
+          }
         }
       }
 
@@ -162,11 +176,19 @@ const CreateFestivalPage = () => {
             <BasicInfoForm register={register} errors={errors} />
             <DateTimeForm register={register} errors={errors} />
             <BoothConfigForm register={register} errors={errors} watch={watch} />
+            <FestivalImageUploadForm 
+              selectedImages={selectedImages}
+              onImageChange={handleImageChange}
+            />
+
             <MapConfigForm 
               register={register} 
               errors={errors} 
               mapLocations={mapLocations}
               setMapLocations={setMapLocations}
+              selectedMapImage={selectedMapImage}
+              previewMapImage={previewMapImage}
+              onMapImageChange={handleMapImageChange}
             />
             <MenuConfigForm 
               register={register} 
@@ -177,11 +199,6 @@ const CreateFestivalPage = () => {
           </div>
 
           <div className="space-y-6">
-            <ImageUploadForm 
-              previewImage={previewImage}
-              onImageChange={handleImageChange}
-            />
-
             <Card>
               <Card.Header>
                 <Card.Title>Hành động</Card.Title>
