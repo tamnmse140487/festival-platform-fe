@@ -114,7 +114,7 @@ const StudentGroupPage = () => {
         isOpen={showDetailModal}
         onClose={() => setShowDetailModal(false)}
         title="Chi tiết nhóm học sinh"
-        size="lg"
+        size="xl"
       >
         {selectedGroup && (
           <GroupDetailModal 
