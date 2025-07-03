@@ -11,7 +11,10 @@ import {
   LogOut,
   X,
   User,
-  Settings
+  Settings,
+  ChefHat,
+  UserPen,
+  Handshake
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLE_NAME } from '../../utils/constants';
@@ -45,9 +48,23 @@ const Sidebar = ({ isOpen, onClose }) => {
     {
       id: 'ingredients',
       label: 'Quản lý nguyên liệu',
-      icon: Store,
+      icon: ChefHat,
       path: '/app/ingredients',
       roles: [ROLE_NAME.SUPPLIER, ROLE_NAME.ADMIN]
+    },
+    {
+      id: 'supplies',
+      label: 'Quản lý cung cấp',
+      icon: Handshake,
+      path: '/app/supplies',
+      roles: [ROLE_NAME.SUPPLIER, ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER]
+    },
+    {
+      id: 'accounts',
+      label: 'Quản lý tài khoản',
+      icon: UserPen,
+      path: '/app/accounts',
+      roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.ADMIN]
     },
     {
       id: 'groups',
@@ -68,7 +85,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       label: 'Gian hàng',
       icon: ShoppingCart,
       path: '/app/booths',
-      roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.STUDENT, ROLE_NAME.TEACHER]
+      roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER]
     },
     {
       id: 'games',

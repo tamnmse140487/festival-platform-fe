@@ -92,7 +92,7 @@ const CreateSchoolForm = ({ onClose, onSchoolCreated }) => {
             };
 
             const accountResponse = await accountServices.create(accountData);
-console.log(":accountResponse ",accountResponse)
+
             if (accountResponse.data && accountResponse.data.id) {
                 const schoolData = {
                     schoolName: formData.schoolName,

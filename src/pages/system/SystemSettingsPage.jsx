@@ -80,7 +80,6 @@ const GeneralSettings = ({ isLoading, setIsLoading }) => {
     setIsLoading(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Saving general settings:', settings);
     } finally {
       setIsLoading(false);
     }
@@ -220,7 +219,6 @@ const DatabaseSettings = ({ isLoading, setIsLoading }) => {
     setIsLoading(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 3000));
-      console.log('Creating backup...');
     } finally {
       setIsLoading(false);
     }
@@ -323,7 +321,6 @@ const SecuritySettings = ({ isLoading, setIsLoading }) => {
     setIsLoading(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Saving security settings:', securitySettings);
     } finally {
       setIsLoading(false);
     }

@@ -25,7 +25,6 @@ const ProfilePage = () => {
   ];
 
   const handleSave = () => {
-    console.log('Saving profile:', profileData);
     setIsEditing(false);
   };
 

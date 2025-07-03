@@ -207,3 +207,7 @@ code {
 .status-error {
   @apply bg-red-500;
 }
+
+.mt-0-important {
+  margin: 0 !important;
+}

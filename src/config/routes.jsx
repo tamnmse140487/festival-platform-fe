@@ -17,6 +17,8 @@ import SystemSettingsPage from "../pages/system/SystemSettingsPage";
 import IngredientPage from "../pages/ingredient/IngredientPage";
 import { ROLE_NAME } from '../utils/constants';
 import MyStudentGroupPage from '../pages/groups/MyStudentGroupPage';
+import AccountManagementPage from '../pages/accounts/AccountManagementPage';
+import SupplyManagementPage from '../pages/suppliers/SupplyManagementPage';
 
 export const protectedRoutes = [
   // Dashboard
@@ -48,11 +50,16 @@ export const protectedRoutes = [
     roles: []
   },
 
-  // Suppliers
+  // Supplier
   {
     path: "/app/suppliers",
     element: <SupplierListPage />,
     roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.SUPPLIER]
+  },
+  {
+    path: "/app/supplies",
+    element: <SupplyManagementPage />,
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPPLIER, ROLE_NAME.SCHOOL_MANAGER]
   },
 
   // Groups
@@ -71,7 +78,7 @@ export const protectedRoutes = [
   {
     path: "/app/booths",
     element: <BoothListPage />,
-    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER]
   },
   {
     path: "/app/booths/create/:festivalId",
@@ -125,4 +132,12 @@ export const protectedRoutes = [
     element: <IngredientPage />,
     roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPPLIER]
   },
+
+  //Accounts
+  {
+    path: "/app/accounts",
+    element: <AccountManagementPage />,
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER]
+  },
+
 ];

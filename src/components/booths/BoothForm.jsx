@@ -146,7 +146,7 @@ const BoothForm = ({
             {availableLocations.map(location => (
               <option key={location.id} value={location.id}>
                 {location.location_name} - {location.location_type}
-                {location.is_occupied && ' (Đã có người đăng ký)'}
+                {location.is_occupied && ' (Đã có nhóm đăng ký)'}
               </option>
             ))}
           </select>

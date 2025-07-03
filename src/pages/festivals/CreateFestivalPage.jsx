@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { ArrowLeft, Save } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import useModal from 'antd/es/modal/useModal';
 import { useAuth } from '../../contexts/AuthContext';
 import { festivalServices } from '../../services/festivalServices';
 import { festivalSchoolServices } from '../../services/festivalSchoolServices';
@@ -22,6 +23,8 @@ import MenuConfigForm from '../../components/festivals/MenuConfigForm';
 
 const CreateFestivalPage = () => {
   const navigate = useNavigate();
+  const [modal, contextHolder] = useModal();
+
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImages, setSelectedImages] = useState([]);
@@ -31,7 +34,14 @@ const CreateFestivalPage = () => {
     { locationName: '', locationType: 'booth', coordinates: '' }
   ]);
   const [menuItems, setMenuItems] = useState([
-    { itemName: '', description: '', itemType: 'food', basePrice: 0 }
+    {
+      itemName: '',
+      description: '',
+      itemType: 'food',
+      basePrice: 0,
+      image: null,
+      imagePreview: null
+    }
   ]);
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm({
@@ -62,9 +72,9 @@ const CreateFestivalPage = () => {
     setPreviewMapImage(preview);
   };
 
-  const onSubmit = async (data) => {
+  const processCreateFestival = async (data) => {
     setIsLoading(true);
-    
+
     try {
       const festivalData = {
         organizerSchoolId: user.schoolId,
@@ -81,11 +91,11 @@ const CreateFestivalPage = () => {
       };
 
       const festivalResponse = await festivalServices.create(festivalData);
-      const festivalId = festivalResponse.data.id;
+      const festivalId = festivalResponse.data.festivalId;
 
       if (selectedImages.length > 0) {
         for (const imageFile of selectedImages) {
-          await uploadService.uploadFestivalImage(imageFile, festivalId);
+          await uploadService.uploadFestivalImage(imageFile.file, festivalId);
         }
       }
 
@@ -106,7 +116,7 @@ const CreateFestivalPage = () => {
         mapUrl: mapUrl
       };
       const mapResponse = await festivalMapServices.create(mapData);
-      const mapId = mapResponse.data.id;
+      const mapId = mapResponse.data.mapId;
 
       for (const location of mapLocations) {
         if (location.locationName.trim()) {
@@ -126,10 +136,11 @@ const CreateFestivalPage = () => {
         description: data.menuDescription
       };
       const menuResponse = await festivalMenuServices.create(menuData);
-      const menuId = menuResponse.data.id;
+      const menuId = menuResponse.data.menuId;
 
       for (const item of menuItems) {
         if (item.itemName.trim()) {
+
           const menuItemResponse = await menuItemServices.create({
             menuId: menuId,
             itemName: item.itemName,
@@ -139,7 +150,12 @@ const CreateFestivalPage = () => {
           });
 
           if (item.image) {
-            await uploadService.uploadMenuItemImage(item.image, menuItemResponse.data.id);
+            try {
+              await uploadService.uploadMenuItemImage(item.image, menuItemResponse.data.itemId);
+            } catch (error) {
+              console.error(`Error uploading image for menu item ${item.itemName}:`, error);
+              toast.error(`Không thể upload ảnh cho món ${item.itemName}: ${error.message}`);
+            }
           }
         }
       }
@@ -154,83 +170,116 @@ const CreateFestivalPage = () => {
     }
   };
 
+  const onSubmit = (data) => {
+    modal.confirm({
+      title: 'Xác nhận tạo lễ hội',
+      content: 'Bạn có chắc chắn muốn tạo lễ hội này không?',
+      okText: 'Xác nhận',
+      cancelText: 'Hủy bỏ',
+      onOk: () => processCreateFestival(data),
+    });
+  };
+
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center space-x-4">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/app/festivals')}
-          icon={<ArrowLeft size={20} />}
-        >
-          Quay lại
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Tạo lễ hội mới</h1>
-          <p className="text-gray-600 mt-1">Điền thông tin để tạo lễ hội cho trường của bạn</p>
+    <>
+      {contextHolder}
+      <div className="space-y-6">
+        <div className="flex items-center space-x-4">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/app/festivals')}
+            icon={<ArrowLeft size={20} />}
+          >
+            Quay lại
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Tạo lễ hội mới</h1>
+            <p className="text-gray-600 mt-1">Điền thông tin để tạo lễ hội cho trường của bạn</p>
+          </div>
         </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <BasicInfoForm register={register} errors={errors} />
+              <DateTimeForm register={register} errors={errors} />
+              <BoothConfigForm register={register} errors={errors} watch={watch} />
+              <FestivalImageUploadForm
+                selectedImages={selectedImages}
+                onImageChange={handleImageChange}
+              />
+
+              <MapConfigForm
+                register={register}
+                errors={errors}
+                mapLocations={mapLocations}
+                setMapLocations={setMapLocations}
+                selectedMapImage={selectedMapImage}
+                previewMapImage={previewMapImage}
+                onMapImageChange={handleMapImageChange}
+              />
+              <MenuConfigForm
+                register={register}
+                errors={errors}
+                menuItems={menuItems}
+                setMenuItems={setMenuItems}
+              />
+            </div>
+
+            <div className="space-y-6">
+              <Card>
+                <Card.Header>
+                  <Card.Title>Hành động</Card.Title>
+                </Card.Header>
+
+                <Card.Content>
+                  <div className="space-y-3">
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+                    >
+                      {isLoading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                          <span>Đang xử lý...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Save size={20} />
+                          <span>Tạo lễ hội</span>
+                        </>
+                      )}
+                    </button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      fullWidth
+                      onClick={() => navigate('/app/festivals')}
+                      disabled={isLoading}
+                    >
+                      Hủy bỏ
+                    </Button>
+                  </div>
+                </Card.Content>
+              </Card>
+            </div>
+          </div>
+        </form>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <BasicInfoForm register={register} errors={errors} />
-            <DateTimeForm register={register} errors={errors} />
-            <BoothConfigForm register={register} errors={errors} watch={watch} />
-            <FestivalImageUploadForm 
-              selectedImages={selectedImages}
-              onImageChange={handleImageChange}
-            />
-
-            <MapConfigForm 
-              register={register} 
-              errors={errors} 
-              mapLocations={mapLocations}
-              setMapLocations={setMapLocations}
-              selectedMapImage={selectedMapImage}
-              previewMapImage={previewMapImage}
-              onMapImageChange={handleMapImageChange}
-            />
-            <MenuConfigForm 
-              register={register} 
-              errors={errors} 
-              menuItems={menuItems}
-              setMenuItems={setMenuItems}
-            />
-          </div>
-
-          <div className="space-y-6">
-            <Card>
-              <Card.Header>
-                <Card.Title>Hành động</Card.Title>
-              </Card.Header>
-              
-              <Card.Content>
-                <div className="space-y-3">
-                  <Button
-                    type="submit"
-                    fullWidth
-                    loading={isLoading}
-                    icon={<Save size={20} />}
-                  >
-                    Tạo lễ hội
-                  </Button>
-                  
-                  <Button
-                    type="button"
-                    variant="outline"
-                    fullWidth
-                    onClick={() => navigate('/app/festivals')}
-                    disabled={isLoading}
-                  >
-                    Hủy bỏ
-                  </Button>
-                </div>
-              </Card.Content>
-            </Card>
+      {isLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 flex flex-col items-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p className="text-lg font-medium text-gray-900">Dữ liệu đang được xử lý</p>
+            <p className="text-sm text-gray-600">Vui lòng chờ trong giây lát</p>
           </div>
         </div>
-      </form>
-    </div>
+      )}
+    </>
   );
 };
 

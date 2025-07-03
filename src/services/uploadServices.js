@@ -1,28 +1,55 @@
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../config/configFirebase';
 import { imageServices } from './imageServices';
+
+const uploadImageToCloudinary = async (file, folder = 'festivals') => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", process.env.REACT_APP_UPLOAD_PRESET);
+    formData.append("folder", folder);
+
+    const cloud_name = process.env.REACT_APP_CLOUD_NAME;
+
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Upload failed");
+    }
+
+    const data = await response.json();
+    return {
+      url: data.secure_url,
+      publicId: data.public_id,
+      originalName: file.name
+    };
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    throw error;
+  }
+};
 
 export const uploadService = {
   uploadImage: async (file, folder = 'festivals', entityData = {}) => {
     try {
-      const timestamp = Date.now();
-      const fileName = `${timestamp}_${file.name}`;
-      const storageRef = ref(storage, `${folder}/${fileName}`);
-      
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
+
+      const uploadResult = await uploadImageToCloudinary(file, folder);
       
       if (Object.keys(entityData).length > 0) {
         const imageData = {
-          imageUrl: downloadURL,
-          imageName: fileName,
+          imageUrl: uploadResult.url,
+          imageName: uploadResult.originalName,
           ...entityData
         };
         
         await imageServices.addToEntity(imageData);
       }
       
-      return downloadURL;
+      return uploadResult.url;
     } catch (error) {
       console.error('Upload failed:', error);
       throw new Error('Không thể tải ảnh lên. Vui lòng thử lại.');

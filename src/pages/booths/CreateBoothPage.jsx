@@ -48,7 +48,6 @@ const CreateBoothPage = () => {
         registration_date: new Date().toISOString()
       };
 
-      console.log('Creating booth:', boothData);
       
       await new Promise(resolve => setTimeout(resolve, 2000));
       
