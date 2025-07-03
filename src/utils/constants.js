@@ -4,6 +4,7 @@ export const ROLE_NAME = {
   TEACHER: "Teacher",
   STUDENT: "Student",
   SUPPLIER: "Supplier",
+  GUEST: "Guest"
 };
 
 export const FESTIVAL_STATUS = {
