@@ -1,10 +1,19 @@
-import React from 'react';
-import { MapPin } from 'lucide-react';
+import React, { useState } from 'react';
+import { MapPin, Store } from 'lucide-react';
 import Card from '../common/Card';
+import { FESTIVAL_STATUS, ROLE_NAME } from '../../utils/constants';
+import BoothRegistrationModal from '../booths/BoothRegistrationModal';
+import { useAuth } from '../../contexts/AuthContext';
+import Button from '../common/Button';
 
-const MapTab = ({ festivalMap, mapLocations, loading }) => {
-  // console.log("festivalMap: ", festivalMap)
-  // console.log("mapLocations: ", mapLocations)
+const MapTab = ({ festivalMap, mapLocations, festival, loading, menuItems = [], menuItemImages = [] }) => {
+  const { user, hasRole } = useAuth();
+  const [showRegisterBoothModal, setShowRegisterBoothModal] = useState(false);
+
+  const handleRegisterBoothModalClose = () => {
+    setShowRegisterBoothModal(false);
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -43,23 +52,34 @@ const MapTab = ({ festivalMap, mapLocations, loading }) => {
           <Card>
             <Card.Header>
               <Card.Title>Vị trí trên bản đồ</Card.Title>
+              <div className='relative'>
+                {hasRole([ROLE_NAME.STUDENT]) && festival?.status === FESTIVAL_STATUS.PUBLISHED && (
+                  <Button
+                    icon={<Store size={16} />}
+                    onClick={() => setShowRegisterBoothModal(true)}
+                    className='absolute right-0 -top-8'
+                  >
+                    Đăng ký gian hàng
+                  </Button>
+                )}
+              </div>
             </Card.Header>
             <Card.Content>
               {mapLocations.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {mapLocations.map((location) => (
-                    <div key={location.id} className="p-4 border border-gray-200 rounded-lg">
-                      <h4 className="font-medium text-gray-900">{location.locationName}</h4>
+                    <div key={location.locationId || location.id} className="p-4 border border-gray-200 rounded-lg">
+                      <h4 className="font-medium text-gray-900">
+                        {location.coordinates && `${location.coordinates} - `}
+                        {location.locationName}
+                      </h4>
                       <p className="text-sm text-gray-600">Loại: {location.locationType}</p>
-                      {location.coordinates && (
-                        <p className="text-sm text-gray-600">Tọa độ: {location.coordinates}</p>
-                      )}
-                      <span className={`inline-block mt-2 px-2 py-1 rounded-full text-xs ${
-                        location.isOccupied 
-                          ? 'bg-red-100 text-red-800' 
-                          : 'bg-green-100 text-green-800'
-                      }`}>
-                        {location.isOccupied ? 'Đã sử dụng' : 'Còn trống'}
+
+                      <span className={`inline-block mt-2 px-2 py-1 rounded-full text-xs ${location.isOccupied
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-green-100 text-green-800'
+                        }`}>
+                        {location.isOccupied ? 'Đã có nhóm đăng ký' : 'Còn trống'}
                       </span>
                     </div>
                   ))}
@@ -81,6 +101,15 @@ const MapTab = ({ festivalMap, mapLocations, loading }) => {
           </Card.Content>
         </Card>
       )}
+
+      <BoothRegistrationModal
+        isOpen={showRegisterBoothModal}
+        onClose={handleRegisterBoothModalClose}
+        mapLocations={mapLocations}
+        festivalId={festival?.festivalId || festival?.id}
+        menuItems={menuItems}
+        menuItemImages={menuItemImages}
+      />
     </div>
   );
 };

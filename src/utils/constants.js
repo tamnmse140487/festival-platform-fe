@@ -23,6 +23,13 @@ export const FESTIVAL_INGREDIENT_STATUS = {
   REJECTED: 'rejected'
 };
 
+export const BOOTH_STATUS = {
+  PENDING: 'pending',
+  APPROVED: 'approved',
+  REJECTED: 'rejected',
+  ACTIVE: 'active'
+};
+
 export const GROUP_ROLE = {
   LEADER: "leader",
   MEMBER: "member",

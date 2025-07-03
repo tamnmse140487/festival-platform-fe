@@ -173,7 +173,7 @@ const GroupDetailModal = ({ group, isOpen, onClose, onRefresh }) => {
         return <GroupBudget group={group} />
       
       case 'booth':
-        return <BoothInfo groupId={group.groupId} />
+        return <BoothInfo groupId={group.groupId} group={group} members={members}/>
       
       case 'menu':
         return <BoothMenu groupId={group.groupId} />

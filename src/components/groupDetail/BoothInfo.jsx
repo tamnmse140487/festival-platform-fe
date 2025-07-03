@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react'
-import { Store, MapPin } from 'lucide-react'
+import { Store, MapPin, Check, X } from 'lucide-react'
+import { Button } from 'antd'
 import { toast } from 'react-hot-toast'
 import { boothServices } from '../../services/boothServices'
 import { festivalServices } from '../../services/festivalServices'
 import { mapLocationServices } from '../../services/mapLocationServices'
 import { festivalMapServices } from '../../services/festivalMapServices'
 import { imageServices } from '../../services/imageServices'
+import { useAuth } from '../../contexts/AuthContext'
+import { ROLE_NAME, BOOTH_STATUS } from '../../utils/constants'
+import useModal from 'antd/es/modal/useModal';
 
-const BoothInfo = ({ groupId }) => {
+const BoothInfo = ({ groupId, group, members }) => {
+  const { user, hasRole } = useAuth();
+
   const [booth, setBooth] = useState(null)
   const [festival, setFestival] = useState(null)
   const [location, setLocation] = useState(null)
@@ -15,6 +21,8 @@ const BoothInfo = ({ groupId }) => {
   const [festivalImages, setFestivalImages] = useState([])
   const [boothImages, setBoothImages] = useState([])
   const [loading, setLoading] = useState(false)
+  const [actionLoading, setActionLoading] = useState(false)
+  const [modal, contextHolder] = useModal();
 
   const fetchBoothData = async () => {
     setLoading(true)
@@ -33,7 +41,6 @@ const BoothInfo = ({ groupId }) => {
           mapLocationServices.get({ id: boothData.locationId }),
           imageServices.get({ boothId: boothData.boothId })
         ])
-        
         setFestival(festivalResponse.data?.[0] || null)
         setLocation(locationResponse.data?.[0] || null)
         setBoothImages(boothImagesResponse.data || [])
@@ -43,7 +50,7 @@ const BoothInfo = ({ groupId }) => {
             imageServices.get({ festivalId: boothData.festivalId }),
             festivalMapServices.get({ festivalId: boothData.festivalId })
           ])
-          
+
           setFestivalImages(festivalImagesResponse.data || [])
           setMapUrl(mapResponse.data?.[0]?.mapUrl || null)
         }
@@ -68,17 +75,134 @@ const BoothInfo = ({ groupId }) => {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      'approved': { label: 'Đã duyệt', class: 'bg-green-100 text-green-800' },
-      'pending': { label: 'Chờ duyệt', class: 'bg-yellow-100 text-yellow-800' },
-      'rejected': { label: 'Từ chối', class: 'bg-red-100 text-red-800' }
+      [BOOTH_STATUS.APPROVED]: { label: 'Đã duyệt', class: 'bg-green-100 text-green-800' },
+      [BOOTH_STATUS.PENDING]: { label: 'Chờ duyệt', class: 'bg-yellow-100 text-yellow-800' },
+      [BOOTH_STATUS.REJECTED]: { label: 'Từ chối', class: 'bg-red-100 text-red-800' },
+      [BOOTH_STATUS.ACTIVE]: { label: 'Hoạt động', class: 'bg-blue-100 text-blue-800' }
     }
-    
-    const config = statusConfig[status] || statusConfig.pending
+
+    const config = statusConfig[status] || statusConfig[BOOTH_STATUS.PENDING]
     return (
       <span className={`px-2 py-1 text-xs font-medium rounded ${config.class}`}>
         {config.label}
       </span>
     )
+  }
+
+  const isHomeroomTeacher = () => {
+    if (!hasRole([ROLE_NAME.TEACHER]) || !members || !Array.isArray(members)) {
+      return false
+    }
+
+    return members.some(member =>
+      member.role === 'homeroom_teacher' && member.accountId === user.id
+    )
+  }
+
+  const handleStatusChange = (action, newStatus) => {
+    const actionText = {
+      approve: 'duyệt',
+      reject: 'từ chối',
+      activate: 'kích hoạt'
+    }
+
+    modal.confirm({
+      title: `Xác nhận ${actionText[action]} gian hàng`,
+      content: `Bạn có chắc chắn muốn ${actionText[action]} gian hàng "${booth.boothName}" không?`,
+      okText: 'Xác nhận',
+      cancelText: 'Hủy',
+      onOk: () => executeStatusChange(action, newStatus)
+    })
+  }
+
+  const executeStatusChange = async (action, newStatus) => {
+    try {
+      setActionLoading(true)
+
+      if (action === 'approve') {
+        await boothServices.updateApprove(
+          { id: booth.boothId },
+          {
+            approvalDate: new Date().toISOString(),
+            pointsBalance: 0
+          }
+        )
+
+        if (location?.locationId) {
+          await mapLocationServices.update(
+            { id: location.locationId, isOccupied: true }
+          )
+        }
+      } else {
+        const apiMap = {
+          reject: boothServices.updateReject,
+          activate: boothServices.updateActivate
+        }
+
+        await apiMap[action]({ boothId: booth.boothId })
+      }
+
+      setBooth(prev => ({ ...prev, status: newStatus }))
+
+      const successMessage = {
+        approve: 'Duyệt gian hàng thành công!',
+        reject: 'Từ chối gian hàng thành công!',
+        activate: 'Kích hoạt gian hàng thành công!'
+      }
+
+      toast.success(successMessage[action])
+    } catch (error) {
+      console.error(`Error ${action} booth:`, error)
+      toast.error(`Không thể ${action === 'approve' ? 'duyệt' : action === 'reject' ? 'từ chối' : 'kích hoạt'} gian hàng`)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const renderActionButtons = () => {
+    if (!booth || !isHomeroomTeacher()) {
+      return null
+    }
+
+    if (booth.status === BOOTH_STATUS.ACTIVE) {
+      return (
+        <div className="flex space-x-3 mt-4">
+          <Button
+            type="primary"
+            icon={<Check size={16} />}
+            loading={actionLoading}
+            onClick={() => handleStatusChange('approve', BOOTH_STATUS.APPROVED)}
+          >
+            Duyệt gian hàng
+          </Button>
+          <Button
+            danger
+            icon={<X size={16} />}
+            loading={actionLoading}
+            onClick={() => handleStatusChange('reject', BOOTH_STATUS.REJECTED)}
+          >
+            Từ chối gian hàng
+          </Button>
+        </div>
+      )
+    }
+
+    if (booth.status === BOOTH_STATUS.APPROVED) {
+      return (
+        <div className="flex space-x-3 mt-4">
+          <Button
+            type="primary"
+            icon={<Check size={16} />}
+            loading={actionLoading}
+            onClick={() => handleStatusChange('activate', BOOTH_STATUS.ACTIVE)}
+          >
+            Kích hoạt gian hàng
+          </Button>
+        </div>
+      )
+    }
+
+    return null
   }
 
   useEffect(() => {
@@ -106,14 +230,15 @@ const BoothInfo = ({ groupId }) => {
     )
   }
 
-  return (
+  return (<>
+    {contextHolder}
     <div className="space-y-6">
       <div className="bg-white border border-gray-200 rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <h4 className="text-lg font-semibold text-gray-900">Thông tin gian hàng</h4>
           {getStatusBadge(booth.status)}
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="text-sm font-medium text-gray-500">Tên gian hàng</label>
@@ -152,6 +277,8 @@ const BoothInfo = ({ groupId }) => {
             <p className="text-gray-900 mt-1">{booth.note}</p>
           </div>
         )}
+
+        {renderActionButtons()}
 
         {boothImages.length > 0 && (
           <div className="mt-6">
@@ -220,21 +347,17 @@ const BoothInfo = ({ groupId }) => {
           </h5>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-gray-500">Tên vị trí</label>
-              <p className="text-gray-900 mt-1">{location.locationName}</p>
+              <label className="text-sm font-medium text-gray-500">Vị trí</label>
+              <p className="text-gray-900 mt-1">{location.locationName}-{location.coordinates}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500">Loại vị trí</label>
               <p className="text-gray-900 mt-1">{location.locationType}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Tọa độ</label>
-              <p className="text-gray-900 mt-1">{location.coordinates}</p>
-            </div>
-            <div>
               <label className="text-sm font-medium text-gray-500">Trạng thái</label>
               <p className="text-gray-900 mt-1">
-                {location.isOccupied ? 'Đã có người' : 'Còn trống'}
+                {location.isOccupied ? 'Đã có nhóm đăng ký' : 'Còn trống'}
               </p>
             </div>
           </div>
@@ -245,13 +368,15 @@ const BoothInfo = ({ groupId }) => {
               <img
                 src={mapUrl}
                 alt="Festival Map"
-                className="w-full max-w-lg h-64 object-cover rounded-lg border mx-auto"
+                className="w-full max-w-lg h-full object-cover rounded-lg border mx-auto"
               />
             </div>
           )}
         </div>
       )}
     </div>
+  </>
+
   )
 }
 
