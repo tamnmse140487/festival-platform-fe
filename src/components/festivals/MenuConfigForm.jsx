@@ -32,36 +32,30 @@ const MenuConfigForm = ({ register, errors, menuItems, setMenuItems }) => {
   const handleImageUpload = (index, event) => {
     const file = event.target.files[0];
     if (file) {
-      console.log('Selected file:', file.name, 'Type:', file.type, 'Size:', file.size);
       
-      // Kiểm tra file type
       if (!file.type.startsWith('image/')) {
         alert('Vui lòng chọn file ảnh');
-        event.target.value = ''; // Reset input
+        event.target.value = ''; 
         return;
       }
       
-      // Kiểm tra file size (5MB)
       if (file.size > 5 * 1024 * 1024) {
         alert('Kích thước file không được vượt quá 5MB');
-        event.target.value = ''; // Reset input
+        event.target.value = ''; 
         return;
       }
 
-      // Tạo preview URL
       const previewUrl = URL.createObjectURL(file);
       
-      // Cập nhật menuItem với file và preview
       const updated = menuItems.map((item, i) => 
         i === index ? { 
           ...item, 
-          image: file, // Đảm bảo đây là File object
+          image: file, 
           imagePreview: previewUrl 
         } : item
       );
       setMenuItems(updated);
       
-      console.log('Updated menu item:', updated[index]);
     }
   };
 

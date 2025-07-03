@@ -6,6 +6,14 @@ export const ROLE_NAME = {
   SUPPLIER: "Supplier",
 };
 
+export const FESTIVAL_STATUS = {
+  DRAFT: "draft",
+  PUBLISHED: "published",
+  ONGOING: "ongoing",
+  COMPLETED: "completed",
+  CANCELLED: "cancelled",
+};
+
 export const GROUP_ROLE = {
   LEADER: "leader",
   MEMBER: "member",

@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  Calendar, 
-  MapPin, 
-  Users, 
-  Edit, 
-  Share2, 
+import {
+  ArrowLeft,
+  Calendar,
+  MapPin,
+  Edit,
+  Share2,
   ShoppingCart,
-  Store,
   Trophy,
   Clock,
   CheckCircle,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Play,
+  X,
+  Check
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
@@ -26,43 +27,14 @@ import { imageServices } from '../../services/imageServices';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Modal from '../../components/common/Modal';
-import { ROLE_NAME } from '../../utils/constants';
+import OverviewTab from '../../components/festivalDetail/OverviewTab';
+import ImagesTab from '../../components/festivalDetail/ImagesTab';
+import MapTab from '../../components/festivalDetail/MapTab';
+import MenuTab from '../../components/festivalDetail/MenuTab';
+import { ROLE_NAME, FESTIVAL_STATUS } from '../../utils/constants';
 
 const FestivalDetailPage = () => {
   const { id } = useParams();
-
-const ImagesTab = ({ festivalImages }) => (
-  <div className="space-y-6">
-    <Card>
-      <Card.Header>
-        <Card.Title>Hình ảnh lễ hội</Card.Title>
-        <Card.Description>Tất cả hình ảnh của lễ hội</Card.Description>
-      </Card.Header>
-      <Card.Content>
-        {festivalImages.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {festivalImages.map((image, index) => (
-              <div key={image.id || index} className="relative group">
-                <img
-                  src={image.imageUrl}
-                  alt={image.imageName || `Festival image ${index + 1}`}
-                  className="w-full h-48 object-cover rounded-lg transition-transform group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity rounded-lg" />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <ImageIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có hình ảnh</h3>
-            <p className="text-gray-600">Lễ hội chưa có hình ảnh nào được tải lên.</p>
-          </div>
-        )}
-      </Card.Content>
-    </Card>
-  </div>
-);
   const navigate = useNavigate();
   const { user, hasRole } = useAuth();
   const [festival, setFestival] = useState(null);
@@ -71,10 +43,12 @@ const ImagesTab = ({ festivalImages }) => (
   const [mapLocations, setMapLocations] = useState([]);
   const [festivalMenu, setFestivalMenu] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
+  const [menuItemImages, setMenuItemImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   useEffect(() => {
     loadFestivalData();
@@ -83,14 +57,14 @@ const ImagesTab = ({ festivalImages }) => (
   const loadFestivalData = async () => {
     try {
       setLoading(true);
-      
+
       const [
         festivalResponse,
         festivalImagesResponse,
         mapResponse,
         menuResponse
       ] = await Promise.all([
-        festivalServices.get({ id: parseInt(id) }),
+        festivalServices.get({ festivalId: parseInt(id) }),
         imageServices.get({ festivalId: parseInt(id) }),
         festivalMapServices.get({ festivalId: parseInt(id) }),
         festivalMenuServices.get({ festivalId: parseInt(id) })
@@ -107,7 +81,7 @@ const ImagesTab = ({ festivalImages }) => (
       if (mapResponse.data && mapResponse.data.length > 0) {
         const map = mapResponse.data[0];
         setFestivalMap(map);
-        
+
         const locationsResponse = await mapLocationServices.get({ mapId: map.id });
         setMapLocations(locationsResponse.data || []);
       }
@@ -115,9 +89,18 @@ const ImagesTab = ({ festivalImages }) => (
       if (menuResponse.data && menuResponse.data.length > 0) {
         const menu = menuResponse.data[0];
         setFestivalMenu(menu);
-        
+
         const itemsResponse = await menuItemServices.get({ menuId: menu.id });
-        setMenuItems(itemsResponse.data || []);
+        if (itemsResponse.data) {
+          setMenuItems(itemsResponse.data);
+
+          const menuItemImagesPromises = itemsResponse.data.map(item =>
+            imageServices.get({ menuItemId: item.id })
+          );
+          const menuItemImagesResponses = await Promise.all(menuItemImagesPromises);
+          const allMenuItemImages = menuItemImagesResponses.flatMap(response => response.data || []);
+          setMenuItemImages(allMenuItemImages);
+        }
       }
 
     } catch (error) {
@@ -145,10 +128,36 @@ const ImagesTab = ({ festivalImages }) => (
     }
   };
 
+  const handleStatusUpdate = async (newStatus) => {
+    try {
+      setIsUpdatingStatus(true);
+      await festivalServices.update({ id: parseInt(id), status: newStatus });
+      setFestival(prev => ({ ...prev, status: newStatus }));
+      toast.success('Cập nhật trạng thái lễ hội thành công!');
+    } catch (error) {
+      console.error('Error updating festival status:', error);
+      toast.error('Không thể cập nhật trạng thái lễ hội');
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="h-64 bg-gray-200 rounded mb-6"></div>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="lg:col-span-3">
+              <div className="h-96 bg-gray-200 rounded"></div>
+            </div>
+            <div className="space-y-4">
+              <div className="h-40 bg-gray-200 rounded"></div>
+              <div className="h-32 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -176,20 +185,91 @@ const ImagesTab = ({ festivalImages }) => (
 
   const getStatusBadge = (status) => {
     const badges = {
-      'draft': { label: 'Bản nháp', class: 'bg-gray-100 text-gray-800', icon: <Edit size={16} /> },
-      'published': { label: 'Đã công bố', class: 'bg-green-100 text-green-800', icon: <CheckCircle size={16} /> },
-      'ongoing': { label: 'Đang diễn ra', class: 'bg-blue-100 text-blue-800', icon: <Clock size={16} /> },
-      'completed': { label: 'Đã kết thúc', class: 'bg-purple-100 text-purple-800', icon: <Trophy size={16} /> },
-      'cancelled': { label: 'Đã hủy', class: 'bg-red-100 text-red-800', icon: <Edit size={16} /> }
+      [FESTIVAL_STATUS.DRAFT]: { label: 'Bản nháp', class: 'bg-gray-100 text-gray-800', icon: <Edit size={16} /> },
+      [FESTIVAL_STATUS.PUBLISHED]: { label: 'Đã công bố', class: 'bg-green-100 text-green-800', icon: <CheckCircle size={16} /> },
+      [FESTIVAL_STATUS.ONGOING]: { label: 'Đang diễn ra', class: 'bg-blue-100 text-blue-800', icon: <Clock size={16} /> },
+      [FESTIVAL_STATUS.COMPLETED]: { label: 'Đã kết thúc', class: 'bg-purple-100 text-purple-800', icon: <Trophy size={16} /> },
+      [FESTIVAL_STATUS.CANCELLED]: { label: 'Đã hủy', class: 'bg-red-100 text-red-800', icon: <X size={16} /> }
     };
-    
-    const badge = badges[status] || badges.draft;
+
+    const badge = badges[status] || badges[FESTIVAL_STATUS.DRAFT];
     return (
       <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${badge.class}`}>
         {badge.icon}
         <span className="ml-1">{badge.label}</span>
       </span>
     );
+  };
+
+  const getStatusActions = () => {
+    if (hasRole([ROLE_NAME.ADMIN]) && festival.status === FESTIVAL_STATUS.DRAFT) {
+      return (
+        <button
+          onClick={() => handleStatusUpdate(FESTIVAL_STATUS.PUBLISHED)}
+          disabled={isUpdatingStatus}
+          className="inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+        >
+          {isUpdatingStatus ? (
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+          ) : (
+            <Check size={16} className="mr-1" />
+          )}
+          Duyệt lễ hội
+        </button>
+      );
+    }
+
+    if (hasRole([ROLE_NAME.SCHOOL_MANAGER]) && festival.schoolId === user.schoolId) {
+      if (festival.status === FESTIVAL_STATUS.PUBLISHED) {
+        return (
+          <div className="flex space-x-2">
+            <button
+              onClick={() => handleStatusUpdate(FESTIVAL_STATUS.ONGOING)}
+              disabled={isUpdatingStatus}
+              className="inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {isUpdatingStatus ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              ) : (
+                <Play size={16} className="mr-1" />
+              )}
+              Bắt đầu
+            </button>
+            <button
+              onClick={() => handleStatusUpdate(FESTIVAL_STATUS.CANCELLED)}
+              disabled={isUpdatingStatus}
+              className="inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              {isUpdatingStatus ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              ) : (
+                <X size={16} className="mr-1" />
+              )}
+              Hủy bỏ
+            </button>
+          </div>
+        );
+      }
+
+      if (festival.status === FESTIVAL_STATUS.ONGOING) {
+        return (
+          <button
+            onClick={() => handleStatusUpdate(FESTIVAL_STATUS.COMPLETED)}
+            disabled={isUpdatingStatus}
+            className="inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50"
+          >
+            {isUpdatingStatus ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+            ) : (
+              <Trophy size={16} className="mr-1" />
+            )}
+            Kết thúc
+          </button>
+        );
+      }
+    }
+
+    return null;
   };
 
   const tabs = [
@@ -211,13 +291,14 @@ const ImagesTab = ({ festivalImages }) => (
             Quay lại
           </Button>
         </div>
-        
+
         <div className="flex items-center space-x-3">
+          {getStatusActions()}
           <Button variant="outline" icon={<Share2 size={16} />}>
             Chia sẻ
           </Button>
           {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && festival.organizerSchoolId === user.schoolId && (
-            <Button 
+            <Button
               icon={<Edit size={16} />}
               onClick={() => navigate(`/app/festivals/${id}/edit`)}
             >
@@ -259,11 +340,10 @@ const ImagesTab = ({ festivalImages }) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === tab.id
+                  className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
+                    }`}
                 >
                   {tab.icon}
                   <span className="ml-2">{tab.label}</span>
@@ -273,9 +353,9 @@ const ImagesTab = ({ festivalImages }) => (
           </div>
 
           {activeTab === 'overview' && <OverviewTab festival={festival} />}
-          {activeTab === 'images' && <ImagesTab festivalImages={festivalImages} />}
-          {activeTab === 'map' && <MapTab festivalMap={festivalMap} mapLocations={mapLocations} />}
-          {activeTab === 'menu' && <MenuTab festivalMenu={festivalMenu} menuItems={menuItems} />}
+          {activeTab === 'images' && <ImagesTab festivalImages={festivalImages} loading={loading} />}
+          {activeTab === 'map' && <MapTab festivalMap={festivalMap} mapLocations={mapLocations} loading={loading} />}
+          {activeTab === 'menu' && <MenuTab festivalMenu={festivalMenu} menuItems={menuItems} menuItemImages={menuItemImages} loading={loading} />}
         </div>
 
         <div className="space-y-6">
@@ -292,7 +372,7 @@ const ImagesTab = ({ festivalImages }) => (
                     {festival.location}
                   </p>
                 </div>
-                
+
                 <div>
                   <label className="text-sm font-medium text-gray-500">Thời gian diễn ra</label>
                   <div className="text-gray-900">
@@ -334,13 +414,13 @@ const ImagesTab = ({ festivalImages }) => (
             </Card.Content>
           </Card>
 
-          {hasRole([ROLE_NAME.STUDENT, ROLE_NAME.TEACHER]) && festival.status === 'published' && (
+          {hasRole([ROLE_NAME.STUDENT, ROLE_NAME.TEACHER]) && festival.status === FESTIVAL_STATUS.PUBLISHED && (
             <Card>
               <Card.Header>
                 <Card.Title>Tham gia lễ hội</Card.Title>
               </Card.Header>
               <Card.Content>
-                <Button 
+                <Button
                   fullWidth
                   onClick={() => setShowRegisterModal(true)}
                 >
@@ -363,15 +443,15 @@ const ImagesTab = ({ festivalImages }) => (
             Bạn có muốn đăng ký tham gia lễ hội "{festival.festivalName}" không?
           </p>
           <div className="flex space-x-3">
-            <Button 
+            <Button
               fullWidth
               loading={isRegistering}
               onClick={handleRegister}
             >
               Xác nhận đăng ký
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               fullWidth
               onClick={() => setShowRegisterModal(false)}
               disabled={isRegistering}
@@ -384,171 +464,5 @@ const ImagesTab = ({ festivalImages }) => (
     </div>
   );
 };
-
-const OverviewTab = ({ festival }) => (
-  <div className="space-y-6">
-    <Card>
-      <Card.Header>
-        <Card.Title>Mô tả lễ hội</Card.Title>
-      </Card.Header>
-      <Card.Content>
-        <p className="text-gray-700 leading-relaxed">{festival.description}</p>
-      </Card.Content>
-    </Card>
-
-    <Card>
-      <Card.Header>
-        <Card.Title>Lịch trình đăng ký</Card.Title>
-      </Card.Header>
-      <Card.Content>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
-            <div>
-              <h4 className="font-medium text-blue-900">Mở đăng ký</h4>
-              <p className="text-blue-700 text-sm">
-                {new Date(festival.registrationStartDate).toLocaleDateString('vi-VN')}
-              </p>
-            </div>
-            <Calendar className="w-8 h-8 text-blue-600" />
-          </div>
-          
-          <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
-            <div>
-              <h4 className="font-medium text-red-900">Đóng đăng ký</h4>
-              <p className="text-red-700 text-sm">
-                {new Date(festival.registrationEndDate).toLocaleDateString('vi-VN')}
-              </p>
-            </div>
-            <Clock className="w-8 h-8 text-red-600" />
-          </div>
-        </div>
-      </Card.Content>
-    </Card>
-  </div>
-);
-
-const MapTab = ({ festivalMap, mapLocations }) => (
-  <div className="space-y-6">
-    {festivalMap ? (
-      <>
-        <Card>
-          <Card.Header>
-            <Card.Title>{festivalMap.mapName}</Card.Title>
-            <Card.Description>Loại: {festivalMap.mapType}</Card.Description>
-          </Card.Header>
-          <Card.Content>
-            {festivalMap.mapUrl && (
-              <img
-                src={festivalMap.mapUrl}
-                alt={festivalMap.mapName}
-                className="w-full h-64 object-cover rounded-lg"
-              />
-            )}
-          </Card.Content>
-        </Card>
-
-        <Card>
-          <Card.Header>
-            <Card.Title>Vị trí trên bản đồ</Card.Title>
-          </Card.Header>
-          <Card.Content>
-            {mapLocations.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {mapLocations.map((location) => (
-                  <div key={location.id} className="p-4 border border-gray-200 rounded-lg">
-                    <h4 className="font-medium text-gray-900">{location.locationName}</h4>
-                    <p className="text-sm text-gray-600">Loại: {location.locationType}</p>
-                    {location.coordinates && (
-                      <p className="text-sm text-gray-600">Tọa độ: {location.coordinates}</p>
-                    )}
-                    <span className={`inline-block mt-2 px-2 py-1 rounded-full text-xs ${
-                      location.isOccupied 
-                        ? 'bg-red-100 text-red-800' 
-                        : 'bg-green-100 text-green-800'
-                    }`}>
-                      {location.isOccupied ? 'Đã sử dụng' : 'Còn trống'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-600">Chưa có vị trí nào được thiết lập.</p>
-            )}
-          </Card.Content>
-        </Card>
-      </>
-    ) : (
-      <Card>
-        <Card.Content>
-          <div className="text-center py-8">
-            <MapPin className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có bản đồ</h3>
-            <p className="text-gray-600">Bản đồ lễ hội chưa được thiết lập.</p>
-          </div>
-        </Card.Content>
-      </Card>
-    )}
-  </div>
-);
-
-const MenuTab = ({ festivalMenu, menuItems }) => (
-  <div className="space-y-6">
-    {festivalMenu ? (
-      <>
-        <Card>
-          <Card.Header>
-            <Card.Title>{festivalMenu.menuName}</Card.Title>
-            <Card.Description>{festivalMenu.description}</Card.Description>
-          </Card.Header>
-        </Card>
-
-        <Card>
-          <Card.Header>
-            <Card.Title>Danh sách món ăn/đồ uống</Card.Title>
-          </Card.Header>
-          <Card.Content>
-            {menuItems.length > 0 ? (
-              <div className="space-y-4">
-                {menuItems.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                    <div>
-                      <h4 className="font-medium text-gray-900">{item.itemName}</h4>
-                      <p className="text-sm text-gray-600">{item.description}</p>
-                      <span className={`inline-block mt-1 px-2 py-1 rounded-full text-xs ${
-                        item.itemType === 'food' 
-                          ? 'bg-orange-100 text-orange-800' 
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {item.itemType === 'food' ? 'Đồ ăn' : 'Đồ uống'}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-gray-900">
-                        {item.basePrice.toLocaleString('vi-VN')} ₫
-                      </p>
-                      <p className="text-sm text-gray-600">Giá cơ bản</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-600">Chưa có món ăn nào được thêm vào thực đơn.</p>
-            )}
-          </Card.Content>
-        </Card>
-      </>
-    ) : (
-      <Card>
-        <Card.Content>
-          <div className="text-center py-8">
-            <ShoppingCart className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có thực đơn</h3>
-            <p className="text-gray-600">Thực đơn lễ hội chưa được thiết lập.</p>
-          </div>
-        </Card.Content>
-      </Card>
-    )}
-  </div>
-);
 
 export default FestivalDetailPage;

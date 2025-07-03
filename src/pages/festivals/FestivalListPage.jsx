@@ -4,6 +4,7 @@ import { Plus, Eye, Edit, MapPin, Calendar, Users, Search, Grid, List, Trash2 } 
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { festivalServices } from '../../services/festivalServices';
+import { imageServices } from '../../services/imageServices';
 import { ROLE_NAME } from '../../utils/constants';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
@@ -11,6 +12,7 @@ import Modal from '../../components/common/Modal';
 const FestivalListPage = () => {
   const { user, hasRole } = useAuth();
   const [festivals, setFestivals] = useState([]);
+  const [festivalImages, setFestivalImages] = useState({});
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('grid');
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,12 +28,15 @@ const FestivalListPage = () => {
   const loadFestivals = async () => {
     try {
       setLoading(true);
-      const params = hasRole([ROLE_NAME.SCHOOL_MANAGER]) 
+      const params = hasRole([ROLE_NAME.SCHOOL_MANAGER])
         ? { schoolId: user.schoolId }
         : {};
-      
+
       const response = await festivalServices.get(params);
-      setFestivals(response.data || []);
+      const festivalsData = response.data || [];
+      setFestivals(festivalsData);
+      
+      await loadFestivalImages(festivalsData);
     } catch (error) {
       console.error('Error loading festivals:', error);
       toast.error('Không thể tải danh sách lễ hội');
@@ -40,12 +45,42 @@ const FestivalListPage = () => {
     }
   };
 
+  const loadFestivalImages = async (festivalsData) => {
+    const imagePromises = festivalsData.map(async (festival) => {
+      try {
+        const response = await imageServices.get({ festivalId: festival.festivalId });
+        return {
+          festivalId: festival.festivalId,
+          images: response.data || []
+        };
+      } catch (error) {
+        console.error(`Error loading images for festival ${festival.festivalId}:`, error);
+        return {
+          festivalId: festival.festivalId,
+          images: []
+        };
+      }
+    });
+
+    const imageResults = await Promise.all(imagePromises);
+    const imagesMap = {};
+    imageResults.forEach(result => {
+      imagesMap[result.festivalId] = result.images;
+    });
+    setFestivalImages(imagesMap);
+  };
+
+  const getFestivalImage = (festivalId) => {
+    const images = festivalImages[festivalId] || [];
+    return images.length > 0 ? images[0].imageUrl : '/api/placeholder/400/300';
+  };
+
   const handleDelete = async () => {
     if (!deleteModal.festival) return;
-    
+
     try {
       setIsDeleting(true);
-      await festivalServices.delete({ id: deleteModal.festival.id });
+      await festivalServices.delete({ id: deleteModal.festival.festivalId });
       toast.success('Xóa lễ hội thành công');
       setDeleteModal({ isOpen: false, festival: null });
       loadFestivals();
@@ -59,11 +94,11 @@ const FestivalListPage = () => {
 
   const filteredFestivals = festivals.filter(festival => {
     const matchesSearch = festival.festivalName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         festival.theme?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         festival.location?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+      festival.theme?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      festival.location?.toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesStatus = statusFilter === 'all' || festival.status === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   }).sort((a, b) => {
     switch (sortBy) {
@@ -88,7 +123,7 @@ const FestivalListPage = () => {
       'completed': { label: 'Đã kết thúc', class: 'bg-purple-100 text-purple-800' },
       'cancelled': { label: 'Đã hủy', class: 'bg-red-100 text-red-800' }
     };
-    
+
     const badge = badges[status] || badges.draft;
     return (
       <span className={`px-3 py-1 rounded-full text-xs font-medium ${badge.class}`}>
@@ -119,13 +154,13 @@ const FestivalListPage = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Quản lý Lễ hội</h1>
           <p className="text-gray-600 mt-1">
-            {hasRole([ROLE_NAME.SCHOOL_MANAGER]) 
-              ? 'Tạo và quản lý các lễ hội của trường bạn.' 
+            {hasRole([ROLE_NAME.SCHOOL_MANAGER])
+              ? 'Tạo và quản lý các lễ hội của trường bạn.'
               : 'Khám phá và tham gia các lễ hội thú vị.'
             }
           </p>
         </div>
-        
+
         {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && (
           <Link
             to="/app/festivals/create"
@@ -150,7 +185,7 @@ const FestivalListPage = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            
+
             <div className="flex gap-2">
               <select
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -163,7 +198,7 @@ const FestivalListPage = () => {
                 <option value="ongoing">Đang diễn ra</option>
                 <option value="completed">Đã kết thúc</option>
               </select>
-              
+
               <select
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={sortBy}
@@ -176,25 +211,23 @@ const FestivalListPage = () => {
               </select>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-lg transition-colors ${
-                viewMode === 'grid' 
-                  ? 'bg-blue-100 text-blue-600' 
+              className={`p-2 rounded-lg transition-colors ${viewMode === 'grid'
+                  ? 'bg-blue-100 text-blue-600'
                   : 'text-gray-400 hover:text-gray-600'
-              }`}
+                }`}
             >
               <Grid size={20} />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-2 rounded-lg transition-colors ${
-                viewMode === 'list' 
-                  ? 'bg-blue-100 text-blue-600' 
+              className={`p-2 rounded-lg transition-colors ${viewMode === 'list'
+                  ? 'bg-blue-100 text-blue-600'
                   : 'text-gray-400 hover:text-gray-600'
-              }`}
+                }`}
             >
               <List size={20} />
             </button>
@@ -206,8 +239,8 @@ const FestivalListPage = () => {
             <Calendar className="mx-auto h-12 w-12 text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Không tìm thấy lễ hội nào</h3>
             <p className="text-gray-600 mb-6">
-              {searchTerm || statusFilter !== 'all' 
-                ? 'Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.' 
+              {searchTerm || statusFilter !== 'all'
+                ? 'Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.'
                 : 'Chưa có lễ hội nào được tạo.'
               }
             </p>
@@ -225,22 +258,24 @@ const FestivalListPage = () => {
           <div className={viewMode === 'grid' ? 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
             {filteredFestivals.map(festival => (
               viewMode === 'grid' ? (
-                <FestivalCard 
-                  key={festival.id} 
-                  festival={festival} 
-                  user={user} 
+                <FestivalCard
+                  key={festival.id}
+                  festival={festival}
+                  user={user}
                   onDelete={(festival) => setDeleteModal({ isOpen: true, festival })}
                   formatDate={formatDate}
                   getStatusBadge={getStatusBadge}
+                  getFestivalImage={getFestivalImage}
                 />
               ) : (
-                <FestivalListItem 
-                  key={festival.id} 
-                  festival={festival} 
-                  user={user} 
+                <FestivalListItem
+                  key={festival.id}
+                  festival={festival}
+                  user={user}
                   onDelete={(festival) => setDeleteModal({ isOpen: true, festival })}
                   formatDate={formatDate}
                   getStatusBadge={getStatusBadge}
+                  getFestivalImage={getFestivalImage}
                 />
               )
             ))}
@@ -256,19 +291,19 @@ const FestivalListPage = () => {
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            Bạn có chắc chắn muốn xóa lễ hội "{deleteModal.festival?.festivalName}" không? 
+            Bạn có chắc chắn muốn xóa lễ hội "{deleteModal.festival?.festivalName}" không?
             Hành động này không thể hoàn tác.
           </p>
           <div className="flex space-x-3">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               fullWidth
               onClick={() => setDeleteModal({ isOpen: false, festival: null })}
               disabled={isDeleting}
             >
               Hủy
             </Button>
-            <Button 
+            <Button
               fullWidth
               loading={isDeleting}
               onClick={handleDelete}
@@ -283,28 +318,31 @@ const FestivalListPage = () => {
   );
 };
 
-const FestivalCard = ({ festival, user, onDelete, formatDate, getStatusBadge }) => {
+const FestivalCard = ({ festival, user, onDelete, formatDate, getStatusBadge, getFestivalImage }) => {
   const hasRole = (roles) => roles.includes(user?.role);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
       <div className="relative">
-        <img 
-          src={festival.imageUrl || '/api/placeholder/400/300'} 
-          alt={festival.festivalName} 
+        <img
+          src={getFestivalImage(festival.festivalId)}
+          alt={festival.festivalName}
           className="w-full h-48 object-cover"
+          onError={(e) => {
+            e.target.src = '/api/placeholder/400/300';
+          }}
         />
         <div className="absolute top-4 left-4">
           {getStatusBadge(festival.status)}
         </div>
       </div>
-      
+
       <div className="p-6">
         <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
           {festival.festivalName}
         </h3>
         <p className="text-gray-600 mb-4 line-clamp-2">{festival.theme}</p>
-        
+
         <div className="space-y-2 text-sm text-gray-600 mb-4">
           <div className="flex items-center">
             <MapPin size={16} className="mr-2 flex-shrink-0" />
@@ -315,12 +353,12 @@ const FestivalCard = ({ festival, user, onDelete, formatDate, getStatusBadge }) 
             <span>{formatDate(festival.startDate)} - {formatDate(festival.endDate)}</span>
           </div>
         </div>
-        
+
         <div className="flex justify-between text-sm text-gray-600 mb-4 pt-4 border-t border-gray-200">
           <span>{festival.maxFoodBooths || 0} gian ăn</span>
           <span>{festival.maxBeverageBooths || 0} gian uống</span>
         </div>
-        
+
         <div className="flex space-x-2">
           <Link
             to={`/app/festivals/${festival.festivalId}`}
@@ -351,24 +389,27 @@ const FestivalCard = ({ festival, user, onDelete, formatDate, getStatusBadge }) 
   );
 };
 
-const FestivalListItem = ({ festival, user, onDelete, formatDate, getStatusBadge }) => {
+const FestivalListItem = ({ festival, user, onDelete, formatDate, getStatusBadge, getFestivalImage }) => {
   const hasRole = (roles) => roles.includes(user?.role);
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-sm transition-shadow">
       <div className="flex items-start space-x-4">
-        <img 
-          src={festival.imageUrl || '/api/placeholder/400/300'} 
-          alt={festival.festivalName} 
+        <img
+          src={getFestivalImage(festival.festivalId)}
+          alt={festival.festivalName}
           className="w-24 h-24 rounded-lg object-cover flex-shrink-0"
+          onError={(e) => {
+            e.target.src = '/api/placeholder/400/300';
+          }}
         />
-        
+
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
               <h3 className="text-lg font-bold text-gray-900 mb-1">{festival.festivalName}</h3>
               <p className="text-gray-600 mb-2">{festival.theme}</p>
-              
+
               <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                 <span className="flex items-center">
                   <MapPin size={14} className="mr-1" />
@@ -380,13 +421,13 @@ const FestivalListItem = ({ festival, user, onDelete, formatDate, getStatusBadge
                 </span>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-3 ml-4">
               {getStatusBadge(festival.status)}
-              
+
               <div className="flex space-x-2">
                 <Link
-                  to={`/app/festivals/${festival.id}`}
+                  to={`/app/festivals/${festival.festivalId}`}
                   className="bg-blue-50 text-blue-700 py-2 px-4 rounded-lg hover:bg-blue-100 transition-colors font-medium"
                 >
                   <Eye size={16} className="inline mr-1" />
@@ -395,7 +436,7 @@ const FestivalListItem = ({ festival, user, onDelete, formatDate, getStatusBadge
                 {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && (
                   <>
                     <Link
-                      to={`/app/festivals/${festival.id}/edit`}
+                      to={`/app/festivals/${festival.festivalId}/edit`}
                       className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       <Edit size={16} />

@@ -512,7 +512,6 @@ const CreateGroupForm = ({ onClose }) => {
     
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
-      console.log('Creating group:', formData);
       onClose();
     } catch (error) {
       console.error('Error creating group:', error);

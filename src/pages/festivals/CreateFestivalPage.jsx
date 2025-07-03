@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { ArrowLeft, Save } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import useModal  from 'antd/es/modal/useModal';
+import useModal from 'antd/es/modal/useModal';
 import { useAuth } from '../../contexts/AuthContext';
 import { festivalServices } from '../../services/festivalServices';
 import { festivalSchoolServices } from '../../services/festivalSchoolServices';
@@ -93,7 +93,21 @@ const CreateFestivalPage = () => {
       const festivalResponse = await festivalServices.create(festivalData);
       const festivalId = festivalResponse.data.festivalId;
 
+      if (selectedImages.length > 0) {
+        for (const imageFile of selectedImages) {
+          await uploadService.uploadFestivalImage(imageFile.file, festivalId);
+        }
+      }
+
+      await festivalSchoolServices.create({
+        festivalId: festivalId,
+        schoolId: user.schoolId
+      });
+
       let mapUrl = '';
+      if (selectedMapImage) {
+        mapUrl = await uploadService.uploadImage(selectedMapImage, 'maps');
+      }
 
       const mapData = {
         festivalId: festivalId,
@@ -103,6 +117,18 @@ const CreateFestivalPage = () => {
       };
       const mapResponse = await festivalMapServices.create(mapData);
       const mapId = mapResponse.data.mapId;
+
+      for (const location of mapLocations) {
+        if (location.locationName.trim()) {
+          await mapLocationServices.create({
+            mapId: mapId,
+            locationName: location.locationName,
+            locationType: location.locationType,
+            isOccupied: false,
+            coordinates: location.coordinates
+          });
+        }
+      }
 
       const menuData = {
         festivalId: festivalId,
@@ -122,7 +148,6 @@ const CreateFestivalPage = () => {
             itemType: item.itemType,
             basePrice: parseFloat(item.basePrice) || 0
           });
-
 
           if (item.image) {
             try {

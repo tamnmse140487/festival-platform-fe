@@ -39,7 +39,6 @@ const CreateGamePage = () => {
         created_at: new Date().toISOString()
       };
 
-      console.log('Creating game:', gameData);
       
       await new Promise(resolve => setTimeout(resolve, 2000));
       
