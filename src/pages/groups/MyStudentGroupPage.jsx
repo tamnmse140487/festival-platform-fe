@@ -109,50 +109,6 @@ const MyStudentGroupPage = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <Card.Content>
-            <div className="flex items-center">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Users className="w-6 h-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Tổng nhóm</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalGroups}</p>
-              </div>
-            </div>
-          </Card.Content>
-        </Card>
-
-        <Card>
-          <Card.Content>
-            <div className="flex items-center">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Nhóm hoạt động</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.activeGroups}</p>
-              </div>
-            </div>
-          </Card.Content>
-        </Card>
-
-        <Card>
-          <Card.Content>
-            <div className="flex items-center">
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <DollarSign className="w-6 h-6 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Tổng ngân sách</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalBudget.toLocaleString()}đ</p>
-              </div>
-            </div>
-          </Card.Content>
-        </Card>
-      </div>
-
       <Card>
         <Card.Content>
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
