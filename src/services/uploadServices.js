@@ -1,6 +1,7 @@
 import { imageServices } from './imageServices';
 
 const uploadImageToCloudinary = async (file, folder = 'festivals') => {
+  console.log("file: ", file)
   try {
     const formData = new FormData();
     formData.append("file", file);
@@ -37,6 +38,8 @@ const uploadImageToCloudinary = async (file, folder = 'festivals') => {
 export const uploadService = {
   uploadImage: async (file, folder = 'festivals', entityData = {}) => {
     try {
+      console.log("file, :", file)
+      console.log(" folder: ", folder)
       const uploadResult = await uploadImageToCloudinary(file, folder);
       
       if (Object.keys(entityData).length > 0) {
@@ -46,7 +49,7 @@ export const uploadService = {
           ...entityData
         };
         
-        await imageServices.create(imageData);
+        await imageServices.addToEntity(imageData);
       }
       
       return uploadResult.url;

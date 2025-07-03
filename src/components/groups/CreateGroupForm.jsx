@@ -108,7 +108,7 @@ const InviteTeacherModal = ({ onClose, onSubmit }) => {
                     className="p-3 rounded-lg cursor-pointer transition-colors hover:bg-gray-50 border border-transparent hover:border-gray-200"
                   >
                     <div className="font-medium text-gray-900">
-                      {account.fullNme || 'Chưa có tên'}
+                      {account.fullName || 'Chưa có tên'}
                     </div>
                     <div className="text-sm text-gray-600">{account.email}</div>
                     {account.phoneNumber && (
@@ -135,7 +135,7 @@ const InviteTeacherModal = ({ onClose, onSubmit }) => {
                 </div>
                 <div>
                   <div className="font-medium text-gray-900">
-                    {selectedTeacher.fullNme || 'Chưa có tên'}
+                    {selectedTeacher.fullName || 'Chưa có tên'}
                   </div>
                   <div className="text-sm text-gray-600">{selectedTeacher.email}</div>
                   {selectedTeacher.phoneNumber && (

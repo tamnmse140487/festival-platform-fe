@@ -48,7 +48,7 @@ const GroupDetailModal = ({ group, isOpen, onClose, onRefresh }) => {
             return {
               ...member,
               email: accountData.email,
-              fullNme: accountData.fullNme,
+              fullName: accountData.fullName,
               phoneNumber: accountData.phoneNumber
             }
           } catch (error) {

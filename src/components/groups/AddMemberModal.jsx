@@ -142,7 +142,7 @@ const AddMemberModal = ({ onClose, onSubmit }) => {
                                                 className="p-3 rounded-lg cursor-pointer transition-colors hover:bg-gray-50 border border-transparent hover:border-gray-200"
                                             >
                                                 <div className="font-medium text-gray-900">
-                                                    {account.fullNme || 'Chưa có tên'}
+                                                    {account.fullName || 'Chưa có tên'}
                                                 </div>
                                                 <div className="text-sm text-gray-600">{account.email}</div>
                                                 {account.phoneNumber && (
@@ -170,7 +170,7 @@ const AddMemberModal = ({ onClose, onSubmit }) => {
                                 <div key={member.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                     <div className="flex-1">
                                         <div className="font-medium text-gray-900">
-                                            {member.fullNme || 'Chưa có tên'}
+                                            {member.fullName || 'Chưa có tên'}
                                         </div>
                                         <div className="text-sm text-gray-600">{member.email}</div>
                                         {member.phoneNumber && (

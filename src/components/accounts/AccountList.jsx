@@ -52,9 +52,9 @@ const AccountList = ({ accounts, loading, roleIds, onRefresh }) => {
         },
         {
             title: 'Họ tên',
-            dataIndex: 'fullNme',
-            key: 'fullNme',
-            sorter: (a, b) => a.fullNme.localeCompare(b.fullNme),
+            dataIndex: 'fullName',
+            key: 'fullName',
+            sorter: (a, b) => a.fullName.localeCompare(b.fullName),
         },
         {
             title: 'Email',

@@ -95,7 +95,7 @@ const MemberList = ({
                         <div>
                             <div className="flex items-center space-x-2">
                                 <h5 className="font-medium text-gray-900">
-                                    {member.fullNme || 'Chưa có tên'}
+                                    {member.fullName || 'Chưa có tên'}
                                 </h5>
                                 <span className={`px-2 py-1 text-xs font-medium rounded ${getRoleColor(member.role)}`}>
                                     {GROUP_ROLE_LABELS[member.role]}

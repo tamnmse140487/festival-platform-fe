@@ -323,7 +323,7 @@ const FestivalCard = ({ festival, user, onDelete, formatDate, getStatusBadge }) 
         
         <div className="flex space-x-2">
           <Link
-            to={`/app/festivals/${festival.id}`}
+            to={`/app/festivals/${festival.festivalId}`}
             className="flex-1 bg-blue-50 text-blue-700 py-2 px-4 rounded-lg hover:bg-blue-100 transition-colors text-center font-medium"
           >
             <Eye size={16} className="inline mr-1" />
@@ -332,7 +332,7 @@ const FestivalCard = ({ festival, user, onDelete, formatDate, getStatusBadge }) 
           {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && (
             <>
               <Link
-                to={`/app/festivals/${festival.id}/edit`}
+                to={`/app/festivals/${festival.festivalId}/edit`}
                 className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <Edit size={16} />

@@ -59,7 +59,7 @@ const InviteTeacherModal = ({ onClose, onSubmit }) => {
 
   useEffect(() => {
     const filtered = teachers.filter(teacher =>
-      teacher.fullNme?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      teacher.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       teacher.email?.toLowerCase().includes(searchTerm.toLowerCase())
     )
     setFilteredTeachers(filtered)
@@ -105,7 +105,7 @@ const InviteTeacherModal = ({ onClose, onSubmit }) => {
                     }`}
                 >
                   <div className="font-medium text-gray-900">
-                    {teacher.fullNme || 'Chưa có tên'}
+                    {teacher.fullName || 'Chưa có tên'}
                   </div>
                   <div className="text-sm text-gray-600">{teacher.email}</div>
                   {teacher.phoneNumber && (
