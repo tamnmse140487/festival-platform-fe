@@ -241,7 +241,7 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          {user?.role === 'school_admin' && (
+          {user?.role === 'SchoolManager' && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Lễ hội đang diễn ra</h3>
               <div className="space-y-4">
@@ -273,7 +273,7 @@ const DashboardPage = () => {
         </div>
 
         <div className="space-y-6">
-          {user?.role === 'school_admin' && (
+          {user?.role === 'SchoolManager' && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Thống kê nhanh</h3>
               <div className="space-y-4">
@@ -297,7 +297,7 @@ const DashboardPage = () => {
             </div>
           )}
 
-          {user?.role === 'student' && (
+          {user?.role === 'Student' && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Mini Games yêu thích</h3>
               <div className="space-y-3">
@@ -320,10 +320,10 @@ const DashboardPage = () => {
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-6 text-white">
             <h3 className="text-lg font-semibold mb-2">Mẹo hữu ích</h3>
             <p className="text-sm opacity-90 mb-4">
-              {user?.role === 'school_admin' && "Thường xuyên kiểm tra và phê duyệt các gian hàng để tăng sự hài lòng của học sinh."}
-              {user?.role === 'teacher' && "Động viên học sinh tham gia tích cực vào các hoạt động lễ hội để tăng trải nghiệm học tập."}
-              {user?.role === 'student' && "Tham gia mini games để tích lũy điểm và đổi lấy những phần quà hấp dẫn!"}
-              {user?.role === 'supplier' && "Cập nhật thường xuyên giá cả và chất lượng nguyên liệu để thu hút nhiều đối tác hơn."}
+              {user?.role === 'SchoolManager' && "Thường xuyên kiểm tra và phê duyệt các gian hàng để tăng sự hài lòng của học sinh."}
+              {user?.role === 'Teacher' && "Động viên học sinh tham gia tích cực vào các hoạt động lễ hội để tăng trải nghiệm học tập."}
+              {user?.role === 'Student' && "Tham gia mini games để tích lũy điểm và đổi lấy những phần quà hấp dẫn!"}
+              {user?.role === 'Supplier' && "Cập nhật thường xuyên giá cả và chất lượng nguyên liệu để thu hút nhiều đối tác hơn."}
             </p>
             <button className="text-sm bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition-colors">
               Tìm hiểu thêm
