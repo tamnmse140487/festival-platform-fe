@@ -14,7 +14,8 @@ import {
   Play,
   X,
   Check,
-  Handshake
+  Handshake,
+  Store
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
@@ -34,6 +35,7 @@ import MapTab from '../../components/festivalDetail/MapTab';
 import MenuTab from '../../components/festivalDetail/MenuTab';
 import IngredientRegistrationModal from '../../components/festivalDetail/IngredientRegistrationModal';
 import { ROLE_NAME, FESTIVAL_STATUS } from '../../utils/constants';
+import BoothRegistrationModal from '../../components/booths/BoothRegistrationModal';
 
 const FestivalDetailPage = () => {
   const { id } = useParams();
@@ -148,6 +150,8 @@ const FestivalDetailPage = () => {
   const handleIngredientModalClose = () => {
     setShowIngredientModal(false);
   };
+
+
 
   if (loading) {
     return (
@@ -301,14 +305,15 @@ const FestivalDetailPage = () => {
 
         <div className="flex items-center space-x-3">
           {hasRole([ROLE_NAME.SUPPLIER]) && festival.status === FESTIVAL_STATUS.PUBLISHED && (
-            <Button 
-              variant="success" 
+            <Button
+              variant="success"
               icon={<Handshake size={16} />}
               onClick={() => setShowIngredientModal(true)}
             >
               Đăng ký cung cấp nguyên liệu
             </Button>
           )}
+
           {getStatusActions()}
           <Button variant="outline" icon={<Share2 size={16} />}>
             Chia sẻ
@@ -321,6 +326,7 @@ const FestivalDetailPage = () => {
               Chỉnh sửa
             </Button>
           )}
+
         </div>
       </div>
 
@@ -370,7 +376,7 @@ const FestivalDetailPage = () => {
 
           {activeTab === 'overview' && <OverviewTab festival={festival} />}
           {activeTab === 'images' && <ImagesTab festivalImages={festivalImages} loading={loading} />}
-          {activeTab === 'map' && <MapTab festivalMap={festivalMap} mapLocations={mapLocations} loading={loading} />}
+          {activeTab === 'map' && <MapTab festivalMap={festivalMap} mapLocations={mapLocations} festival={festival} festivalMenu={festivalMenu} menuItems={menuItems} menuItemImages={menuItemImages} loading={loading} />}
           {activeTab === 'menu' && <MenuTab festivalMenu={festivalMenu} menuItems={menuItems} menuItemImages={menuItemImages} loading={loading} />}
         </div>
 
@@ -484,6 +490,8 @@ const FestivalDetailPage = () => {
         festivalId={parseInt(id)}
         supplierId={user?.supplierId}
       />
+
+
     </div>
   );
 };
