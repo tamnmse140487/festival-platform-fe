@@ -3,9 +3,6 @@ import { ShoppingCart, Image as ImageIcon } from 'lucide-react';
 import Card from '../common/Card';
 
 const MenuTab = ({ festivalMenu, menuItems, menuItemImages, loading }) => {
-  console.log("festivalMenu: ", festivalMenu)
-  console.log("menuItems: ", menuItems)
-  console.log("menuItemImages: ", menuItemImages)
   
   if (loading) {
     return (

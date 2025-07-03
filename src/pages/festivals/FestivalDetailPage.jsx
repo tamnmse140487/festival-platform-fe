@@ -13,7 +13,8 @@ import {
   Image as ImageIcon,
   Play,
   X,
-  Check
+  Check,
+  Handshake
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
@@ -31,6 +32,7 @@ import OverviewTab from '../../components/festivalDetail/OverviewTab';
 import ImagesTab from '../../components/festivalDetail/ImagesTab';
 import MapTab from '../../components/festivalDetail/MapTab';
 import MenuTab from '../../components/festivalDetail/MenuTab';
+import IngredientRegistrationModal from '../../components/festivalDetail/IngredientRegistrationModal';
 import { ROLE_NAME, FESTIVAL_STATUS } from '../../utils/constants';
 
 const FestivalDetailPage = () => {
@@ -47,6 +49,7 @@ const FestivalDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showIngredientModal, setShowIngredientModal] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
@@ -140,6 +143,10 @@ const FestivalDetailPage = () => {
     } finally {
       setIsUpdatingStatus(false);
     }
+  };
+
+  const handleIngredientModalClose = () => {
+    setShowIngredientModal(false);
   };
 
   if (loading) {
@@ -293,6 +300,15 @@ const FestivalDetailPage = () => {
         </div>
 
         <div className="flex items-center space-x-3">
+          {hasRole([ROLE_NAME.SUPPLIER]) && festival.status === FESTIVAL_STATUS.PUBLISHED && (
+            <Button 
+              variant="success" 
+              icon={<Handshake size={16} />}
+              onClick={() => setShowIngredientModal(true)}
+            >
+              Đăng ký cung cấp nguyên liệu
+            </Button>
+          )}
           {getStatusActions()}
           <Button variant="outline" icon={<Share2 size={16} />}>
             Chia sẻ
@@ -341,8 +357,8 @@ const FestivalDetailPage = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
                 >
                   {tab.icon}
@@ -461,6 +477,13 @@ const FestivalDetailPage = () => {
           </div>
         </div>
       </Modal>
+
+      <IngredientRegistrationModal
+        isOpen={showIngredientModal}
+        onClose={handleIngredientModalClose}
+        festivalId={parseInt(id)}
+        supplierId={user?.supplierId}
+      />
     </div>
   );
 };

@@ -13,7 +13,8 @@ import {
   User,
   Settings,
   ChefHat,
-  UserPen
+  UserPen,
+  Handshake
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLE_NAME } from '../../utils/constants';
@@ -50,6 +51,13 @@ const Sidebar = ({ isOpen, onClose }) => {
       icon: ChefHat,
       path: '/app/ingredients',
       roles: [ROLE_NAME.SUPPLIER, ROLE_NAME.ADMIN]
+    },
+    {
+      id: 'supplies',
+      label: 'Quản lý cung cấp',
+      icon: Handshake,
+      path: '/app/supplies',
+      roles: [ROLE_NAME.SUPPLIER, ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER]
     },
     {
       id: 'accounts',

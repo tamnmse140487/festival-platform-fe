@@ -18,6 +18,7 @@ import IngredientPage from "../pages/ingredient/IngredientPage";
 import { ROLE_NAME } from '../utils/constants';
 import MyStudentGroupPage from '../pages/groups/MyStudentGroupPage';
 import AccountManagementPage from '../pages/accounts/AccountManagementPage';
+import SupplyManagementPage from '../pages/suppliers/SupplyManagementPage';
 
 export const protectedRoutes = [
   // Dashboard
@@ -49,11 +50,16 @@ export const protectedRoutes = [
     roles: []
   },
 
-  // Suppliers
+  // Supplier
   {
     path: "/app/suppliers",
     element: <SupplierListPage />,
     roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.SUPPLIER]
+  },
+  {
+    path: "/app/supplies",
+    element: <SupplyManagementPage />,
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPPLIER, ROLE_NAME.SCHOOL_MANAGER]
   },
 
   // Groups
@@ -128,7 +134,7 @@ export const protectedRoutes = [
   },
 
   //Accounts
-   {
+  {
     path: "/app/accounts",
     element: <AccountManagementPage />,
     roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER]

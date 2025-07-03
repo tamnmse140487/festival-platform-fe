@@ -14,6 +14,15 @@ export const FESTIVAL_STATUS = {
   CANCELLED: "cancelled",
 };
 
+export const FESTIVAL_INGREDIENT_STATUS = {
+  AVAILABLE: 'available',
+  LIMITED: 'limited',
+  OUT_OF_STOCK: 'out_of_stock',
+  PENDING: 'pending',
+  APPROVED: 'approved',
+  REJECTED: 'rejected'
+};
+
 export const GROUP_ROLE = {
   LEADER: "leader",
   MEMBER: "member",
