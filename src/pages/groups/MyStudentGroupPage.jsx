@@ -10,7 +10,7 @@ import Input from '../../components/common/Input'
 import Card from '../../components/common/Card'
 import Modal from '../../components/common/Modal'
 import GroupDetailModal from '../../components/groups/GroupDetailModal'
-import CreateGroupModal from '../../components/groups/CreateGroupForm'
+import CreateGroupModal from '../../components/groups/CreateGroupModal'
 
 const MyStudentGroupPage = () => {
   const { user } = useAuth()

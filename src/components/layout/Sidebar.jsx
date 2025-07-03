@@ -81,6 +81,13 @@ const Sidebar = ({ isOpen, onClose }) => {
       roles: [ROLE_NAME.STUDENT]
     },
     {
+      id: 'schools',
+      label: 'Quản lý trường',
+      icon: School,
+      path: '/app/schools',
+      roles: [ROLE_NAME.ADMIN]
+    },
+    {
       id: 'booths',
       label: 'Gian hàng',
       icon: ShoppingCart,
@@ -100,13 +107,6 @@ const Sidebar = ({ isOpen, onClose }) => {
       icon: Coins,
       path: '/app/points',
       roles: [ROLE_NAME.STUDENT, ROLE_NAME.GUEST]
-    },
-    {
-      id: 'schools',
-      label: 'Quản lý trường',
-      icon: School,
-      path: '/app/schools',
-      roles: [ROLE_NAME.ADMIN]
     },
     {
       id: 'system',
