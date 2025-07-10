@@ -60,6 +60,13 @@ const Sidebar = ({ isOpen, onClose }) => {
       roles: [ROLE_NAME.SUPPLIER, ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER]
     },
     {
+      id: 'schools',
+      label: 'Quản lý trường',
+      icon: School,
+      path: '/app/schools',
+      roles: [ROLE_NAME.ADMIN]
+    },
+    {
       id: 'accounts',
       label: 'Quản lý tài khoản',
       icon: UserPen,
@@ -80,20 +87,14 @@ const Sidebar = ({ isOpen, onClose }) => {
       path: '/app/my-groups',
       roles: [ROLE_NAME.STUDENT]
     },
-    {
-      id: 'schools',
-      label: 'Quản lý trường',
-      icon: School,
-      path: '/app/schools',
-      roles: [ROLE_NAME.ADMIN]
-    },
-    {
-      id: 'booths',
-      label: 'Gian hàng',
-      icon: ShoppingCart,
-      path: '/app/booths',
-      roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER]
-    },
+
+    // {
+    //   id: 'booths',
+    //   label: 'Gian hàng',
+    //   icon: ShoppingCart,
+    //   path: '/app/booths',
+    //   roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER]
+    // },
     {
       id: 'games',
       label: 'Mini Games',
@@ -108,13 +109,13 @@ const Sidebar = ({ isOpen, onClose }) => {
       path: '/app/points',
       roles: [ROLE_NAME.STUDENT, ROLE_NAME.GUEST]
     },
-    {
-      id: 'system',
-      label: 'Hệ thống',
-      icon: Settings,
-      path: '/app/system',
-      roles: [ROLE_NAME.ADMIN]
-    }
+    // {
+    //   id: 'system',
+    //   label: 'Hệ thống',
+    //   icon: Settings,
+    //   path: '/app/system',
+    //   roles: [ROLE_NAME.ADMIN]
+    // }
   ];
 
   const visibleNavItems = navigationItems.filter(item =>

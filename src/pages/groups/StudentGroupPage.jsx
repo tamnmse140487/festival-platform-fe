@@ -10,7 +10,6 @@ import Input from '../../components/common/Input'
 import Card from '../../components/common/Card'
 import Modal from '../../components/common/Modal'
 import GroupDetailModal from '../../components/groups/GroupDetailModal'
-import CreateGroupModal from '../../components/groups/CreateGroupModal'
 
 const StudentGroupPage = () => {
   const { user } = useAuth()
@@ -20,12 +19,10 @@ const StudentGroupPage = () => {
   const [statusFilter, setStatusFilter] = useState('all')
   const [selectedGroup, setSelectedGroup] = useState(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
-  const [showCreateModal, setShowCreateModal] = useState(false)
 
   const fetchGroups = async () => {
     setLoading(true)
     try {
-      // Bước 1: Lấy danh sách các nhóm mà user tham gia
       const memberResponse = await groupMemberServices.get({
         accountId: user?.id
       })
@@ -39,7 +36,6 @@ const StudentGroupPage = () => {
         return
       }
 
-      // Bước 2: Lấy thông tin chi tiết của từng nhóm với xử lý lỗi riêng biệt
       const groupPromises = groupIds.map(async (member) => {
         try {
           const response = await studentGroupServices.get({
@@ -49,24 +45,21 @@ const StudentGroupPage = () => {
           return response.data
         } catch (error) {
           console.error(`Error fetching group ${member.groupId}:`, error)
-          return null // Trả về null nếu có lỗi
+          return null 
         }
       })
 
       const groupResponses = await Promise.all(groupPromises)
 
-      // Bước 3: Flatten và lọc dữ liệu
       const groupsData = groupResponses
         .filter(group => group !== null)
         .flatMap(group => {
-          // Nếu group là array thì spread, nếu không thì return as is
           return Array.isArray(group) ? group : [group]
         })
 
       console.log("Groups data: ", groupsData)
       setGroups(groupsData)
 
-      // Hiển thị warning nếu có group nào lỗi
       const failedCount = groupResponses.filter(group => group === null).length
       if (failedCount > 0) {
         toast.warning(`Không thể tải ${failedCount} nhóm`)
@@ -78,31 +71,6 @@ const StudentGroupPage = () => {
       setGroups([])
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleCreateGroup = async (groupData) => {
-    try {
-      const groupResponse = await studentGroupServices.create({
-        schoolId: 1,
-        accountId: user?.id,
-        ...groupData
-      })
-
-      if (groupResponse.data?.groupId) {
-        await groupMemberServices.create({
-          groupId: groupResponse.data.groupId,
-          accountId: user?.id,
-          role: GROUP_ROLE.LEADER
-        })
-      }
-
-      toast.success('Tạo nhóm thành công')
-      setShowCreateModal(false)
-      fetchGroups()
-    } catch (error) {
-      toast.error('Tạo nhóm thất bại')
-      console.error('Error creating group:', error)
     }
   }
 
@@ -118,15 +86,6 @@ const StudentGroupPage = () => {
     return matchesSearch && matchesStatus
   })
 
-  const getStats = () => {
-    const totalGroups = groups.length
-    const activeGroups = groups.filter(g => g.status === 'active').length
-    const totalBudget = groups.reduce((sum, g) => sum + (g.groupBudget || 0), 0)
-
-    return { totalGroups, activeGroups, totalBudget }
-  }
-
-  const stats = getStats()
 
   useEffect(() => {
     if (user?.id) {
@@ -190,12 +149,7 @@ const StudentGroupPage = () => {
                   : 'Chưa có nhóm học sinh nào được tạo.'
                 }
               </p>
-              <Button
-                onClick={() => setShowCreateModal(true)}
-                icon={<Plus size={16} />}
-              >
-                Tạo nhóm đầu tiên
-              </Button>
+              
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -218,17 +172,6 @@ const StudentGroupPage = () => {
         onRefresh={fetchGroups}
       />
 
-      <Modal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        title="Tạo nhóm học sinh mới"
-        size="md"
-      >
-        <CreateGroupModal
-          onClose={() => setShowCreateModal(false)}
-          onSubmit={handleCreateGroup}
-        />
-      </Modal>
     </div>
   )
 }

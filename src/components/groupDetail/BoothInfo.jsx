@@ -37,8 +37,8 @@ const BoothInfo = ({ groupId, group, members }) => {
           locationResponse,
           boothImagesResponse
         ] = await Promise.all([
-          festivalServices.get({ id: boothData.festivalId }),
-          mapLocationServices.get({ id: boothData.locationId }),
+          festivalServices.get({ festivalId: boothData.festivalId }),
+          mapLocationServices.get({ locationId: boothData.locationId }),
           imageServices.get({ boothId: boothData.boothId })
         ])
         setFestival(festivalResponse.data?.[0] || null)
@@ -354,12 +354,7 @@ const BoothInfo = ({ groupId, group, members }) => {
               <label className="text-sm font-medium text-gray-500">Loại vị trí</label>
               <p className="text-gray-900 mt-1">{location.locationType}</p>
             </div>
-            <div>
-              <label className="text-sm font-medium text-gray-500">Trạng thái</label>
-              <p className="text-gray-900 mt-1">
-                {location.isOccupied ? 'Đã có nhóm đăng ký' : 'Còn trống'}
-              </p>
-            </div>
+           
           </div>
 
           {mapUrl && (
