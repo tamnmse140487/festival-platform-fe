@@ -11,6 +11,9 @@ import SchoolCard from '../../components/schools/SchoolCard';
 import SchoolDetailModal from '../../components/schools/SchoolDetailModal';
 import CreateSchoolForm from '../../components/schools/CreateSchoolForm';
 import { schoolServices } from '../../services/schoolServices';
+import { accountServices } from '../../services/accountServices';
+import useModal from 'antd/es/modal/useModal';
+import toast from 'react-hot-toast';
 
 const SchoolListPage = () => {
   const { hasRole } = useAuth();
@@ -21,6 +24,8 @@ const SchoolListPage = () => {
   const [selectedSchool, setSelectedSchool] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [modal, contextHolder] = useModal();
 
   const itemsPerPage = 10;
 
@@ -32,7 +37,7 @@ const SchoolListPage = () => {
     try {
       setLoading(true);
       const response = await schoolServices.get();
-      setSchools(response.data || []);
+      setSchools((response.data || []).reverse());
     } catch (error) {
       console.error('Error loading schools:', error);
     } finally {
@@ -40,9 +45,41 @@ const SchoolListPage = () => {
     }
   };
 
+  const handleDeleteSchool = (school) => {
+    modal.confirm({
+      title: 'Xác nhận xóa trường học',
+      content: `Bạn có chắc chắn muốn xóa trường học "${school.schoolName}"? Hành động này không thể hoàn tác!`,
+      okText: 'Xóa',
+      okType: 'danger',
+      cancelText: 'Hủy',
+      confirmLoading: deleteLoading,
+      onOk: async () => {
+        try {
+          setDeleteLoading(true);
+
+          await schoolServices.delete({ id: school.schoolId });
+
+          if (school.accountId) {
+            await accountServices.delete({ id: school.accountId });
+          }
+
+          setSchools(prevSchools => prevSchools.filter(s => s.schoolId !== school.schoolId));
+
+          toast.success("Xóa trường học thành công!")
+
+        } catch (error) {
+          console.error('Error deleting school:', error);
+          toast.error('Có lỗi xảy ra khi xóa trường học. Vui lòng thử lại.')
+        } finally {
+          setDeleteLoading(false);
+        }
+      },
+    });
+  };
+
   const filteredSchools = schools.filter(school => {
     const matchesSearch = school.schoolName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         school.address.toLowerCase().includes(searchTerm.toLowerCase());
+      school.address.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
   });
 
@@ -57,15 +94,18 @@ const SchoolListPage = () => {
     setShowDetailModal(true);
   };
 
-  const handleSchoolCreated = () => {
+  const handleSchoolCreated = (newSchool) => {
     setShowCreateModal(false);
-    loadSchools();
+    setSchools(prev => [newSchool, ...prev]);
   };
 
-  const handleSchoolUpdated = () => {
+  const handleSchoolUpdated = (updatedSchool) => {
     setShowDetailModal(false);
-    loadSchools();
+    setSchools(prev =>
+      prev.map(s => (s.schoolId === updatedSchool.schoolId ? updatedSchool : s))
+    );
   };
+
 
   if (loading) {
     return (
@@ -77,6 +117,7 @@ const SchoolListPage = () => {
 
   return (
     <div className="space-y-6">
+      {contextHolder}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Quản lý Trường học</h1>
@@ -84,8 +125,8 @@ const SchoolListPage = () => {
             Quản lý tất cả trường học trong hệ thống Festival Hub.
           </p>
         </div>
-        
-        <Button 
+
+        <Button
           icon={<Plus size={20} />}
           onClick={() => setShowCreateModal(true)}
         >
@@ -112,8 +153,8 @@ const SchoolListPage = () => {
             <div className="text-center py-12">
               <h3 className="text-lg font-medium text-gray-900 mb-2">Không tìm thấy trường học nào</h3>
               <p className="text-gray-600 mb-6">
-                {searchTerm 
-                  ? 'Thử thay đổi từ khóa tìm kiếm.' 
+                {searchTerm
+                  ? 'Thử thay đổi từ khóa tìm kiếm.'
                   : 'Chưa có trường học nào trong hệ thống.'
                 }
               </p>
@@ -121,10 +162,11 @@ const SchoolListPage = () => {
           ) : (
             <div className="space-y-4">
               {paginatedSchools.map(school => (
-                <SchoolCard 
-                  key={school.schoolId} 
-                  school={school} 
+                <SchoolCard
+                  key={school.schoolId}
+                  school={school}
                   onViewDetails={handleViewDetails}
+                  onDelete={handleDeleteSchool}
                 />
               ))}
             </div>
@@ -151,8 +193,8 @@ const SchoolListPage = () => {
         size="lg"
       >
         {selectedSchool && (
-          <SchoolDetailModal 
-            school={selectedSchool} 
+          <SchoolDetailModal
+            school={selectedSchool}
             onClose={() => setShowDetailModal(false)}
             onSchoolUpdated={handleSchoolUpdated}
           />
@@ -165,7 +207,7 @@ const SchoolListPage = () => {
         title="Thêm trường học mới"
         size="lg"
       >
-        <CreateSchoolForm 
+        <CreateSchoolForm
           onClose={() => setShowCreateModal(false)}
           onSchoolCreated={handleSchoolCreated}
         />

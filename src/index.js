@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import "./index.css";
 import App from "./App";
+import 'antd/dist/reset.css';
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(

@@ -4,7 +4,9 @@ import Input from '../common/Input';
 import { accountServices } from '../../services/accountServices';
 import { schoolServices } from '../../services/schoolServices';
 import { roleServices } from '../../services/roleServices';
+import { uploadService } from '../../services/uploadServices';
 import { ROLE_NAME } from '../../utils/constants';
+import { Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const CreateSchoolForm = ({ onClose, onSchoolCreated }) => {
@@ -23,6 +25,8 @@ const CreateSchoolForm = ({ onClose, onSchoolCreated }) => {
     const [errors, setErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const [schoolManagerRole, setSchoolManagerRole] = useState(null);
+    const [selectedLogoImage, setSelectedLogoImage] = useState(null);
+    const [previewImage, setPreviewImage] = useState(null);
 
     useEffect(() => {
         loadSchoolManagerRole();
@@ -43,7 +47,6 @@ const CreateSchoolForm = ({ onClose, onSchoolCreated }) => {
         const newErrors = {};
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         const phoneRegex = /^(0[2-9]|84[2-9])\d{8}$/;
-        const urlRegex = /^https?:\/\/.+\..+/;
 
         if (!formData.email) newErrors.email = 'Vui lòng nhập email';
         else if (!emailRegex.test(formData.email)) newErrors.email = 'Email không hợp lệ';
@@ -59,12 +62,28 @@ const CreateSchoolForm = ({ onClose, onSchoolCreated }) => {
         if (!formData.schoolName) newErrors.schoolName = 'Vui lòng nhập tên trường';
         if (!formData.address) newErrors.address = 'Vui lòng nhập địa chỉ';
         if (!formData.contactInfo) newErrors.contactInfo = 'Vui lòng nhập thông tin liên hệ';
-        if (formData.logoUrl && !urlRegex.test(formData.logoUrl))
-            newErrors.logoUrl = 'URL logo không hợp lệ';
 
         return newErrors;
     };
 
+    const handleLogoImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setSelectedLogoImage(file);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setPreviewImage(e.target.result);
+            };
+            reader.readAsDataURL(file);
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                if (newErrors.logoUrl) {
+                    delete newErrors.logoUrl;
+                }
+                return newErrors;
+            });
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -83,6 +102,19 @@ const CreateSchoolForm = ({ onClose, onSchoolCreated }) => {
 
         setIsLoading(true);
         try {
+            let logoUrl = formData.logoUrl;
+
+            if (selectedLogoImage) {
+                try {
+                    logoUrl = await uploadService.uploadAvatarImage(selectedLogoImage);
+                } catch (error) {
+                    console.error('Error uploading logo:', error);
+                    setErrors({ form: 'Có lỗi xảy ra khi upload logo' });
+                    setIsLoading(false);
+                    return;
+                }
+            }
+
             const accountData = {
                 fullName: formData.schoolName,
                 password: formData.password,
@@ -98,13 +130,17 @@ const CreateSchoolForm = ({ onClose, onSchoolCreated }) => {
                     schoolName: formData.schoolName,
                     address: formData.address,
                     contactInfo: formData.contactInfo,
-                    logoUrl: formData.logoUrl,
+                    logoUrl: logoUrl,
                     description: formData.description,
                     accountId: accountResponse.data.id
                 };
 
-                await schoolServices.create(schoolData);
-                onSchoolCreated();
+                const schoolResponse = await schoolServices.create(schoolData);
+                if (schoolResponse.data) {
+                    toast.success("Tạo trường học thành công!");
+                    onSchoolCreated(schoolResponse.data);
+                }
+
             }
         } catch (error) {
             console.error('Error creating school:', error);
@@ -114,17 +150,16 @@ const CreateSchoolForm = ({ onClose, onSchoolCreated }) => {
         }
     };
 
-
     const handleChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
 
         setErrors(prev => {
-        const newErrors = { ...prev };
-        if (newErrors[field]) {
-            delete newErrors[field];
-        }
-        return newErrors;
-    });
+            const newErrors = { ...prev };
+            if (newErrors[field]) {
+                delete newErrors[field];
+            }
+            return newErrors;
+        });
     };
 
     return (
@@ -201,7 +236,6 @@ const CreateSchoolForm = ({ onClose, onSchoolCreated }) => {
                     error={errors.address}
                 />
 
-
                 <Input
                     label="Thông tin liên hệ"
                     required
@@ -211,13 +245,53 @@ const CreateSchoolForm = ({ onClose, onSchoolCreated }) => {
                     error={errors.contactInfo}
                 />
 
-                <Input
-                    label="URL Logo"
-                    placeholder="https://..."
-                    value={formData.logoUrl}
-                    onChange={(e) => handleChange('logoUrl', e.target.value)}
-                    error={errors.logoUrl}
-                />
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Logo trường học
+                    </label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-500 transition-colors">
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleLogoImageChange}
+                            className="hidden"
+                            id="logo-upload"
+                        />
+                        <label
+                            htmlFor="logo-upload"
+                            className="cursor-pointer flex flex-col items-center"
+                        >
+                            <Upload size={24} className="text-gray-400 mb-2" />
+                            <span className="text-sm text-gray-600">
+                                Nhấn để tải ảnh lên
+                            </span>
+                            <span className="text-xs text-gray-400 mt-1">
+                                PNG, JPG, GIF tối đa 5MB
+                            </span>
+                        </label>
+                    </div>
+                    {previewImage && (
+                        <div className="mt-2">
+                            <img
+                                src={previewImage}
+                                alt="Logo preview"
+                                className="w-20 h-20 object-cover rounded-lg border border-gray-300"
+                            />
+                        </div>
+                    )}
+                    {formData.logoUrl && (
+                        <div className="mt-2">
+                            <img
+                                src={formData.logoUrl}
+                                alt="Logo preview"
+                                className="w-20 h-20 object-cover rounded-lg border border-gray-300"
+                            />
+                        </div>
+                    )}
+                    {errors.logoUrl && (
+                        <p className="text-red-500 text-sm mt-1">{errors.logoUrl}</p>
+                    )}
+                </div>
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
