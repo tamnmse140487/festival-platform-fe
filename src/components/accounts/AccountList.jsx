@@ -14,6 +14,8 @@ const AccountList = ({ accounts, loading, roleIds, onRefresh }) => {
             onRefresh()
         } catch (error) {
             toast.error('Xóa tài khoản thất bại')
+            toast.error(error?.response?.data?.message)
+            toast.error(error?.response?.data?.detail)
             console.error('Error deleting account:', error)
         } finally {
             setDeletingIds(prev => {

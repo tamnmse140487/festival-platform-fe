@@ -4,9 +4,10 @@ import { Plus, Edit, Trash2, Search, Package } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { ingredientServices } from '../../services/ingredientServices';
 import { useAuth } from '../../contexts/AuthContext';
+import { ROLE_NAME } from '../../utils/constants';
 
 const IngredientPage = () => {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
   const [ingredients, setIngredients] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -206,14 +207,15 @@ const IngredientPage = () => {
               className="pl-10"
             />
           </div>
-          <Button
+          {hasRole([ROLE_NAME.SUPPLIER]) && <Button
             type="primary"
             icon={<Plus className="w-4 h-4" />}
             onClick={handleCreate}
             className="bg-blue-600 hover:bg-blue-700"
           >
             Thêm nguyên liệu
-          </Button>
+          </Button>}
+
         </div>
       </div>
 
@@ -236,13 +238,14 @@ const IngredientPage = () => {
               <div className="py-8 text-center">
                 <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                 <p className="text-gray-500">Chưa có nguyên liệu nào</p>
-                <Button
+                {hasRole([ROLE_NAME.SUPPLIER]) && <Button
                   type="link"
                   onClick={handleCreate}
                   className="text-blue-600"
                 >
                   Thêm nguyên liệu đầu tiên
-                </Button>
+                </Button>}
+
               </div>
             ),
           }}

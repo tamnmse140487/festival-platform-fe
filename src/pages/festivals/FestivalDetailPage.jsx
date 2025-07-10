@@ -87,7 +87,7 @@ const FestivalDetailPage = () => {
         const map = mapResponse.data[0];
         setFestivalMap(map);
 
-        const locationsResponse = await mapLocationServices.get({ mapId: map.id });
+        const locationsResponse = await mapLocationServices.get({ mapId: map.mapId });
         setMapLocations(locationsResponse.data || []);
       }
 
@@ -95,7 +95,8 @@ const FestivalDetailPage = () => {
         const menu = menuResponse.data[0];
         setFestivalMenu(menu);
 
-        const itemsResponse = await menuItemServices.get({ menuId: menu.id });
+        const itemsResponse = await menuItemServices.get({ menuId: menu.menuId });
+        console.log("itemsResponse: ", itemsResponse)
         if (itemsResponse.data) {
           setMenuItems(itemsResponse.data);
 

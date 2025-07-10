@@ -3,7 +3,7 @@ import { ShoppingCart, Image as ImageIcon } from 'lucide-react';
 import Card from '../common/Card';
 
 const MenuTab = ({ festivalMenu, menuItems, menuItemImages, loading }) => {
-  
+
   if (loading) {
     return (
       <div className="space-y-6">
