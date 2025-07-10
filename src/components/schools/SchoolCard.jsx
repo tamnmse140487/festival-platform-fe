@@ -1,11 +1,16 @@
 import React from 'react';
-import { MapPin, Phone, Calendar, Eye, Edit, Users, Info } from 'lucide-react';
+import { MapPin, Phone, Calendar, Eye, Edit, Users, Info, Trash2 } from 'lucide-react';
 import Card from '../common/Card';
 import Button from '../common/Button';
 
-const SchoolCard = ({ school, onViewDetails }) => {
+const SchoolCard = ({ school, onViewDetails, onDelete }) => {
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('vi-VN');
+  };
+
+  const handleDelete = (e) => {
+    e.stopPropagation();
+    onDelete(school);
   };
 
   return (
@@ -65,7 +70,18 @@ const SchoolCard = ({ school, onViewDetails }) => {
                 >
                   Chi tiết
                 </Button>
-               
+                
+                {onDelete && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDelete}
+                    icon={<Trash2 size={16} />}
+                    className="text-red-600 hover:text-red-700 hover:border-red-300"
+                  >
+                    Xóa
+                  </Button>
+                )}
               </div>
             </div>
           </div>

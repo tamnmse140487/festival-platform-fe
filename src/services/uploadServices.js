@@ -64,11 +64,15 @@ export const uploadService = {
     return await uploadService.uploadImage(file, 'menu-items', { menuItemId });
   },
 
-  uploadMapImage: async (file, mapId) => {
-    return await uploadService.uploadImage(file, 'maps', { mapId });
+  uploadMapImage: async (file) => {
+    return await uploadService.uploadImage(file, 'maps');
   },
 
   uploadBoothImage: async (file, boothId) => {
     return await uploadService.uploadImage(file, 'booths', { boothId });
+  },
+
+  uploadAvatarImage: async (file) => {
+    return await uploadService.uploadImage(file, 'avatars');
   }
 };
