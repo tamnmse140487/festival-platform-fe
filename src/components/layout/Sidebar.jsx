@@ -29,14 +29,14 @@ const Sidebar = ({ isOpen, onClose }) => {
       label: 'Tổng quan',
       icon: Calendar,
       path: '/app/dashboard',
-      roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.STUDENT, ROLE_NAME.SUPPLIER, ROLE_NAME.TEACHER, ROLE_NAME.GUEST]
+      roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.STUDENT, ROLE_NAME.SUPPLIER, ROLE_NAME.TEACHER, ROLE_NAME.USER]
     },
     {
       id: 'festivals',
       label: 'Lễ hội',
       icon: Calendar,
       path: '/app/festivals',
-      roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.STUDENT, ROLE_NAME.SUPPLIER, ROLE_NAME.TEACHER, ROLE_NAME.GUEST]
+      roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.STUDENT, ROLE_NAME.SUPPLIER, ROLE_NAME.TEACHER, ROLE_NAME.USER]
     },
     {
       id: 'suppliers',
@@ -100,14 +100,14 @@ const Sidebar = ({ isOpen, onClose }) => {
       label: 'Mini Games',
       icon: GamepadIcon,
       path: '/app/games',
-      roles: [ROLE_NAME.STUDENT, ROLE_NAME.GUEST]
+      roles: [ROLE_NAME.STUDENT, ROLE_NAME.USER]
     },
     {
       id: 'points',
       label: 'Điểm tích lũy',
       icon: Coins,
       path: '/app/points',
-      roles: [ROLE_NAME.STUDENT, ROLE_NAME.GUEST]
+      roles: [ROLE_NAME.STUDENT, ROLE_NAME.USER]
     },
     // {
     //   id: 'system',
