@@ -164,7 +164,7 @@ const BoothInfo = ({ groupId, group, members }) => {
       return null
     }
 
-    if (booth.status === BOOTH_STATUS.ACTIVE) {
+    if (booth.status === BOOTH_STATUS.PENDING) {
       return (
         <div className="flex space-x-3 mt-4">
           <Button
