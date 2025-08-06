@@ -3,9 +3,11 @@ import { toast } from 'react-hot-toast'
 import { ROLE_NAME } from '../../utils/constants'
 import { useAuth } from '../../contexts/AuthContext'
 import { accountServices } from '../../services/accountServices'
+import { schoolAccountRelationServices } from '../../services/schoolAccountRelationServices'
 import { roleServices } from '../../services/roleServices'
 import AccountList from '../../components/accounts/AccountList'
 import CreateAccountModal from '../../components/accounts/CreateAccountModal'
+import { walletServices } from '../../services/walletServices'
 
 const AccountManagementPage = () => {
     const { user, hasRole } = useAuth()
@@ -44,21 +46,41 @@ const AccountManagementPage = () => {
     const fetchAccounts = async (roleIdsToUse = null) => {
         setLoading(true)
         try {
-            const currentRoleIds = roleIdsToUse || roleIds
-
-            if (!currentRoleIds.teacher || !currentRoleIds.student) {
+            if (!user?.schoolId) {
+                console.error('User không có schoolId')
+                setAccounts([])
                 return
             }
 
-            const [teacherAccounts, studentAccounts] = await Promise.all([
-                accountServices.get({ role: currentRoleIds.teacher }),
-                accountServices.get({ role: currentRoleIds.student })
-            ])
+            const schoolAccountRelations = await schoolAccountRelationServices.get({
+                schoolId: user.schoolId
+            })
 
-            const combinedAccounts = [
-                ...(teacherAccounts.data || []),
-                ...(studentAccounts.data || [])
-            ]
+            if (!schoolAccountRelations?.data || schoolAccountRelations.data.length === 0) {
+                setAccounts([])
+                return
+            }
+
+            const accountPromises = schoolAccountRelations.data.map(relation =>
+                accountServices.get({ id: relation.accountId })
+            )
+
+            const accountResults = await Promise.all(accountPromises)
+
+            const combinedAccounts = accountResults
+                .map((result, index) => {
+                    const accountData = result?.data?.[0] 
+                    if (accountData) {
+                        return {
+                            ...accountData,
+                            relationType: schoolAccountRelations.data[index].relationType,
+                            relationId: schoolAccountRelations.data[index].id,
+                            relationCreatedAt: schoolAccountRelations.data[index].createdAt
+                        }
+                    }
+                    return null
+                })
+                .filter(account => account !== null)
 
             setAccounts(combinedAccounts)
         } catch (error) {
@@ -71,7 +93,32 @@ const AccountManagementPage = () => {
 
     const handleCreateAccount = async (accountData) => {
         try {
-            await accountServices.create(accountData)
+            const accountResult = await accountServices.create(accountData)
+
+            if (accountResult.success || accountResult.data) {
+                const accountId = accountResult.data?.id || accountResult.id;
+
+                const walletData = {
+                    accountId: accountId,
+                    balance: 0
+                };
+                await walletServices.create(walletData);
+
+                if (user?.schoolId) {
+                    const relationType = accountData.roleId === roleIds.student
+                        ? ROLE_NAME.STUDENT
+                        : ROLE_NAME.TEACHER;
+
+                    const schoolAccountRelationData = {
+                        schoolId: user.schoolId,
+                        accountId: accountId,
+                        relationType: relationType
+                    };
+
+                    await schoolAccountRelationServices.create(schoolAccountRelationData);
+                }
+            }
+
             toast.success('Tạo tài khoản thành công')
             setShowCreateModal(false)
             fetchAccounts()

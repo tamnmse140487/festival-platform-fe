@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Table, Button, Popconfirm, Tag } from 'antd'
 import { toast } from 'react-hot-toast'
 import { accountServices } from '../../services/accountServices'
+import { ROLE_NAME } from '../../utils/constants'
 
 const AccountList = ({ accounts, loading, roleIds, onRefresh }) => {
     const [deletingIds, setDeletingIds] = useState(new Set())
@@ -31,14 +32,13 @@ const AccountList = ({ accounts, loading, roleIds, onRefresh }) => {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
-
         })
     }
 
-    const getRoleTag = (roleId) => {
-        if (roleId === roleIds.teacher) {
+    const getRoleTag = (relationType) => {
+        if (relationType === ROLE_NAME.TEACHER.toLowerCase()) {
             return <Tag color="blue">Giáo viên</Tag>
-        } else if (roleId === roleIds.student) {
+        } else if (relationType === ROLE_NAME.STUDENT.toLowerCase()) {
             return <Tag color="green">Học sinh</Tag>
         }
         return <Tag>Không xác định</Tag>
@@ -71,14 +71,14 @@ const AccountList = ({ accounts, loading, roleIds, onRefresh }) => {
         },
         {
             title: 'Vai trò',
-            dataIndex: 'roleId',
-            key: 'roleId',
-            render: (roleId) => getRoleTag(roleId),
+            dataIndex: 'relationType',
+            key: 'relationType',
+            render: (relationType) => getRoleTag(relationType),
             filters: [
-                { text: 'Giáo viên', value: roleIds.teacher },
-                { text: 'Học sinh', value: roleIds.student },
+                { text: 'Giáo viên', value: ROLE_NAME.TEACHER },
+                { text: 'Học sinh', value: ROLE_NAME.STUDENT },
             ],
-            onFilter: (value, record) => record.roleId === value,
+            onFilter: (value, record) => record.relationType === value,
         },
         {
             title: 'Ngày tạo',

@@ -40,7 +40,7 @@ const StudentGroupPage = () => {
         try {
           const response = await studentGroupServices.get({
             groupId: member.groupId,
-            schoolId: 1
+            schoolId: user?.schoolId
           })
           return response.data
         } catch (error) {
