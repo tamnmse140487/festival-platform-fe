@@ -90,7 +90,7 @@ export const protectedRoutes = [
   {
     path: "/app/games",
     element: <GameListPage />,
-    roles: [ROLE_NAME.TEACHER, ROLE_NAME.STUDENT, ROLE_NAME.GUEST]
+    roles: [ROLE_NAME.TEACHER, ROLE_NAME.STUDENT, ROLE_NAME.USER]
   },
   {
     path: "/app/games/create/:boothId",
@@ -102,7 +102,7 @@ export const protectedRoutes = [
   {
     path: "/app/points",
     element: <PointsPage />,
-    roles: [ROLE_NAME.STUDENT, ROLE_NAME.GUEST]
+    roles: [ROLE_NAME.STUDENT, ROLE_NAME.USER]
   },
 
   // Schools

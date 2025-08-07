@@ -7,6 +7,8 @@ import { roleServices } from '../../services/roleServices';
 import { accountServices } from '../../services/accountServices';
 import { supplierServices } from '../../services/supplierServices';
 import { toast } from 'react-hot-toast';
+import { ROLE_NAME } from '../../utils/constants';
+import { walletServices } from '../../services/walletServices';
 
 const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -29,14 +31,14 @@ const RegisterPage = () => {
       try {
         const response = await roleServices.get();
         const filteredRoles = response.data.filter(role =>
-          role.roleName === 'Guest' || role.roleName === 'Supplier'
+          role.roleName === ROLE_NAME.USER || role.roleName === ROLE_NAME.SUPPLIER
         );
         setAvailableRoles(filteredRoles);
       } catch (error) {
         toast.error('Không thể tải danh sách vai trò');
       }
     };
-    
+
     fetchRoles();
   }, []);
 
@@ -59,7 +61,7 @@ const RegisterPage = () => {
     setIsLoading(true);
     try {
       const completeData = { ...formData, ...data };
-      
+
       const accountData = {
         email: completeData.email,
         password: completeData.password,
@@ -73,7 +75,14 @@ const RegisterPage = () => {
       if (accountResult.success || accountResult.data) {
         const accountId = accountResult.data?.id || accountResult.id;
 
-        if (selectedRole === 'Supplier') {
+        const walletData = {
+          accountId: accountId,
+          balance: 0
+        };
+
+        await walletServices.create(walletData);
+
+        if (selectedRole === ROLE_NAME.SUPPLIER) {
           const supplierData = {
             accountId: accountId,
             companyName: completeData.companyName,
@@ -87,7 +96,7 @@ const RegisterPage = () => {
           await supplierServices.create(supplierData);
         }
 
-        if (selectedRole === 'Guest') {
+        if (selectedRole === ROLE_NAME.USER) {
           const loginResult = await login({
             email: completeData.email,
             password: completeData.password
@@ -132,7 +141,7 @@ const RegisterPage = () => {
           >
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                {role.roleName === 'Guest' ? (
+                {role.roleName === ROLE_NAME.USER ? (
                   <User className="w-6 h-6 text-blue-600" />
                 ) : (
                   <Building className="w-6 h-6 text-blue-600" />
@@ -140,10 +149,10 @@ const RegisterPage = () => {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {role.roleName === 'Guest' ? 'Khách' : 'Nhà cung cấp'}
+                  {role.roleName === ROLE_NAME.USER ? 'Khách' : 'Nhà cung cấp'}
                 </h3>
                 <p className="text-sm text-gray-600">
-                  {role.roleName === 'Guest'
+                  {role.roleName === ROLE_NAME.USER
                     ? 'Tài khoản khách để tham gia các hoạt động'
                     : 'Tài khoản nhà cung cấp sản phẩm, nguyên liệu'
                   }
@@ -166,7 +175,7 @@ const RegisterPage = () => {
           <ArrowLeft className="w-4 h-4 mr-1" />
           Quay lại
         </button>
-        {selectedRole === 'Supplier' && (
+        {selectedRole === ROLE_NAME.SUPPLIER && (
           <div className="flex space-x-2">
             <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
             <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
@@ -184,7 +193,7 @@ const RegisterPage = () => {
         </p>
       </div>
 
-      <form className="space-y-6" onSubmit={handleSubmit(selectedRole === 'Guest' ? onSubmit : handleNextStep)}>
+      <form className="space-y-6" onSubmit={handleSubmit(selectedRole === ROLE_NAME.USER ? onSubmit : handleNextStep)}>
         <div>
           <label className="block text-sm font-medium text-gray-700">Họ và tên</label>
           <div className="mt-1 relative">
@@ -318,7 +327,7 @@ const RegisterPage = () => {
           )}
         </div>
 
-        {selectedRole === 'Guest' && (
+        {selectedRole === ROLE_NAME.USER && (
           <div className="flex items-center">
             <input
               {...register('terms', {
@@ -340,7 +349,7 @@ const RegisterPage = () => {
             </label>
           </div>
         )}
-        {selectedRole === 'Guest' && errors.terms && (
+        {selectedRole === ROLE_NAME.USER && errors.terms && (
           <p className="text-sm text-red-600">{errors.terms.message}</p>
         )}
 
@@ -352,7 +361,7 @@ const RegisterPage = () => {
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            ) : selectedRole === 'Guest' ? (
+            ) : selectedRole === ROLE_NAME.USER ? (
               'Tạo tài khoản'
             ) : (
               <div className="flex items-center">
