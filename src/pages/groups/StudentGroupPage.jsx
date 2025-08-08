@@ -4,11 +4,10 @@ import { toast } from 'react-hot-toast'
 import { useAuth } from '../../contexts/AuthContext'
 import { studentGroupServices } from '../../services/studentGroupServices'
 import { groupMemberServices } from '../../services/groupMemberServices'
-import { ROLE_NAME, GROUP_ROLE, GROUP_ROLE_LABELS, getRoleColor } from '../../utils/constants'
+import { ROLE_NAME } from '../../utils/constants'
 import Button from '../../components/common/Button'
 import Input from '../../components/common/Input'
 import Card from '../../components/common/Card'
-import Modal from '../../components/common/Modal'
 import GroupDetailModal from '../../components/groups/GroupDetailModal'
 
 const StudentGroupPage = () => {
@@ -23,47 +22,49 @@ const StudentGroupPage = () => {
   const fetchGroups = async () => {
     setLoading(true)
     try {
-      const memberResponse = await groupMemberServices.get({
-        accountId: user?.id
-      })
+      let groupsData = []
 
-      console.log("Member response: ", memberResponse)
-
-      const groupIds = memberResponse.data || []
-
-      if (groupIds.length === 0) {
-        setGroups([])
-        return
-      }
-
-      const groupPromises = groupIds.map(async (member) => {
-        try {
-          const response = await studentGroupServices.get({
-            groupId: member.groupId,
-            schoolId: user?.schoolId
-          })
-          return response.data
-        } catch (error) {
-          console.error(`Error fetching group ${member.groupId}:`, error)
-          return null 
-        }
-      })
-
-      const groupResponses = await Promise.all(groupPromises)
-
-      const groupsData = groupResponses
-        .filter(group => group !== null)
-        .flatMap(group => {
-          return Array.isArray(group) ? group : [group]
+      if (user?.role === ROLE_NAME.SCHOOL_MANAGER) {
+        const groupResponses = await studentGroupServices.get({
+          schoolId: user?.schoolId
         })
 
-      console.log("Groups data: ", groupsData)
-      setGroups(groupsData)
+        groupsData = groupResponses.data || []
+      } else {
+        const memberResponse = await groupMemberServices.get({
+          accountId: user?.id
+        })
 
-      const failedCount = groupResponses.filter(group => group === null).length
-      if (failedCount > 0) {
-        toast.warning(`Không thể tải ${failedCount} nhóm`)
+        const groupIds = memberResponse.data || []
+
+        if (groupIds.length === 0) {
+          setGroups([])
+          return
+        }
+
+        const groupPromises = groupIds.map(async (member) => {
+          try {
+            const response = await studentGroupServices.get({
+              groupId: member.groupId,
+            })
+            return response.data
+          } catch (error) {
+            console.error(`Error fetching group ${member.groupId}:`, error)
+            return null
+          }
+        })
+
+        const groupResponses = await Promise.all(groupPromises)
+
+        groupsData = groupResponses
+          .filter(group => group !== null)
+          .flatMap(group => {
+            return Array.isArray(group) ? group : [group]
+          })
+
       }
+
+      setGroups(groupsData)
 
     } catch (error) {
       toast.error('Không thể tải danh sách nhóm')
@@ -86,7 +87,6 @@ const StudentGroupPage = () => {
     return matchesSearch && matchesStatus
   })
 
-
   useEffect(() => {
     if (user?.id) {
       fetchGroups()
@@ -99,11 +99,9 @@ const StudentGroupPage = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Quản lý Nhóm học sinh</h1>
           <p className="text-gray-600 mt-1">
-            Quản lý tất cả nhóm mà bạn tham gia
+            Quản lý {user?.role === ROLE_NAME.SCHOOL_MANAGER ? 'tất cả nhóm học sinh' : 'nhóm của bạn'} tại trường học.
           </p>
         </div>
-
-       
       </div>
 
       <Card>
@@ -149,13 +147,12 @@ const StudentGroupPage = () => {
                   : 'Chưa có nhóm học sinh nào được tạo.'
                 }
               </p>
-              
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredGroups.map(group => (
                 <GroupCard
-                  key={group.id}
+                  key={group.groupId}
                   group={group}
                   onViewDetails={handleViewDetails}
                 />
@@ -171,7 +168,6 @@ const StudentGroupPage = () => {
         onClose={() => setShowDetailModal(false)}
         onRefresh={fetchGroups}
       />
-
     </div>
   )
 }
@@ -259,7 +255,6 @@ const GroupCard = ({ group, onViewDetails }) => {
         >
           Chi tiết
         </Button>
-
       </Card.Content>
     </Card>
   )

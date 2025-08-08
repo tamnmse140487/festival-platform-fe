@@ -12,6 +12,7 @@ import { walletServices } from '../../services/walletServices'
 const AccountManagementPage = () => {
     const { user, hasRole } = useAuth()
     const [accounts, setAccounts] = useState([])
+    const [roles, setRoles] = useState([]) 
     const [roleIds, setRoleIds] = useState({ teacher: null, student: null })
     const [loading, setLoading] = useState(true)
     const [showCreateModal, setShowCreateModal] = useState(false)
@@ -22,67 +23,69 @@ const AccountManagementPage = () => {
             ? 'Quản lý tất cả học sinh, giáo viên trong hệ thống.'
             : ''
 
-    const fetchRoleIds = async () => {
+    const fetchRoles = async () => {
         try {
-            const [teacherResponse, studentResponse] = await Promise.all([
-                roleServices.get({ roleName: ROLE_NAME.TEACHER }),
-                roleServices.get({ roleName: ROLE_NAME.STUDENT })
-            ])
-
-            const teacherRoleId = teacherResponse.data?.[0]?.roleId
-            const studentRoleId = studentResponse.data?.[0]?.roleId
-
-            if (teacherRoleId && studentRoleId) {
-                setRoleIds({ teacher: teacherRoleId, student: studentRoleId })
-                return { teacher: teacherRoleId, student: studentRoleId }
-            }
+            const roleResponse = await roleServices.get()
+            setRoles(roleResponse.data || [])
+            
+            const teacherRole = roleResponse.data?.find(role => role.roleName === 'Teacher')
+            const studentRole = roleResponse.data?.find(role => role.roleName === 'Student')
+            
+            setRoleIds({
+                teacher: teacherRole?.roleId || null,
+                student: studentRole?.roleId || null
+            })
         } catch (error) {
-            toast.error('Không thể lấy thông tin vai trò')
-            console.error('Error fetching role IDs:', error)
+            console.error('Error fetching roles:', error)
         }
-        return null
     }
 
-    const fetchAccounts = async (roleIdsToUse = null) => {
+    const fetchAccounts = async () => {
         setLoading(true)
         try {
-            if (!user?.schoolId) {
-                console.error('User không có schoolId')
-                setAccounts([])
-                return
-            }
 
-            const schoolAccountRelations = await schoolAccountRelationServices.get({
-                schoolId: user.schoolId
-            })
+            if (user?.role === ROLE_NAME.SCHOOL_MANAGER) {
+                if (!user?.schoolId) {
+                    console.error('User không có schoolId')
+                    setAccounts([])
+                    return
+                }
 
-            if (!schoolAccountRelations?.data || schoolAccountRelations.data.length === 0) {
-                setAccounts([])
-                return
-            }
-
-            const accountPromises = schoolAccountRelations.data.map(relation =>
-                accountServices.get({ id: relation.accountId })
-            )
-
-            const accountResults = await Promise.all(accountPromises)
-
-            const combinedAccounts = accountResults
-                .map((result, index) => {
-                    const accountData = result?.data?.[0] 
-                    if (accountData) {
-                        return {
-                            ...accountData,
-                            relationType: schoolAccountRelations.data[index].relationType,
-                            relationId: schoolAccountRelations.data[index].id,
-                            relationCreatedAt: schoolAccountRelations.data[index].createdAt
-                        }
-                    }
-                    return null
+                const schoolAccountRelations = await schoolAccountRelationServices.get({
+                    schoolId: user.schoolId
                 })
-                .filter(account => account !== null)
 
-            setAccounts(combinedAccounts)
+                if (!schoolAccountRelations?.data || schoolAccountRelations.data.length === 0) {
+                    setAccounts([])
+                    return
+                }
+
+                const accountPromises = schoolAccountRelations.data.map(relation =>
+                    accountServices.get({ id: relation.accountId })
+                )
+
+                const accountResults = await Promise.all(accountPromises)
+
+                const combinedAccounts = accountResults
+                    .map((result, index) => {
+                        const accountData = result?.data?.[0]
+                        if (accountData) {
+                            return {
+                                ...accountData,
+                            }
+                        }
+                        return null
+                    })
+                    .filter(account => account !== null)
+
+                setAccounts(combinedAccounts)
+
+            } else if (user?.role === ROLE_NAME.ADMIN) {
+                const accountResponse = await accountServices.get()
+                console.log("Account response:", accountResponse)
+                setAccounts(accountResponse.data || [])
+            }
+
         } catch (error) {
             toast.error('Không thể lấy danh sách tài khoản')
             console.error('Error fetching accounts:', error)
@@ -90,6 +93,11 @@ const AccountManagementPage = () => {
             setLoading(false)
         }
     }
+
+    useEffect(() => {
+        fetchAccounts()
+        fetchRoles()
+    }, [])
 
     const handleCreateAccount = async (accountData) => {
         try {
@@ -133,16 +141,6 @@ const AccountManagementPage = () => {
         fetchAccounts()
     }
 
-    useEffect(() => {
-        const initializeData = async () => {
-            const fetchedRoleIds = await fetchRoleIds()
-            if (fetchedRoleIds) {
-                await fetchAccounts(fetchedRoleIds)
-            }
-        }
-        initializeData()
-    }, [])
-
     return (
         <div className="space-y-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -177,6 +175,7 @@ const AccountManagementPage = () => {
             <AccountList
                 accounts={accounts}
                 loading={loading}
+                roles={roles} 
                 roleIds={roleIds}
                 onRefresh={handleRefresh}
             />

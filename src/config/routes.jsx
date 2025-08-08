@@ -16,9 +16,9 @@ import SchoolListPage from "../pages/schools/SchoolListPage";
 import SystemSettingsPage from "../pages/system/SystemSettingsPage";
 import IngredientPage from "../pages/ingredient/IngredientPage";
 import { ROLE_NAME } from '../utils/constants';
-import MyStudentGroupPage from '../pages/groups/MyStudentGroupPage';
 import AccountManagementPage from '../pages/accounts/AccountManagementPage';
 import SupplyManagementPage from '../pages/suppliers/SupplyManagementPage';
+import AdminFestivalDetail from '../pages/festivals/admin/AdminFestivalDetail';
 
 export const protectedRoutes = [
   // Dashboard
@@ -49,6 +49,11 @@ export const protectedRoutes = [
     element: <FestivalDetailPage />,
     roles: []
   },
+  {
+    path: "/app/festivals/admin/:id",
+    element: <AdminFestivalDetail />,
+    roles: [ROLE_NAME.ADMIN]
+  },
 
   // Supplier
   {
@@ -67,11 +72,6 @@ export const protectedRoutes = [
     path: "/app/groups",
     element: <StudentGroupPage />,
     roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
-  },
-  {
-    path: "/app/my-groups",
-    element: <MyStudentGroupPage />,
-    roles: [ROLE_NAME.STUDENT]
   },
 
   // Booths

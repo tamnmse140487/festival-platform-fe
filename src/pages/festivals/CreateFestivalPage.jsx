@@ -38,9 +38,8 @@ const CreateFestivalPage = () => {
       itemName: '',
       description: '',
       itemType: 'food',
-      basePrice: 0,
-      image: null,
-      imagePreview: null
+      minPrice: 0,
+      maxPrice: 0
     }
   ]);
 
@@ -98,7 +97,6 @@ const CreateFestivalPage = () => {
           await uploadService.uploadFestivalImage(imageFile.file, festivalId);
         }
       }
-
       await festivalSchoolServices.create({
         festivalId: festivalId,
         schoolId: user.schoolId
@@ -108,7 +106,6 @@ const CreateFestivalPage = () => {
       if (selectedMapImage) {
         mapUrl = await uploadService.uploadImage(selectedMapImage, 'maps');
       }
-
       const mapData = {
         festivalId: festivalId,
         mapName: data.mapName,
@@ -129,7 +126,6 @@ const CreateFestivalPage = () => {
           });
         }
       }
-
       const menuData = {
         festivalId: festivalId,
         menuName: data.menuName,
@@ -140,23 +136,14 @@ const CreateFestivalPage = () => {
 
       for (const item of menuItems) {
         if (item.itemName.trim()) {
-
-          const menuItemResponse = await menuItemServices.create({
+          await menuItemServices.create({
             menuId: menuId,
             itemName: item.itemName,
             description: item.description,
             itemType: item.itemType,
-            basePrice: parseFloat(item.basePrice) || 0
+            minPrice: parseFloat(item.minPrice) || 0,
+            maxPrice: parseFloat(item.maxPrice) || 0
           });
-
-          if (item.image) {
-            try {
-              await uploadService.uploadMenuItemImage(item.image, menuItemResponse.data.itemId);
-            } catch (error) {
-              console.error(`Error uploading image for menu item ${item.itemName}:`, error);
-              toast.error(`Không thể upload ảnh cho món ${item.itemName}: ${error.message}`);
-            }
-          }
         }
       }
 
@@ -180,7 +167,6 @@ const CreateFestivalPage = () => {
     });
   };
 
-
   return (
     <>
       {contextHolder}
@@ -203,7 +189,7 @@ const CreateFestivalPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
               <BasicInfoForm register={register} errors={errors} />
-              <DateTimeForm register={register} errors={errors} />
+              <DateTimeForm register={register} errors={errors} watch={watch} />
               <BoothConfigForm register={register} errors={errors} watch={watch} />
               <FestivalImageUploadForm
                 selectedImages={selectedImages}
@@ -270,7 +256,7 @@ const CreateFestivalPage = () => {
         </form>
       </div>
 
-      {isLoading && (
+      {/* {isLoading && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-8 flex flex-col items-center space-y-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -278,7 +264,7 @@ const CreateFestivalPage = () => {
             <p className="text-sm text-gray-600">Vui lòng chờ trong giây lát</p>
           </div>
         </div>
-      )}
+      )} */}
     </>
   );
 };

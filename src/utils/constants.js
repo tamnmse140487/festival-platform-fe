@@ -4,7 +4,19 @@ export const ROLE_NAME = {
   TEACHER: "Teacher",
   STUDENT: "Student",
   SUPPLIER: "Supplier",
-  USER: "User"
+  USER: "User",
+};
+
+export const FESTIVAL_APPROVAL_STATUS = {
+  PENDING: "pending",
+  APPROVED: "approved",
+  REJECTED: "rejected",
+};
+
+export const FESTIVAL_APPROVAL_STATUS_LABELS = {
+  pending: "Chờ duyệt",
+  approved: "Đã duyệt",
+  rejected: "Đã từ chối",
 };
 
 export const FESTIVAL_STATUS = {
@@ -16,19 +28,19 @@ export const FESTIVAL_STATUS = {
 };
 
 export const FESTIVAL_INGREDIENT_STATUS = {
-  AVAILABLE: 'available',
-  LIMITED: 'limited',
-  OUT_OF_STOCK: 'out_of_stock',
-  PENDING: 'pending',
-  APPROVED: 'approved',
-  REJECTED: 'rejected'
+  AVAILABLE: "available",
+  LIMITED: "limited",
+  OUT_OF_STOCK: "out_of_stock",
+  PENDING: "pending",
+  APPROVED: "approved",
+  REJECTED: "rejected",
 };
 
 export const BOOTH_STATUS = {
-  PENDING: 'pending',
-  APPROVED: 'approved',
-  REJECTED: 'rejected',
-  ACTIVE: 'active'
+  PENDING: "pending",
+  APPROVED: "approved",
+  REJECTED: "rejected",
+  ACTIVE: "active",
 };
 
 export const GROUP_ROLE = {
