@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Search } from 'lucide-react'
+import { Search, User } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { accountServices } from '../../services/accountServices'
 import { roleServices } from '../../services/roleServices'
@@ -65,6 +65,27 @@ const InviteTeacherModal = ({ onClose, onSubmit }) => {
     setFilteredTeachers(filtered)
   }, [searchTerm, teachers])
 
+  const Avatar = ({ src, alt, size = "w-10 h-10" }) => {
+    const [imageError, setImageError] = useState(false)
+
+    if (!src || imageError) {
+      return (
+        <div className={`${size} bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0`}>
+          <User size={20} className="text-gray-500" />
+        </div>
+      )
+    }
+
+    return (
+      <img
+        src={src}
+        alt={alt}
+        className={`${size} rounded-full object-cover flex-shrink-0`}
+        onError={() => setImageError(true)}
+      />
+    )
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
@@ -99,18 +120,26 @@ const InviteTeacherModal = ({ onClose, onSubmit }) => {
                 <div
                   key={teacher.id}
                   onClick={() => setSelectedTeacher(teacher)}
-                  className={`p-3 rounded-lg cursor-pointer transition-colors ${selectedTeacher?.id === teacher.id
-                      ? 'bg-blue-100 border-blue-500 border'
-                      : 'hover:bg-gray-50 border border-transparent'
+                  className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${selectedTeacher?.id === teacher.id
+                    ? 'bg-blue-100 border-blue-500 border'
+                    : 'hover:bg-gray-50 border border-transparent'
                     }`}
                 >
-                  <div className="font-medium text-gray-900">
-                    {teacher.fullName || 'Chưa có tên'}
+                  <Avatar
+                    src={teacher.avatarUrl}
+                    alt={teacher.fullName || teacher.email}
+                    size="w-8 h-8"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-gray-900">
+                      {teacher.fullName || 'Chưa có tên'}
+                    </div>
+                    <div className="text-sm text-gray-600">{teacher.email}</div>
+                    {teacher.phoneNumber && (
+                      <div className="text-sm text-gray-600">{teacher.phoneNumber}</div>
+                    )}
                   </div>
-                  <div className="text-sm text-gray-600">{teacher.email}</div>
-                  {teacher.phoneNumber && (
-                    <div className="text-sm text-gray-600">{teacher.phoneNumber}</div>
-                  )}
+
                 </div>
               ))}
             </div>

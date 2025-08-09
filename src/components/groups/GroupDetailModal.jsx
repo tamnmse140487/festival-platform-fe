@@ -9,6 +9,7 @@ import Button from '../common/Button'
 import MemberList from './MemberList'
 import AddMemberModal from './AddMemberModal'
 import InviteTeacherModal from './InviteTeacherModal'
+//các tabs
 import GroupInfo from '../groupDetail/GroupInfo'
 import GroupBudget from '../groupDetail/GroupBudget'
 import BoothInfo from '../groupDetail/BoothInfo'
@@ -27,7 +28,7 @@ const GroupDetailModal = ({ group, isOpen, onClose, onRefresh }) => {
   const tabs = [
     { id: 'info', label: 'Thông tin', icon: <FileText size={16} /> },
     { id: 'members', label: 'Thành viên', icon: <Users size={16} /> },
-    { id: 'budget', label: 'Ngân sách', icon: <DollarSign size={16} /> },
+    // { id: 'budget', label: 'Ngân sách', icon: <DollarSign size={16} /> },
     { id: 'booth', label: 'Gian hàng', icon: <Store size={16} /> },
     { id: 'menu', label: 'Menu', icon: <UtensilsCrossed size={16} /> },
     { id: 'chat', label: 'Chat', icon: <MessageCircle size={16} /> },
@@ -169,8 +170,8 @@ const GroupDetailModal = ({ group, isOpen, onClose, onRefresh }) => {
           </div>
         )
       
-      case 'budget':
-        return <GroupBudget group={group} />
+      // case 'budget':
+      //   return <GroupBudget group={group} />
       
       case 'booth':
         return <BoothInfo groupId={group.groupId} group={group} members={members}/>
@@ -270,6 +271,7 @@ const GroupDetailModal = ({ group, isOpen, onClose, onRefresh }) => {
               <AddMemberModal
                 onClose={() => setShowAddMemberModal(false)}
                 onSubmit={handleAddMember}
+                currentUserId={user?.id}
               />
             </div>
           </div>

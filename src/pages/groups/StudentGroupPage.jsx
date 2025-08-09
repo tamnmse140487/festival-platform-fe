@@ -4,20 +4,24 @@ import { toast } from 'react-hot-toast'
 import { useAuth } from '../../contexts/AuthContext'
 import { studentGroupServices } from '../../services/studentGroupServices'
 import { groupMemberServices } from '../../services/groupMemberServices'
-import { ROLE_NAME } from '../../utils/constants'
+import { schoolAccountRelationServices } from '../../services/schoolAccountRelationServices'
+import { GROUP_ROLE, ROLE_NAME } from '../../utils/constants'
 import Button from '../../components/common/Button'
 import Input from '../../components/common/Input'
 import Card from '../../components/common/Card'
 import GroupDetailModal from '../../components/groups/GroupDetailModal'
+import Modal from '../../components/common/Modal'
+import CreateGroupModal from '../../components/groups/CreateGroupModal'
 
 const StudentGroupPage = () => {
-  const { user } = useAuth()
+  const { user, hasRole } = useAuth()
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [selectedGroup, setSelectedGroup] = useState(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
   const fetchGroups = async () => {
     setLoading(true)
@@ -75,6 +79,42 @@ const StudentGroupPage = () => {
     }
   }
 
+  const handleCreateGroup = async (groupData) => {
+    try {
+      const relationResponse = await schoolAccountRelationServices.get({
+        accountId: user?.id
+      })
+
+      if (!relationResponse.data || relationResponse.data.length === 0) {
+        toast.error('Không tìm thấy thông tin trường học')
+        return
+      }
+
+      const schoolId = relationResponse.data[0].schoolId
+
+      const groupResponse = await studentGroupServices.create({
+        schoolId: schoolId,
+        accountId: user?.id,
+        ...groupData
+      })
+
+      if (groupResponse.data?.groupId) {
+        await groupMemberServices.create({
+          groupId: groupResponse.data.groupId,
+          accountId: user?.id,
+          role: GROUP_ROLE.LEADER
+        })
+      }
+
+      toast.success('Tạo nhóm thành công')
+      setShowCreateModal(false)
+      fetchGroups()
+    } catch (error) {
+      toast.error('Tạo nhóm thất bại')
+      console.error('Error creating group:', error)
+    }
+  }
+
   const handleViewDetails = (group) => {
     setSelectedGroup(group)
     setShowDetailModal(true)
@@ -102,6 +142,15 @@ const StudentGroupPage = () => {
             Quản lý {user?.role === ROLE_NAME.SCHOOL_MANAGER ? 'tất cả nhóm học sinh' : 'nhóm của bạn'} tại trường học.
           </p>
         </div>
+
+        {hasRole([ROLE_NAME.STUDENT]) && (
+          <Button
+            icon={<Plus size={20} />}
+            onClick={() => setShowCreateModal(true)}
+          >
+            Tạo nhóm mới
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -147,6 +196,15 @@ const StudentGroupPage = () => {
                   : 'Chưa có nhóm học sinh nào được tạo.'
                 }
               </p>
+
+              {hasRole([ROLE_NAME.STUDENT]) && (
+                <Button
+                  onClick={() => setShowCreateModal(true)}
+                  icon={<Plus size={16} />}
+                >
+                  Tạo nhóm đầu tiên
+                </Button>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -168,6 +226,18 @@ const StudentGroupPage = () => {
         onClose={() => setShowDetailModal(false)}
         onRefresh={fetchGroups}
       />
+
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="Tạo nhóm học sinh mới"
+        size="md"
+      >
+        <CreateGroupModal
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={handleCreateGroup}
+        />
+      </Modal>
     </div>
   )
 }

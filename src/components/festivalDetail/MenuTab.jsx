@@ -2,7 +2,7 @@ import React from 'react';
 import { ShoppingCart, Image as ImageIcon } from 'lucide-react';
 import Card from '../common/Card';
 
-const MenuTab = ({ festivalMenu, menuItems, menuItemImages, loading }) => {
+const MenuTab = ({ festivalMenu, menuItems, loading }) => {
 
   if (loading) {
     return (

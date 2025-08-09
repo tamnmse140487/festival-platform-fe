@@ -34,6 +34,7 @@ export const getStatusBadge = (status, type = 'default') => {
       rejected: { label: 'Đã từ chối', class: 'bg-red-100 text-red-800' }
     },
     booth: {
+      active: { label: 'Đang hoạt động', class: 'bg-purple-100 text-purple-800' },
       pending: { label: 'Chờ duyệt', class: 'bg-yellow-100 text-yellow-800' },
       approved: { label: 'Đã duyệt', class: 'bg-green-100 text-green-800' },
       rejected: { label: 'Đã từ chối', class: 'bg-red-100 text-red-800' }

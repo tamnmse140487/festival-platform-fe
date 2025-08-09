@@ -67,7 +67,7 @@ export const protectedRoutes = [
     roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPPLIER, ROLE_NAME.SCHOOL_MANAGER]
   },
 
-  // Groups
+  // Groups and internal groups
   {
     path: "/app/groups",
     element: <StudentGroupPage />,

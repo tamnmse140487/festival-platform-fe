@@ -15,7 +15,9 @@ import {
   X,
   Check,
   Handshake,
-  Store
+  Store,
+  AlertCircle,
+  XCircle
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
@@ -34,8 +36,8 @@ import ImagesTab from '../../components/festivalDetail/ImagesTab';
 import MapTab from '../../components/festivalDetail/MapTab';
 import MenuTab from '../../components/festivalDetail/MenuTab';
 import IngredientRegistrationModal from '../../components/festivalDetail/IngredientRegistrationModal';
-import { ROLE_NAME, FESTIVAL_STATUS } from '../../utils/constants';
-import BoothRegistrationModal from '../../components/booths/BoothRegistrationModal';
+import { ROLE_NAME, FESTIVAL_STATUS, FESTIVAL_APPROVAL_STATUS, FESTIVAL_APPROVAL_STATUS_LABELS } from '../../utils/constants';
+import { convertToVietnamTimeWithFormat } from '../../utils/formatters';
 
 const FestivalDetailPage = () => {
   const { id } = useParams();
@@ -47,7 +49,7 @@ const FestivalDetailPage = () => {
   const [mapLocations, setMapLocations] = useState([]);
   const [festivalMenu, setFestivalMenu] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
-  const [menuItemImages, setMenuItemImages] = useState([]);
+  const [approvalData, setApprovalData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [showRegisterModal, setShowRegisterModal] = useState(false);
@@ -63,17 +65,26 @@ const FestivalDetailPage = () => {
     try {
       setLoading(true);
 
-      const [
-        festivalResponse,
-        festivalImagesResponse,
-        mapResponse,
-        menuResponse
-      ] = await Promise.all([
+      const promises = [
         festivalServices.get({ festivalId: parseInt(id) }),
         imageServices.get({ festivalId: parseInt(id) }),
         festivalMapServices.get({ festivalId: parseInt(id) }),
         festivalMenuServices.get({ festivalId: parseInt(id) })
-      ]);
+      ];
+
+      if (hasRole([ROLE_NAME.SCHOOL_MANAGER])) {
+        promises.push(festivalSchoolServices.get({ festivalId: parseInt(id) }));
+      }
+
+      const responses = await Promise.all(promises);
+
+      const [
+        festivalResponse,
+        festivalImagesResponse,
+        mapResponse,
+        menuResponse,
+        approvalResponse
+      ] = responses;
 
       if (festivalResponse.data && festivalResponse.data.length > 0) {
         setFestival(festivalResponse.data[0]);
@@ -96,16 +107,14 @@ const FestivalDetailPage = () => {
         setFestivalMenu(menu);
 
         const itemsResponse = await menuItemServices.get({ menuId: menu.menuId });
-        console.log("itemsResponse: ", itemsResponse)
         if (itemsResponse.data) {
           setMenuItems(itemsResponse.data);
+        }
+      }
 
-          const menuItemImagesPromises = itemsResponse.data.map(item =>
-            imageServices.get({ menuItemId: item.id })
-          );
-          const menuItemImagesResponses = await Promise.all(menuItemImagesPromises);
-          const allMenuItemImages = menuItemImagesResponses.flatMap(response => response.data || []);
-          setMenuItemImages(allMenuItemImages);
+      if (hasRole([ROLE_NAME.SCHOOL_MANAGER]) && approvalResponse) {
+        if (approvalResponse.data && approvalResponse.data.length > 0) {
+          setApprovalData(approvalResponse.data[0]);
         }
       }
 
@@ -114,23 +123,6 @@ const FestivalDetailPage = () => {
       toast.error('Không thể tải thông tin lễ hội');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleRegister = async () => {
-    try {
-      setIsRegistering(true);
-      await festivalSchoolServices.create({
-        festivalId: parseInt(id),
-        schoolId: user.schoolId
-      });
-      toast.success('Đăng ký tham gia lễ hội thành công!');
-      setShowRegisterModal(false);
-    } catch (error) {
-      console.error('Error registering for festival:', error);
-      toast.error('Không thể đăng ký tham gia lễ hội');
-    } finally {
-      setIsRegistering(false);
     }
   };
 
@@ -152,7 +144,33 @@ const FestivalDetailPage = () => {
     setShowIngredientModal(false);
   };
 
+  const getApprovalStatusBadge = (status) => {
+    const badges = {
+      [FESTIVAL_APPROVAL_STATUS.PENDING]: { 
+        label: FESTIVAL_APPROVAL_STATUS_LABELS.pending, 
+        class: 'bg-yellow-100 text-yellow-800', 
+        icon: <AlertCircle size={16} /> 
+      },
+      [FESTIVAL_APPROVAL_STATUS.APPROVED]: { 
+        label: FESTIVAL_APPROVAL_STATUS_LABELS.approved, 
+        class: 'bg-green-100 text-green-800', 
+        icon: <CheckCircle size={16} /> 
+      },
+      [FESTIVAL_APPROVAL_STATUS.REJECTED]: { 
+        label: FESTIVAL_APPROVAL_STATUS_LABELS.rejected, 
+        class: 'bg-red-100 text-red-800', 
+        icon: <XCircle size={16} /> 
+      }
+    };
 
+    const badge = badges[status] || badges[FESTIVAL_APPROVAL_STATUS.PENDING];
+    return (
+      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${badge.class}`}>
+        {badge.icon}
+        <span className="ml-1">{badge.label}</span>
+      </span>
+    );
+  };
 
   if (loading) {
     return (
@@ -185,16 +203,6 @@ const FestivalDetailPage = () => {
     );
   }
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   const getStatusBadge = (status) => {
     const badges = {
       [FESTIVAL_STATUS.DRAFT]: { label: 'Bản nháp', class: 'bg-gray-100 text-gray-800', icon: <Edit size={16} /> },
@@ -214,7 +222,7 @@ const FestivalDetailPage = () => {
   };
 
   const getStatusActions = () => {
-    if (hasRole([ROLE_NAME.ADMIN]) && festival.status === FESTIVAL_STATUS.DRAFT) {
+    if (hasRole([ROLE_NAME.SCHOOL_MANAGER]) && festival.status === FESTIVAL_STATUS.DRAFT && approvalData?.status === FESTIVAL_APPROVAL_STATUS.APPROVED) {
       return (
         <button
           onClick={() => handleStatusUpdate(FESTIVAL_STATUS.PUBLISHED)}
@@ -226,7 +234,7 @@ const FestivalDetailPage = () => {
           ) : (
             <Check size={16} className="mr-1" />
           )}
-          Duyệt lễ hội
+          Công khai lễ hội
         </button>
       );
     }
@@ -245,7 +253,7 @@ const FestivalDetailPage = () => {
               ) : (
                 <Play size={16} className="mr-1" />
               )}
-              Bắt đầu
+              Bắt đầu lễ hội
             </button>
             <button
               onClick={() => handleStatusUpdate(FESTIVAL_STATUS.CANCELLED)}
@@ -257,7 +265,7 @@ const FestivalDetailPage = () => {
               ) : (
                 <X size={16} className="mr-1" />
               )}
-              Hủy bỏ
+              Hủy bỏ lễ hội
             </button>
           </div>
         );
@@ -349,6 +357,15 @@ const FestivalDetailPage = () => {
                 </span>
               </div>
             </div>
+            {/* Hiển thị trạng thái phê duyệt cho SCHOOL_MANAGER */}
+            {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && approvalData && (
+              <div className="mb-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm opacity-75">Trạng thái phê duyệt:</span>
+                  {getApprovalStatusBadge(approvalData.status)}
+                </div>
+              </div>
+            )}
             <h1 className="text-3xl lg:text-4xl font-bold mb-2">{festival.festivalName}</h1>
             <p className="text-xl opacity-90">{festival.theme}</p>
           </div>
@@ -377,8 +394,8 @@ const FestivalDetailPage = () => {
 
           {activeTab === 'overview' && <OverviewTab festival={festival} />}
           {activeTab === 'images' && <ImagesTab festivalImages={festivalImages} loading={loading} />}
-          {activeTab === 'map' && <MapTab festivalMap={festivalMap} mapLocations={mapLocations} festival={festival} festivalMenu={festivalMenu} menuItems={menuItems} menuItemImages={menuItemImages} loading={loading} />}
-          {activeTab === 'menu' && <MenuTab festivalMenu={festivalMenu} menuItems={menuItems} menuItemImages={menuItemImages} loading={loading} />}
+          {activeTab === 'map' && <MapTab festivalMap={festivalMap} mapLocations={mapLocations} festival={festival} festivalMenu={festivalMenu} menuItems={menuItems}  loading={loading} />}
+          {activeTab === 'menu' && <MenuTab festivalMenu={festivalMenu} menuItems={menuItems} loading={loading} />}
         </div>
 
         <div className="space-y-6">
@@ -403,12 +420,12 @@ const FestivalDetailPage = () => {
                       <Calendar size={16} className="mr-1 text-gray-400" />
                       <span className="text-sm">Bắt đầu:</span>
                     </div>
-                    <p className="ml-5">{formatDate(festival.startDate)}</p>
+                    <p className="ml-5">{convertToVietnamTimeWithFormat(festival.startDate)}</p>
                     <div className="flex items-center mb-1 mt-2">
                       <Calendar size={16} className="mr-1 text-gray-400" />
                       <span className="text-sm">Kết thúc:</span>
                     </div>
-                    <p className="ml-5">{formatDate(festival.endDate)}</p>
+                    <p className="ml-5">{convertToVietnamTimeWithFormat(festival.endDate)}</p>
                   </div>
                 </div>
               </div>
@@ -437,61 +454,16 @@ const FestivalDetailPage = () => {
             </Card.Content>
           </Card>
 
-          {hasRole([ROLE_NAME.STUDENT, ROLE_NAME.TEACHER]) && festival.status === FESTIVAL_STATUS.PUBLISHED && (
-            <Card>
-              <Card.Header>
-                <Card.Title>Tham gia lễ hội</Card.Title>
-              </Card.Header>
-              <Card.Content>
-                <Button
-                  fullWidth
-                  onClick={() => setShowRegisterModal(true)}
-                >
-                  Đăng ký tham gia
-                </Button>
-              </Card.Content>
-            </Card>
-          )}
+         
         </div>
       </div>
-
-      <Modal
-        isOpen={showRegisterModal}
-        onClose={() => setShowRegisterModal(false)}
-        title="Đăng ký tham gia lễ hội"
-        size="md"
-      >
-        <div className="space-y-4">
-          <p className="text-gray-600">
-            Bạn có muốn đăng ký tham gia lễ hội "{festival.festivalName}" không?
-          </p>
-          <div className="flex space-x-3">
-            <Button
-              fullWidth
-              loading={isRegistering}
-              onClick={handleRegister}
-            >
-              Xác nhận đăng ký
-            </Button>
-            <Button
-              variant="outline"
-              fullWidth
-              onClick={() => setShowRegisterModal(false)}
-              disabled={isRegistering}
-            >
-              Hủy
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
+   
       <IngredientRegistrationModal
         isOpen={showIngredientModal}
         onClose={handleIngredientModalClose}
         festivalId={parseInt(id)}
         supplierId={user?.supplierId}
       />
-
 
     </div>
   );

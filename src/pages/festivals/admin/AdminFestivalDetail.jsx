@@ -18,7 +18,7 @@ const AdminFestivalDetail = () => {
     const [festivalSchool, setFestivalSchool] = useState(null);
     const [images, setImages] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('overview');
+    const [activeTab, setActiveTab] = useState('approval');
 
     useEffect(() => {
         loadFestival();

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Calendar, Clock } from 'lucide-react';
 import Card from '../common/Card';
+import { convertToVietnamTimeWithFormat } from '../../utils/formatters';
 
 const OverviewTab = ({ festival }) => {
   if (!festival) {
@@ -40,7 +41,7 @@ const OverviewTab = ({ festival }) => {
               <div>
                 <h4 className="font-medium text-blue-900">Mở đăng ký</h4>
                 <p className="text-blue-700 text-sm">
-                  {new Date(festival.registrationStartDate).toLocaleDateString('vi-VN')}
+                  {convertToVietnamTimeWithFormat(festival.registrationStartDate)}
                 </p>
               </div>
               <Calendar className="w-8 h-8 text-blue-600" />
@@ -50,7 +51,7 @@ const OverviewTab = ({ festival }) => {
               <div>
                 <h4 className="font-medium text-red-900">Đóng đăng ký</h4>
                 <p className="text-red-700 text-sm">
-                  {new Date(festival.registrationEndDate).toLocaleDateString('vi-VN')}
+                  {convertToVietnamTimeWithFormat(festival.registrationEndDate)}
                 </p>
               </div>
               <Clock className="w-8 h-8 text-red-600" />

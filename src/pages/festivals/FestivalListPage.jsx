@@ -6,10 +6,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { festivalServices } from '../../services/festivalServices';
 import { festivalSchoolServices } from '../../services/festivalSchoolServices';
 import { imageServices } from '../../services/imageServices';
-import { ROLE_NAME } from '../../utils/constants';
+import { FESTIVAL_APPROVAL_STATUS, FESTIVAL_STATUS, ROLE_NAME } from '../../utils/constants';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import AdminFestivalList from '../festivals/admin/AdminFestivalList';
+import { convertToVietnamTimeWithFormat } from '../../utils/formatters';
 
 const FestivalListPage = () => {
   const { user, hasRole } = useAuth();
@@ -47,7 +48,7 @@ const UserFestivalList = ({ user, hasRole }) => {
       const response = await festivalServices.get(params);
       const festivalsData = response.data || [];
       setFestivals(festivalsData);
-      
+
       await Promise.all([
         loadFestivalImages(festivalsData),
         loadApprovalStatuses(festivalsData)
@@ -136,12 +137,30 @@ const UserFestivalList = ({ user, hasRole }) => {
     }
   };
 
+  const shouldFilterApprovedOnly = hasRole([ROLE_NAME.USER, ROLE_NAME.STUDENT, ROLE_NAME.TEACHER]);
+
   const filteredFestivals = festivals.filter(festival => {
     const matchesSearch = festival.festivalName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       festival.theme?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       festival.location?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = statusFilter === 'all' || festival.status === statusFilter;
+
+    if (shouldFilterApprovedOnly) {
+      const approvalData = getApprovalStatus(festival.festivalId);
+
+      const isApproved = approvalData && approvalData.status === FESTIVAL_APPROVAL_STATUS.APPROVED;
+
+      const hasValidStatus = [
+        FESTIVAL_STATUS.PUBLISHED,
+        FESTIVAL_STATUS.ONGOING,
+        FESTIVAL_STATUS.COMPLETED
+      ].includes(festival.status);
+
+      if (!isApproved || !hasValidStatus) {
+        return false;
+      }
+    }
 
     return matchesSearch && matchesStatus;
   }).sort((a, b) => {
@@ -199,14 +218,6 @@ const UserFestivalList = ({ user, hasRole }) => {
     );
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -260,10 +271,11 @@ const UserFestivalList = ({ user, hasRole }) => {
                 onChange={(e) => setStatusFilter(e.target.value)}
               >
                 <option value="all">Tất cả trạng thái</option>
-                <option value="draft">Bản nháp</option>
+                {!shouldFilterApprovedOnly && <option value="draft">Bản nháp</option>}
                 <option value="published">Đã công bố</option>
                 <option value="ongoing">Đang diễn ra</option>
                 <option value="completed">Đã kết thúc</option>
+                {!shouldFilterApprovedOnly && <option value="cancelled">Đã hủy</option>}
               </select>
 
               <select
@@ -283,8 +295,8 @@ const UserFestivalList = ({ user, hasRole }) => {
             <button
               onClick={() => setViewMode('grid')}
               className={`p-2 rounded-lg transition-colors ${viewMode === 'grid'
-                  ? 'bg-blue-100 text-blue-600'
-                  : 'text-gray-400 hover:text-gray-600'
+                ? 'bg-blue-100 text-blue-600'
+                : 'text-gray-400 hover:text-gray-600'
                 }`}
             >
               <Grid size={20} />
@@ -292,8 +304,8 @@ const UserFestivalList = ({ user, hasRole }) => {
             <button
               onClick={() => setViewMode('list')}
               className={`p-2 rounded-lg transition-colors ${viewMode === 'list'
-                  ? 'bg-blue-100 text-blue-600'
-                  : 'text-gray-400 hover:text-gray-600'
+                ? 'bg-blue-100 text-blue-600'
+                : 'text-gray-400 hover:text-gray-600'
                 }`}
             >
               <List size={20} />
@@ -331,7 +343,7 @@ const UserFestivalList = ({ user, hasRole }) => {
                   user={user}
                   hasRole={hasRole}
                   onDelete={(festival) => setDeleteModal({ isOpen: true, festival })}
-                  formatDate={formatDate}
+                  formatDate={convertToVietnamTimeWithFormat}
                   getStatusBadge={getStatusBadge}
                   getApprovalBadge={getApprovalBadge}
                   getFestivalImage={getFestivalImage}
@@ -344,7 +356,7 @@ const UserFestivalList = ({ user, hasRole }) => {
                   user={user}
                   hasRole={hasRole}
                   onDelete={(festival) => setDeleteModal({ isOpen: true, festival })}
-                  formatDate={formatDate}
+                  formatDate={convertToVietnamTimeWithFormat}
                   getStatusBadge={getStatusBadge}
                   getApprovalBadge={getApprovalBadge}
                   getFestivalImage={getFestivalImage}
@@ -407,7 +419,7 @@ const FestivalCard = ({ festival, user, hasRole, onDelete, formatDate, getStatus
         />
         <div className="absolute top-4 left-4 ">
           {getStatusBadge(festival.status)}
-         
+
         </div>
         <div className="absolute top-4 right-4 ">
           {getApprovalBadge(approvalData)}
@@ -427,7 +439,7 @@ const FestivalCard = ({ festival, user, hasRole, onDelete, formatDate, getStatus
           </div>
           <div className="flex items-center">
             <Calendar size={16} className="mr-2 flex-shrink-0" />
-            <span>{formatDate(festival.startDate)} - {formatDate(festival.endDate)}</span>
+            <span>{convertToVietnamTimeWithFormat(festival.startDate)} - {convertToVietnamTimeWithFormat(festival.endDate)}</span>
           </div>
         </div>
 
@@ -501,7 +513,7 @@ const FestivalListItem = ({ festival, user, hasRole, onDelete, formatDate, getSt
                 </span>
                 <span className="flex items-center">
                   <Calendar size={14} className="mr-1" />
-                  {formatDate(festival.startDate)}
+                  {convertToVietnamTimeWithFormat(festival.startDate)}
                 </span>
               </div>
 

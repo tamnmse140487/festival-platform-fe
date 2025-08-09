@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit, Trash2, Eye, Store, Users, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Eye, Store, Users, AlertCircle, CheckCircle, Clock, Play } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { boothServices } from '../../../services/boothServices';
 import { studentGroupServices } from '../../../services/studentGroupServices';
@@ -56,8 +56,9 @@ const AdminBoothsTab = ({ festival }) => {
     const pending = booths.filter(booth => booth.status === 'pending').length;
     const approved = booths.filter(booth => booth.status === 'approved').length;
     const rejected = booths.filter(booth => booth.status === 'rejected').length;
+    const active = booths.filter(booth => booth.status === 'active').length;
 
-    return { total, pending, approved, rejected };
+    return { total, pending, approved, rejected, active };
   };
 
   const filteredBooths = booths.filter(booth => {
@@ -110,6 +111,12 @@ const AdminBoothsTab = ({ festival }) => {
       color: 'green'
     },
     {
+      title: 'Đang hoạt động',
+      value: stats.active,
+      icon: Play,
+      color: 'purple'
+    },
+    {
       title: 'Đã từ chối',
       value: stats.rejected,
       icon: AlertCircle,
@@ -128,13 +135,14 @@ const AdminBoothsTab = ({ festival }) => {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {statsCards.map((stat, index) => {
           const Icon = stat.icon;
           const colorClasses = {
             blue: 'bg-blue-50 text-blue-600 border-blue-200',
             yellow: 'bg-yellow-50 text-yellow-600 border-yellow-200',
             green: 'bg-green-50 text-green-600 border-green-200',
+            purple: 'bg-purple-50 text-purple-600 border-purple-200',
             red: 'bg-red-50 text-red-600 border-red-200'
           };
 
@@ -176,6 +184,7 @@ const AdminBoothsTab = ({ festival }) => {
               <option value="all">Tất cả trạng thái</option>
               <option value="pending">Chờ duyệt</option>
               <option value="approved">Đã duyệt</option>
+              <option value="active">Đang hoạt động</option>
               <option value="rejected">Đã từ chối</option>
             </select>
 
@@ -201,10 +210,7 @@ const AdminBoothsTab = ({ festival }) => {
               <option value="group">Nhóm</option>
             </select>
 
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2">
-              <Plus size={16} />
-              <span>Thêm gian hàng</span>
-            </button>
+            
           </div>
         </div>
 
@@ -349,13 +355,14 @@ const AdminBoothsTab = ({ festival }) => {
             {[
               { status: 'pending', label: 'Chờ duyệt', count: stats.pending, color: 'bg-yellow-500' },
               { status: 'approved', label: 'Đã duyệt', count: stats.approved, color: 'bg-green-500' },
+              { status: 'active', label: 'Đang hoạt động', count: stats.active, color: 'bg-purple-500' },
               { status: 'rejected', label: 'Đã từ chối', count: stats.rejected, color: 'bg-red-500' }
             ].map(item => {
               const percentage = stats.total > 0 ? (item.count / stats.total * 100) : 0;
 
               return (
                 <div key={item.status} className="flex items-center gap-4">
-                  <div className="w-24 text-sm font-medium text-gray-700">
+                  <div className="w-28 text-sm font-medium text-gray-700">
                     {item.label}
                   </div>
                   <div className="flex-1 bg-gray-200 rounded-full h-4 relative">
@@ -394,6 +401,18 @@ const AdminBoothsTab = ({ festival }) => {
                   <p className="text-sm font-medium text-yellow-800">Có gian hàng chờ duyệt</p>
                   <p className="text-xs text-yellow-600">
                     {stats.pending} gian hàng đang chờ được duyệt
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {stats.active > 0 && (
+              <div className="flex items-start space-x-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                <Play size={16} className="text-purple-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-purple-800">Có gian hàng đang hoạt động</p>
+                  <p className="text-xs text-purple-600">
+                    {stats.active} gian hàng đang hoạt động tại lễ hội
                   </p>
                 </div>
               </div>
@@ -447,7 +466,13 @@ const AdminBoothsTab = ({ festival }) => {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Tỷ lệ duyệt:</span>
                   <span className="font-medium text-green-600">
-                    {stats.total > 0 ? Math.round((stats.approved / stats.total) * 100) : 0}%
+                    {stats.total > 0 ? Math.round(((stats.approved + stats.active) / stats.total) * 100) : 0}%
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Tỷ lệ hoạt động:</span>
+                  <span className="font-medium text-purple-600">
+                    {stats.total > 0 ? Math.round((stats.active / stats.total) * 100) : 0}%
                   </span>
                 </div>
                 <div className="flex justify-between">

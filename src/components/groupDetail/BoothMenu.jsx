@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast'
 import { boothServices } from '../../services/boothServices'
 import { boothMenuItemServices } from '../../services/boothMenuItemServices'
 import { menuItemServices } from '../../services/menuItemServices'
+import { imageServices } from '../../services/imageServices'
 
 const BoothMenu = ({ groupId }) => {
   const [booth, setBooth] = useState(null)
@@ -18,22 +19,27 @@ const BoothMenu = ({ groupId }) => {
       setBooth(boothData)
 
       if (boothData?.boothId) {
-        const boothMenuResponse = await boothMenuItemServices.get({ 
-          boothId: boothData.boothId 
+        const boothMenuResponse = await boothMenuItemServices.get({
+          boothId: boothData.boothId
         })
         const boothMenuItems = boothMenuResponse.data || []
-
         const menuItemsWithDetails = await Promise.all(
           boothMenuItems.map(async (boothMenuItem) => {
             try {
-              const menuItemResponse = await menuItemServices.get({ 
-                itemId: boothMenuItem.menuItemId 
+              const menuItemResponse = await menuItemServices.get({
+                itemId: boothMenuItem.menuItemId
               })
               const menuItemData = menuItemResponse.data?.[0] || {}
-              
+
+              const imageResponse = await imageServices.get({
+                boothId: boothMenuItem.boothMenuItemId
+              })
+              const imageData = imageResponse.data?.[0] || null
+
               return {
                 ...boothMenuItem,
-                ...menuItemData
+                ...menuItemData,
+                image: imageData
               }
             } catch (error) {
               console.error(`Error fetching menu item ${boothMenuItem.menuItemId}:`, error)
@@ -55,7 +61,7 @@ const BoothMenu = ({ groupId }) => {
   const getItemTypeColor = (itemType) => {
     const colors = {
       'food': 'bg-orange-100 text-orange-800',
-      'drink': 'bg-blue-100 text-blue-800',
+      'beverage': 'bg-blue-100 text-blue-800',
       'dessert': 'bg-pink-100 text-pink-800',
       'snack': 'bg-yellow-100 text-yellow-800'
     }
@@ -65,9 +71,9 @@ const BoothMenu = ({ groupId }) => {
   const getItemTypeLabel = (itemType) => {
     const labels = {
       'food': 'Món chính',
-      'drink': 'Đồ uống',
       'dessert': 'Tráng miệng',
-      'snack': 'Đồ ăn vặt'
+      'snack': 'Đồ ăn vặt',
+      'beverage': 'Thức uống',
     }
     return labels[itemType?.toLowerCase()] || itemType
   }
@@ -125,7 +131,7 @@ const BoothMenu = ({ groupId }) => {
             Menu gian hàng: {booth.boothName}
           </h4>
         </div>
-        
+
         <div className="text-sm text-gray-600">
           Tổng cộng: {menuItems.length} món ăn
         </div>
@@ -145,6 +151,16 @@ const BoothMenu = ({ groupId }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {items.map((item) => (
               <div key={item.menuItemId} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                {item.image && (
+                  <div className="w-full h-32 mb-3 rounded-lg overflow-hidden">
+                    <img
+                      src={item.image.imageUrl}
+                      alt={item.itemName}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                
                 <div className="flex items-start justify-between mb-2">
                   <h6 className="font-medium text-gray-900 flex-1">
                     {item.itemName || 'Chưa có tên'}
@@ -153,21 +169,21 @@ const BoothMenu = ({ groupId }) => {
                     {getItemTypeLabel(item.itemType)}
                   </span>
                 </div>
-                
+
                 {item.description && (
                   <p className="text-sm text-gray-600 mb-3">
                     {item.description}
                   </p>
                 )}
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center text-green-600">
                     <DollarSign size={16} className="mr-1" />
                     <span className="font-semibold">
-                      {item.basePrice?.toLocaleString() || 0}đ
+                      {item.customPrice?.toLocaleString() || 0}đ
                     </span>
                   </div>
-                  
+
                   <div className="text-sm text-gray-500">
                     Giới hạn: {item.quantityLimit || 'Không giới hạn'}
                   </div>
@@ -182,15 +198,6 @@ const BoothMenu = ({ groupId }) => {
         <div className="flex items-center justify-between text-sm text-gray-600">
           <span>Tổng số món trong menu:</span>
           <span className="font-semibold">{menuItems.length} món</span>
-        </div>
-        <div className="flex items-center justify-between text-sm text-gray-600 mt-1">
-          <span>Giá trung bình:</span>
-          <span className="font-semibold">
-            {menuItems.length > 0 
-              ? Math.round(menuItems.reduce((sum, item) => sum + (item.basePrice || 0), 0) / menuItems.length).toLocaleString()
-              : 0
-            }đ
-          </span>
         </div>
       </div>
     </div>

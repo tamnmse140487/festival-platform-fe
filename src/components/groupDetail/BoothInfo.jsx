@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Store, MapPin, Check, X } from 'lucide-react'
-import { Button } from 'antd'
+import { Button, Input } from 'antd'
 import { toast } from 'react-hot-toast'
 import { boothServices } from '../../services/boothServices'
 import { festivalServices } from '../../services/festivalServices'
@@ -10,6 +10,9 @@ import { imageServices } from '../../services/imageServices'
 import { useAuth } from '../../contexts/AuthContext'
 import { ROLE_NAME, BOOTH_STATUS } from '../../utils/constants'
 import useModal from 'antd/es/modal/useModal';
+import { convertToVietnamTimeWithFormat } from '../../utils/formatters'
+
+const { TextArea } = Input;
 
 const BoothInfo = ({ groupId, group, members }) => {
   const { user, hasRole } = useAuth();
@@ -19,7 +22,6 @@ const BoothInfo = ({ groupId, group, members }) => {
   const [location, setLocation] = useState(null)
   const [mapUrl, setMapUrl] = useState(null)
   const [festivalImages, setFestivalImages] = useState([])
-  const [boothImages, setBoothImages] = useState([])
   const [loading, setLoading] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
   const [modal, contextHolder] = useModal();
@@ -29,21 +31,20 @@ const BoothInfo = ({ groupId, group, members }) => {
     try {
       const boothResponse = await boothServices.get({ groupId })
       const boothData = boothResponse.data?.[0] || null
+      console.log("boothResponse: ", boothResponse)
       setBooth(boothData)
 
       if (boothData) {
         const [
           festivalResponse,
           locationResponse,
-          boothImagesResponse
+
         ] = await Promise.all([
           festivalServices.get({ festivalId: boothData.festivalId }),
           mapLocationServices.get({ locationId: boothData.locationId }),
-          imageServices.get({ boothId: boothData.boothId })
         ])
         setFestival(festivalResponse.data?.[0] || null)
         setLocation(locationResponse.data?.[0] || null)
-        setBoothImages(boothImagesResponse.data || [])
 
         if (festivalResponse.data?.[0]) {
           const [festivalImagesResponse, mapResponse] = await Promise.all([
@@ -61,16 +62,6 @@ const BoothInfo = ({ groupId, group, members }) => {
     } finally {
       setLoading(false)
     }
-  }
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
   }
 
   const getStatusBadge = (status) => {
@@ -100,22 +91,53 @@ const BoothInfo = ({ groupId, group, members }) => {
   }
 
   const handleStatusChange = (action, newStatus) => {
-    const actionText = {
-      approve: 'duyệt',
-      reject: 'từ chối',
-      activate: 'kích hoạt'
+    if (action === 'reject') {
+      handleReject()
+    } else {
+      const actionText = {
+        approve: 'duyệt',
+        activate: 'kích hoạt'
+      }
+
+      modal.confirm({
+        title: `Xác nhận ${actionText[action]} gian hàng`,
+        content: `Bạn có chắc chắn muốn ${actionText[action]} gian hàng "${booth.boothName}" không?`,
+        okText: 'Xác nhận',
+        cancelText: 'Hủy',
+        onOk: () => executeStatusChange(action, newStatus)
+      })
     }
+  }
+
+  const handleReject = () => {
+    let rejectionReason = '';
 
     modal.confirm({
-      title: `Xác nhận ${actionText[action]} gian hàng`,
-      content: `Bạn có chắc chắn muốn ${actionText[action]} gian hàng "${booth.boothName}" không?`,
-      okText: 'Xác nhận',
+      title: 'Từ chối gian hàng',
+      content: (
+        <div className="mt-4">
+          <p className="mb-3">Vui lòng nhập lý do từ chối:</p>
+          <TextArea
+            rows={4}
+            placeholder="Nhập lý do từ chối gian hàng..."
+            onChange={(e) => rejectionReason = e.target.value}
+          />
+        </div>
+      ),
+      okText: 'Từ chối',
       cancelText: 'Hủy',
-      onOk: () => executeStatusChange(action, newStatus)
+      okButtonProps: { danger: true },
+      onOk: () => {
+        if (!rejectionReason.trim()) {
+          toast.error('Vui lòng nhập lý do từ chối');
+          return false;
+        }
+        executeStatusChange('reject', BOOTH_STATUS.REJECTED, rejectionReason.trim());
+      }
     })
   }
 
-  const executeStatusChange = async (action, newStatus) => {
+  const executeStatusChange = async (action, newStatus, rejectionReason = null) => {
     try {
       setActionLoading(true)
 
@@ -133,16 +155,24 @@ const BoothInfo = ({ groupId, group, members }) => {
             { id: location.locationId, isOccupied: true }
           )
         }
+      } else if (action === 'reject') {
+        await boothServices.updateReject({ 
+          boothId: booth.boothId, 
+          rejectReason: rejectionReason 
+        })
       } else {
         const apiMap = {
-          reject: boothServices.updateReject,
           activate: boothServices.updateActivate
         }
 
         await apiMap[action]({ boothId: booth.boothId })
       }
 
-      setBooth(prev => ({ ...prev, status: newStatus }))
+      setBooth(prev => ({ 
+        ...prev, 
+        status: newStatus,
+        ...(rejectionReason && { rejectionReason })
+      }))
 
       const successMessage = {
         approve: 'Duyệt gian hàng thành công!',
@@ -254,12 +284,12 @@ const BoothInfo = ({ groupId, group, members }) => {
           </div>
           <div>
             <label className="text-sm font-medium text-gray-500">Ngày đăng ký</label>
-            <p className="text-gray-900 mt-1">{formatDate(booth.registrationDate)}</p>
+            <p className="text-gray-900 mt-1">{convertToVietnamTimeWithFormat(booth.registrationDate)}</p>
           </div>
           {booth.approvalDate && (
             <div>
               <label className="text-sm font-medium text-gray-500">Ngày duyệt</label>
-              <p className="text-gray-900 mt-1">{formatDate(booth.approvalDate)}</p>
+              <p className="text-gray-900 mt-1">{convertToVietnamTimeWithFormat(booth.approvalDate)}</p>
             </div>
           )}
         </div>
@@ -278,24 +308,47 @@ const BoothInfo = ({ groupId, group, members }) => {
           </div>
         )}
 
-        {renderActionButtons()}
-
-        {boothImages.length > 0 && (
-          <div className="mt-6">
-            <label className="text-sm font-medium text-gray-500 mb-3 block">Hình ảnh gian hàng</label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {boothImages.map((image, index) => (
-                <img
-                  key={index}
-                  src={image.imageUrl}
-                  alt={`Booth ${index + 1}`}
-                  className="w-full h-32 object-cover rounded-lg border"
-                />
-              ))}
-            </div>
+        {booth.rejectionReason && booth.status === BOOTH_STATUS.REJECTED && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <label className="text-sm font-medium text-red-700">Lý do từ chối</label>
+            <p className="text-red-800 mt-1">{booth.rejectionReason}</p>
           </div>
         )}
+
+        {renderActionButtons()}
+
       </div>
+
+      {location && (
+        <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6">
+          <h5 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <MapPin size={20} className="mr-2 text-green-600" />
+            Vị trí gian hàng
+          </h5>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-gray-500">Vị trí</label>
+              <p className="text-gray-900 mt-1">{location.locationName}-{location.coordinates}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-500">Loại vị trí</label>
+              <p className="text-gray-900 mt-1">{location.locationType}</p>
+            </div>
+
+          </div>
+
+          {mapUrl && (
+            <div className="mt-4">
+              <label className="text-sm font-medium text-gray-500 mb-3 block">Bản đồ lễ hội</label>
+              <img
+                src={mapUrl}
+                alt="Festival Map"
+                className="w-full max-w-lg h-full object-cover rounded-lg border mx-auto"
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {festival && (
         <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-6">
@@ -316,7 +369,7 @@ const BoothInfo = ({ groupId, group, members }) => {
             <div>
               <label className="text-sm font-medium text-gray-500">Thời gian</label>
               <p className="text-gray-900 mt-1">
-                {formatDate(festival.startDate)} - {formatDate(festival.endDate)}
+                {convertToVietnamTimeWithFormat(festival.startDate)} - {convertToVietnamTimeWithFormat(festival.endDate)}
               </p>
             </div>
           </div>
@@ -339,36 +392,6 @@ const BoothInfo = ({ groupId, group, members }) => {
         </div>
       )}
 
-      {location && (
-        <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6">
-          <h5 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <MapPin size={20} className="mr-2 text-green-600" />
-            Vị trí gian hàng
-          </h5>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-gray-500">Vị trí</label>
-              <p className="text-gray-900 mt-1">{location.locationName}-{location.coordinates}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-500">Loại vị trí</label>
-              <p className="text-gray-900 mt-1">{location.locationType}</p>
-            </div>
-           
-          </div>
-
-          {mapUrl && (
-            <div className="mt-4">
-              <label className="text-sm font-medium text-gray-500 mb-3 block">Bản đồ lễ hội</label>
-              <img
-                src={mapUrl}
-                alt="Festival Map"
-                className="w-full max-w-lg h-full object-cover rounded-lg border mx-auto"
-              />
-            </div>
-          )}
-        </div>
-      )}
     </div>
   </>
 
