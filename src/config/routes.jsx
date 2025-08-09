@@ -19,6 +19,7 @@ import { ROLE_NAME } from '../utils/constants';
 import AccountManagementPage from '../pages/accounts/AccountManagementPage';
 import SupplyManagementPage from '../pages/suppliers/SupplyManagementPage';
 import AdminFestivalDetail from '../pages/festivals/admin/AdminFestivalDetail';
+import GroupDetailPage from '../pages/groups/GroupDetailPage';
 
 export const protectedRoutes = [
   // Dashboard
@@ -71,6 +72,46 @@ export const protectedRoutes = [
   {
     path: "/app/groups",
     element: <StudentGroupPage />,
+    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
+  },
+  {
+    path: "/app/groups/:groupId",
+    element: <GroupDetailPage />,
+    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
+  },
+  {
+    path: "/app/groups/:groupId/info",
+    element: <GroupDetailPage />,
+    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
+  },
+  {
+    path: "/app/groups/:groupId/members",
+    element: <GroupDetailPage />,
+    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
+  },
+  {
+    path: "/app/groups/:groupId/booth",
+    element: <GroupDetailPage />,
+    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
+  },
+  {
+    path: "/app/groups/:groupId/menu",
+    element: <GroupDetailPage />,
+    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
+  },
+  {
+    path: "/app/groups/:groupId/chat",
+    element: <GroupDetailPage />,
+    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
+  },
+  {
+    path: "/app/groups/:groupId/orders",
+    element: <GroupDetailPage />,
+    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
+  },
+  {
+    path: "/app/groups/:groupId/documents",
+    element: <GroupDetailPage />,
     roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
   },
 

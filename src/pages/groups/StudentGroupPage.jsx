@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Plus, Search, Users, DollarSign, Calendar, Eye, Edit, Filter, CheckCircle, Clock } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { useAuth } from '../../contexts/AuthContext'
@@ -9,18 +10,16 @@ import { GROUP_ROLE, ROLE_NAME } from '../../utils/constants'
 import Button from '../../components/common/Button'
 import Input from '../../components/common/Input'
 import Card from '../../components/common/Card'
-import GroupDetailModal from '../../components/groups/GroupDetailModal'
 import Modal from '../../components/common/Modal'
 import CreateGroupModal from '../../components/groups/CreateGroupModal'
 
 const StudentGroupPage = () => {
   const { user, hasRole } = useAuth()
+  const navigate = useNavigate()
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
-  const [selectedGroup, setSelectedGroup] = useState(null)
-  const [showDetailModal, setShowDetailModal] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
 
   const fetchGroups = async () => {
@@ -116,8 +115,7 @@ const StudentGroupPage = () => {
   }
 
   const handleViewDetails = (group) => {
-    setSelectedGroup(group)
-    setShowDetailModal(true)
+    navigate(`/app/groups/${group.groupId}`)
   }
 
   const filteredGroups = groups.filter(group => {
@@ -219,13 +217,6 @@ const StudentGroupPage = () => {
           )}
         </Card.Content>
       </Card>
-
-      <GroupDetailModal
-        group={selectedGroup}
-        isOpen={showDetailModal}
-        onClose={() => setShowDetailModal(false)}
-        onRefresh={fetchGroups}
-      />
 
       <Modal
         isOpen={showCreateModal}

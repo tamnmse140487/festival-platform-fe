@@ -43,6 +43,38 @@ export const BOOTH_STATUS = {
   ACTIVE: "active",
 };
 
+export const ORDER_STATUS = {
+  PENDING: "pending",
+  PAID: "paid",
+  CANCELLED: "cancelled",
+};
+
+export const ORDER_STATUS_LABELS = {
+  [ORDER_STATUS.PENDING]: "Chờ thanh toán",
+  [ORDER_STATUS.PAID]: "Đã thanh toán",
+  [ORDER_STATUS.CANCELLED]: "Đã hủy",
+};
+
+export const PAYMENT_METHOD = {
+  WALLET: "wallet",
+  ACCOUNT_POINTS: "account_points",
+  CASH: "cash",
+  BANK: "bank",
+};
+
+export const PAYMENT_METHOD_LABELS = {
+  [PAYMENT_METHOD.WALLET]: "Ví điện tử",
+  [PAYMENT_METHOD.ACCOUNT_POINTS]: "Điểm tích lũy",
+  [PAYMENT_METHOD.CASH]: "Tiền mặt",
+  [PAYMENT_METHOD.BANK]: "Chuyển khoản",
+};
+
+export const PAYMENT_TYPE = {
+  TOPUP: "topup",
+  REFUND: "refund",
+  ORDER: "order",
+};
+
 export const GROUP_ROLE = {
   LEADER: "leader",
   MEMBER: "member",
