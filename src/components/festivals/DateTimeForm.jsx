@@ -3,7 +3,73 @@ import { Calendar } from 'lucide-react';
 import Input from '../common/Input';
 import Card from '../common/Card';
 
-const DateTimeForm = ({ register, errors }) => {
+const DateTimeForm = ({ register, errors, watch }) => {
+  const watchedValues = watch();
+
+  const getVietnamDateTime = () => {
+    const now = new Date();
+    const vietnamTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Ho_Chi_Minh"}));
+    return vietnamTime.toISOString().slice(0, 16);
+  };
+
+  const validateStartDate = (value) => {
+    if (!value) return 'Ngày bắt đầu là bắt buộc';
+    
+    const startDate = new Date(value);
+    const now = new Date();
+    const vietnamTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Ho_Chi_Minh"}));
+    
+    if (startDate <= vietnamTime) {
+      return 'Ngày bắt đầu phải là 1 ngày trong tương lai';
+    }
+    
+    return true;
+  };
+
+  const validateEndDate = (value) => {
+    if (!value) return 'Ngày kết thúc là bắt buộc';
+    
+    const endDate = new Date(value);
+    const startDate = new Date(watchedValues.startDate);
+    
+    if (watchedValues.startDate && endDate <= startDate) {
+      return 'Ngày kết thúc phải sau ngày bắt đầu';
+    }
+    
+    return true;
+  };
+
+  const validateRegistrationStartDate = (value) => {
+    if (!value) return 'Ngày mở đăng ký là bắt buộc';
+    
+    const regStartDate = new Date(value);
+    const startDate = new Date(watchedValues.startDate);
+    
+    if (watchedValues.startDate && regStartDate >= startDate) {
+      return 'Mở đăng ký phải trước ngày bắt đầu';
+    }
+    
+    return true;
+  };
+
+  const validateRegistrationEndDate = (value) => {
+    if (!value) return 'Ngày đóng đăng ký là bắt buộc';
+    
+    const regEndDate = new Date(value);
+    const regStartDate = new Date(watchedValues.registrationStartDate);
+    const startDate = new Date(watchedValues.startDate);
+    
+    if (watchedValues.registrationStartDate && regEndDate <= regStartDate) {
+      return 'Đóng đăng ký phải sau ngày mở đăng ký';
+    }
+    
+    if (watchedValues.startDate && regEndDate >= startDate) {
+      return 'Đóng đăng ký phải trước ngày bắt đầu';
+    }
+    
+    return true;
+  };
+
   return (
     <Card>
       <Card.Header>
@@ -17,10 +83,11 @@ const DateTimeForm = ({ register, errors }) => {
             label="Ngày bắt đầu"
             type="datetime-local"
             required
+            min={getVietnamDateTime()}
             leftIcon={<Calendar size={20} />}
             error={errors.startDate?.message}
             {...register('startDate', {
-              required: 'Ngày bắt đầu là bắt buộc'
+              validate: validateStartDate
             })}
           />
           
@@ -28,10 +95,11 @@ const DateTimeForm = ({ register, errors }) => {
             label="Ngày kết thúc"
             type="datetime-local"
             required
+            min={watchedValues.startDate || getVietnamDateTime()}
             leftIcon={<Calendar size={20} />}
             error={errors.endDate?.message}
             {...register('endDate', {
-              required: 'Ngày kết thúc là bắt buộc'
+              validate: validateEndDate
             })}
           />
           
@@ -39,10 +107,11 @@ const DateTimeForm = ({ register, errors }) => {
             label="Mở đăng ký từ"
             type="datetime-local"
             required
+            max={watchedValues.startDate}
             leftIcon={<Calendar size={20} />}
             error={errors.registrationStartDate?.message}
             {...register('registrationStartDate', {
-              required: 'Ngày mở đăng ký là bắt buộc'
+              validate: validateRegistrationStartDate
             })}
           />
           
@@ -50,10 +119,12 @@ const DateTimeForm = ({ register, errors }) => {
             label="Đóng đăng ký vào"
             type="datetime-local"
             required
+            min={watchedValues.registrationStartDate}
+            max={watchedValues.startDate}
             leftIcon={<Calendar size={20} />}
             error={errors.registrationEndDate?.message}
             {...register('registrationEndDate', {
-              required: 'Ngày đóng đăng ký là bắt buộc'
+              validate: validateRegistrationEndDate
             })}
           />
         </div>

@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
-import { Users, UserMinus, UserCheck } from 'lucide-react'
+import { Users, UserMinus, UserCheck, User } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { GROUP_ROLE, GROUP_ROLE_LABELS, getRoleColor } from '../../utils/constants'
 import Button from '../common/Button'
-import useModal from 'antd/es/modal/useModal' 
+import useModal from 'antd/es/modal/useModal'
 
 const MemberList = ({
   members,
@@ -13,7 +13,7 @@ const MemberList = ({
   onUpdateRole,
   onRemoveMember
 }) => {
-  const [modal, contextHolder] = useModal() 
+  const [modal, contextHolder] = useModal()
   const [updatingRoles, setUpdatingRoles] = useState(new Set())
   const [removingMembers, setRemovingMembers] = useState(new Set())
 
@@ -32,7 +32,7 @@ const MemberList = ({
   }
 
   const handleRemoveMember = (memberId) => {
-    modal.confirm({ 
+    modal.confirm({
       title: 'Xác nhận xóa thành viên',
       content: 'Bạn có chắc chắn muốn xóa thành viên này?',
       okText: 'Xác nhận',
@@ -85,16 +85,39 @@ const MemberList = ({
     )
   }
 
+  const Avatar = ({ src, alt, size = "w-10 h-10" }) => {
+    const [imageError, setImageError] = useState(false)
+
+    if (!src || imageError) {
+      return (
+        <div className={`${size} bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0`}>
+          <User size={16} className="text-gray-500" />
+        </div>
+      )
+    }
+
+    return (
+      <img
+        src={src}
+        alt={alt}
+        className={`${size} rounded-full object-cover flex-shrink-0`}
+        onError={() => setImageError(true)}
+      />
+    )
+  }
+
   return (
     <>
-      {contextHolder} {/* ✅ bắt buộc phải có */}
+      {contextHolder}
       <div className="space-y-3">
         {members.map(member => (
           <div key={member.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <Users size={16} className="text-blue-600" />
-              </div>
+              <Avatar
+                src={member.avatarUrl}
+                alt={member.fullName || member.email}
+                size="w-8 h-8"
+              />
               <div>
                 <div className="flex items-center space-x-2">
                   <h5 className="font-medium text-gray-900">

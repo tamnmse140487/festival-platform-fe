@@ -6,7 +6,7 @@ import BoothRegistrationModal from '../booths/BoothRegistrationModal';
 import { useAuth } from '../../contexts/AuthContext';
 import Button from '../common/Button';
 
-const MapTab = ({ festivalMap, mapLocations, festival, loading, menuItems = [], menuItemImages = [] }) => {
+const MapTab = ({ festivalMap, mapLocations, festival, loading, menuItems = [] }) => {
   const { user, hasRole } = useAuth();
   const [showRegisterBoothModal, setShowRegisterBoothModal] = useState(false);
 
@@ -108,7 +108,6 @@ const MapTab = ({ festivalMap, mapLocations, festival, loading, menuItems = [], 
         mapLocations={mapLocations}
         festivalId={festival?.festivalId || festival?.id}
         menuItems={menuItems}
-        menuItemImages={menuItemImages}
       />
     </div>
   );

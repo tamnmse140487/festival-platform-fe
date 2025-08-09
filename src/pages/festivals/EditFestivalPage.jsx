@@ -235,9 +235,7 @@ const EditFestivalPage = () => {
               basePrice: parseFloat(item.basePrice) || 0
             });
 
-            if (item.image) {
-              await uploadService.uploadMenuItemImage(item.image, menuItemResponse.data.id);
-            }
+          
           }
         }
       }

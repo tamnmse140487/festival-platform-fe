@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Search, X, UserPlus } from 'lucide-react'
+import { Search, X, UserPlus, User } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { accountServices } from '../../services/accountServices'
 import { GROUP_ROLE, GROUP_ROLE_LABELS, ROLE_NAME } from '../../utils/constants'
@@ -7,7 +7,7 @@ import Button from '../common/Button'
 import Input from '../common/Input'
 import { roleServices } from '../../services/roleServices'
 
-const AddMemberModal = ({ onClose, onSubmit }) => {
+const AddMemberModal = ({ onClose, onSubmit, currentUserId }) => {
     const [accountId, setAccountId] = useState('')
     const [selectedRole, setSelectedRole] = useState(GROUP_ROLE.MEMBER)
     const [suggestions, setSuggestions] = useState([])
@@ -15,8 +15,8 @@ const AddMemberModal = ({ onClose, onSubmit }) => {
     const [loading, setLoading] = useState(false)
     const [searchLoading, setSearchLoading] = useState(false)
 
-    const searchAccount = async (id) => {
-        if (!id.trim()) {
+    const searchAccount = async (email) => {
+        if (!email.trim()) {
             setSuggestions([])
             return
         }
@@ -26,8 +26,13 @@ const AddMemberModal = ({ onClose, onSubmit }) => {
             const roleResponse = await roleServices.get({ roleName: ROLE_NAME.STUDENT })
             const studentRoleId = roleResponse.data?.[0]?.roleId
 
-            const response = await accountServices.get({ id: id, role: studentRoleId })
-            setSuggestions(response.data || [])
+            const response = await accountServices.get({ email: email, role: studentRoleId })
+            
+            const filteredData = (response.data || []).filter(account => 
+                account.id !== currentUserId
+            )
+            
+            setSuggestions(filteredData)
         } catch (error) {
             setSuggestions([])
             console.error('Error searching account:', error)
@@ -36,7 +41,7 @@ const AddMemberModal = ({ onClose, onSubmit }) => {
         }
     }
 
-    const handleAccountIdChange = (e) => {
+    const handleAccountEmailChange = (e) => {
         const value = e.target.value
         setAccountId(value)
         setSearchLoading(true)
@@ -101,6 +106,27 @@ const AddMemberModal = ({ onClose, onSubmit }) => {
         }
     }
 
+    const Avatar = ({ src, alt, size = "w-10 h-10" }) => {
+        const [imageError, setImageError] = useState(false)
+
+        if (!src || imageError) {
+            return (
+                <div className={`${size} bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0`}>
+                    <User size={20} className="text-gray-500" />
+                </div>
+            )
+        }
+
+        return (
+            <img
+                src={src}
+                alt={alt}
+                className={`${size} rounded-full object-cover flex-shrink-0`}
+                onError={() => setImageError(true)}
+            />
+        )
+    }
+
     const availableRoles = [
         { value: GROUP_ROLE.MEMBER, label: GROUP_ROLE_LABELS[GROUP_ROLE.MEMBER] },
         { value: GROUP_ROLE.TREASURER, label: GROUP_ROLE_LABELS[GROUP_ROLE.TREASURER] }
@@ -110,14 +136,14 @@ const AddMemberModal = ({ onClose, onSubmit }) => {
         <form onSubmit={handleSubmit} className="space-y-6">
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tìm kiếm theo ID <span className="text-red-500">*</span>
+                    Tìm kiếm theo email <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                     <Input
-                        placeholder="Nhập ID học sinh..."
+                        placeholder="Nhập email học sinh..."
                         leftIcon={<Search size={20} />}
                         value={accountId}
-                        onChange={handleAccountIdChange}
+                        onChange={handleAccountEmailChange}
                     />
                     {searchLoading && (
                         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -139,15 +165,21 @@ const AddMemberModal = ({ onClose, onSubmit }) => {
                                             <div
                                                 key={account.id}
                                                 onClick={() => addToPending(account)}
-                                                className="p-3 rounded-lg cursor-pointer transition-colors hover:bg-gray-50 border border-transparent hover:border-gray-200"
+                                                className="flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors hover:bg-gray-50 border border-transparent hover:border-gray-200"
                                             >
-                                                <div className="font-medium text-gray-900">
-                                                    {account.fullName || 'Chưa có tên'}
+                                                <Avatar 
+                                                    src={account.avatarUrl} 
+                                                    alt={account.fullName || account.email}
+                                                />
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="font-medium text-gray-900 truncate">
+                                                        {account.fullName || 'Chưa có tên'}
+                                                    </div>
+                                                    <div className="text-sm text-gray-600 truncate">{account.email}</div>
+                                                    {account.phoneNumber && (
+                                                        <div className="text-sm text-gray-600">{account.phoneNumber}</div>
+                                                    )}
                                                 </div>
-                                                <div className="text-sm text-gray-600">{account.email}</div>
-                                                {account.phoneNumber && (
-                                                    <div className="text-sm text-gray-600">{account.phoneNumber}</div>
-                                                )}
                                             </div>
                                         ))}
                                     </div>
@@ -167,18 +199,23 @@ const AddMemberModal = ({ onClose, onSubmit }) => {
                     <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg">
                         <div className="space-y-2 p-3">
                             {pendingMembers.map(member => (
-                                <div key={member.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                    <div className="flex-1">
-                                        <div className="font-medium text-gray-900">
+                                <div key={member.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                    <Avatar 
+                                        src={member.avatarUrl} 
+                                        alt={member.fullName || member.email}
+                                        size="w-8 h-8"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-medium text-gray-900 truncate">
                                             {member.fullName || 'Chưa có tên'}
                                         </div>
-                                        <div className="text-sm text-gray-600">{member.email}</div>
+                                        <div className="text-sm text-gray-600 truncate">{member.email}</div>
                                         {member.phoneNumber && (
                                             <div className="text-sm text-gray-600">{member.phoneNumber}</div>
                                         )}
                                     </div>
 
-                                    <div className="flex items-center space-x-2">
+                                    <div className="flex items-center space-x-2 flex-shrink-0">
                                         <select
                                             value={member.role}
                                             onChange={(e) => updateMemberRole(member.id, e.target.value)}
