@@ -14,7 +14,8 @@ import {
   Settings,
   ChefHat,
   UserPen,
-  Handshake
+  Handshake,
+  SquareUser
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLE_NAME } from '../../utils/constants';
@@ -80,7 +81,13 @@ const Sidebar = ({ isOpen, onClose }) => {
       path: '/app/groups',
       roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
     },
-
+    {
+      id: 'profile',
+      label: 'Hồ sơ cá nhân',
+      icon: SquareUser,
+      path: '/app/profile',
+      roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.ADMIN, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT, ROLE_NAME.SUPPLIER]
+    },
     // {
     //   id: 'booths',
     //   label: 'Gian hàng',
