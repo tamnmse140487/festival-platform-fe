@@ -112,6 +112,7 @@ export const getOrderStatusColor = (status) => {
   const colors = {
     [ORDER_STATUS.PENDING]: "bg-yellow-100 text-yellow-800",
     [ORDER_STATUS.PAID]: "bg-green-100 text-green-800",
+    [ORDER_STATUS.COMPLETED]: "bg-green-100 text-green-800",
     [ORDER_STATUS.CANCELLED]: "bg-red-100 text-red-800",
   };
   return colors[status] || "bg-gray-100 text-gray-800";
