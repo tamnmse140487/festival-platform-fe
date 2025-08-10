@@ -27,7 +27,7 @@ const AdminFestivalList = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      
+
       const [festivalsResponse, festivalSchoolsResponse] = await Promise.all([
         festivalServices.get({}),
         festivalSchoolServices.get({})
@@ -35,7 +35,7 @@ const AdminFestivalList = () => {
 
       const festivalsData = festivalsResponse.data || [];
       const festivalSchoolsData = festivalSchoolsResponse.data || [];
-      
+
       setFestivals(festivalsData);
       setFestivalSchools(festivalSchoolsData);
 
@@ -69,7 +69,7 @@ const AdminFestivalList = () => {
       const festivalSchool = festivalSchools.find(fs => fs.festivalId === festival.festivalId);
       const school = festivalSchool ? schools[festivalSchool.schoolId] : null;
       const stats = calculateFestivalStats(festival);
-      
+
       return {
         ...festival,
         festivalSchool,
@@ -136,7 +136,7 @@ const AdminFestivalList = () => {
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Quản lý Lễ hội (Admin)</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Quản lý Lễ hội</h1>
           <p className="text-gray-600 mt-1">
             Xem và quản lý tất cả lễ hội trong hệ thống
           </p>
@@ -227,10 +227,13 @@ const AdminFestivalList = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto custom-scrollbar">         
+        <div className="overflow-x-auto custom-scrollbar">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Thao tác
+                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Lễ hội
                 </th>
@@ -252,14 +255,21 @@ const AdminFestivalList = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Kiểm duyệt
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Thao tác
-                </th>
+
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {paginatedFestivals.map((festival) => (
                 <tr key={festival.festivalId} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <Link
+                      to={`/app/festivals/admin/${festival.festivalId}`}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg inline-flex items-center space-x-1 transition-colors"
+                    >
+                      <Eye size={14} />
+                      <span>Chi tiết</span>
+                    </Link>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900 max-w-xs truncate">
                       {festival.festivalName}
@@ -335,15 +345,7 @@ const AdminFestivalList = () => {
                       getStatusBadge(festival.approvalStatus, 'approval')
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <Link
-                      to={`/app/festivals/admin/${festival.festivalId}`}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg inline-flex items-center space-x-1 transition-colors"
-                    >
-                      <Eye size={14} />
-                      <span>Chi tiết</span>
-                    </Link>
-                  </td>
+
                 </tr>
               ))}
             </tbody>
@@ -406,7 +408,7 @@ const AdminFestivalList = () => {
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Thống kê tổng quan</h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600 mb-2">
@@ -414,21 +416,21 @@ const AdminFestivalList = () => {
             </div>
             <div className="text-sm text-gray-600">Tổng số lễ hội</div>
           </div>
-          
+
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600 mb-2">
               {festivals.filter(f => f.status === 'published').length}
             </div>
             <div className="text-sm text-gray-600">Đã công bố</div>
           </div>
-          
+
           <div className="text-center">
             <div className="text-2xl font-bold text-yellow-600 mb-2">
               {festivals.filter(f => f.status === 'draft').length}
             </div>
             <div className="text-sm text-gray-600">Đang soạn thảo</div>
           </div>
-          
+
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-600 mb-2">
               {Object.keys(schools).length}
@@ -448,14 +450,14 @@ const AdminFestivalList = () => {
             ].map(item => {
               const total = festivals.length;
               const percentage = total > 0 ? (item.value / total * 100) : 0;
-              
+
               return (
                 <div key={item.label} className="flex items-center gap-4">
                   <div className="w-32 text-sm font-medium text-gray-700">
                     {item.label}
                   </div>
                   <div className="flex-1 bg-gray-200 rounded-full h-4 relative">
-                    <div 
+                    <div
                       className={`h-4 rounded-full ${item.color} transition-all duration-500`}
                       style={{ width: `${percentage}%` }}
                     />

@@ -325,7 +325,6 @@ const GroupDetailPage = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <Button
@@ -365,7 +364,6 @@ const GroupDetailPage = () => {
         </Button>
       </div>
 
-      {/* Navigation Tabs */}
       <div className="border-b border-gray-200">
         <nav className="flex space-x-8 overflow-x-auto">
           {tabs.map((tab) => (
@@ -385,14 +383,12 @@ const GroupDetailPage = () => {
         </nav>
       </div>
 
-      {/* Content */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         {renderTabContent()}
       </div>
 
-      {/* Modals */}
       {showAddMemberModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="mt-0-important fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg w-full max-w-md">
             <div className="p-6 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">Thêm thành viên</h3>
@@ -409,7 +405,7 @@ const GroupDetailPage = () => {
       )}
 
       {showInviteTeacherModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="mt-0-important fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg w-full max-w-md">
             <div className="p-6 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">Mời giáo viên chủ nhiệm</h3>

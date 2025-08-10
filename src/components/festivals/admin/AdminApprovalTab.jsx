@@ -350,7 +350,7 @@ const AdminApprovalTab = ({ festival, festivalSchool, onStatusUpdate }) => {
             </div>
 
             {showRejectModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="mt-0-important fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                             <XCircle size={20} className="text-red-600" />

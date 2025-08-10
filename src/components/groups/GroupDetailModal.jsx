@@ -262,7 +262,7 @@ const GroupDetailModal = ({ group, isOpen, onClose, onRefresh }) => {
       </div>
 
       {showAddMemberModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+        <div className="mt-0-important fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
           <div className="bg-white rounded-lg w-full max-w-md">
             <div className="p-6 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">Thêm thành viên</h3>
@@ -279,7 +279,7 @@ const GroupDetailModal = ({ group, isOpen, onClose, onRefresh }) => {
       )}
 
       {showInviteTeacherModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+        <div className="mt-0-important fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
           <div className="bg-white rounded-lg w-full max-w-md">
             <div className="p-6 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">Mời giáo viên chủ nhiệm</h3>
