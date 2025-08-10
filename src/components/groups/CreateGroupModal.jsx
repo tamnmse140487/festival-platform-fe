@@ -10,16 +10,38 @@ const CreateGroupModal = ({ onClose, onSubmit }) => {
     className: '',
     groupBudget: 0
   })
+  const [displayBudget, setDisplayBudget] = useState('') 
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
 
+  const formatNumber = (num) => {
+    if (!num) return ''
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  }
+
+  const unformatNumber = (str) => {
+    if (!str) return 0
+    return parseInt(str.toString().replace(/\./g, '')) || 0
+  }
+
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }))
+    if (field === 'groupBudget') {
+      const numericValue = value.replace(/[^\d]/g, '')
+      const actualValue = parseInt(numericValue) || 0
+      
+      setFormData(prev => ({
+        ...prev,
+        [field]: actualValue
+      }))
+      
+      setDisplayBudget(formatNumber(numericValue))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }))
+    }
     
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
@@ -80,6 +102,7 @@ const CreateGroupModal = ({ onClose, onSubmit }) => {
       className: '',
       groupBudget: 0
     })
+    setDisplayBudget('')
     setErrors({})
   }
 
@@ -135,14 +158,12 @@ const CreateGroupModal = ({ onClose, onSubmit }) => {
             Ngân sách nhóm (VNĐ)
           </label>
           <Input
-            type="number"
+            type="text"
             placeholder="Nhập ngân sách..."
             leftIcon={<DollarSign size={20} />}
-            value={formData.groupBudget}
+            value={displayBudget}
             onChange={(e) => handleInputChange('groupBudget', e.target.value)}
             error={errors.groupBudget}
-            min="0"
-            step="1000"
           />
           {errors.groupBudget && (
             <p className="mt-1 text-sm text-red-600">{errors.groupBudget}</p>
@@ -152,8 +173,6 @@ const CreateGroupModal = ({ onClose, onSubmit }) => {
           </p>
         </div>
       </div>
-
-     
 
       <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
         <Button

@@ -14,7 +14,8 @@ import {
   Settings,
   ChefHat,
   UserPen,
-  Handshake
+  Handshake,
+  SquareUser
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLE_NAME } from '../../utils/constants';
@@ -75,19 +76,18 @@ const Sidebar = ({ isOpen, onClose }) => {
     },
     {
       id: 'groups',
-      label: 'Nhóm học sinh',
+      label: user?.role === ROLE_NAME.SCHOOL_MANAGER ? 'Nhóm học sinh' : 'Nhóm của tôi',
       icon: Users,
       path: '/app/groups',
-      roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER]
+      roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
     },
     {
-      id: 'my-groups',
-      label: 'Nhóm cá nhân',
-      icon: Users,
-      path: '/app/my-groups',
-      roles: [ROLE_NAME.STUDENT]
+      id: 'profile',
+      label: 'Hồ sơ cá nhân',
+      icon: SquareUser,
+      path: '/app/profile',
+      roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.ADMIN, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT, ROLE_NAME.SUPPLIER]
     },
-
     // {
     //   id: 'booths',
     //   label: 'Gian hàng',
@@ -95,20 +95,20 @@ const Sidebar = ({ isOpen, onClose }) => {
     //   path: '/app/booths',
     //   roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER]
     // },
-    {
-      id: 'games',
-      label: 'Mini Games',
-      icon: GamepadIcon,
-      path: '/app/games',
-      roles: [ROLE_NAME.STUDENT, ROLE_NAME.USER]
-    },
-    {
-      id: 'points',
-      label: 'Điểm tích lũy',
-      icon: Coins,
-      path: '/app/points',
-      roles: [ROLE_NAME.STUDENT, ROLE_NAME.USER]
-    },
+    // {
+    //   id: 'games',
+    //   label: 'Mini Games',
+    //   icon: GamepadIcon,
+    //   path: '/app/games',
+    //   roles: [ROLE_NAME.STUDENT, ROLE_NAME.USER]
+    // },
+    // {
+    //   id: 'points',
+    //   label: 'Điểm tích lũy',
+    //   icon: Coins,
+    //   path: '/app/points',
+    //   roles: [ROLE_NAME.STUDENT, ROLE_NAME.USER]
+    // },
     // {
     //   id: 'system',
     //   label: 'Hệ thống',

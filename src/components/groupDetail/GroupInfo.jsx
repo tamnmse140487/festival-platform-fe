@@ -1,15 +1,7 @@
 import React from 'react'
+import { convertToVietnamTimeWithFormat } from '../../utils/formatters'
 
 const GroupInfo = ({ group, members }) => {
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
 
   return (
     <div className="space-y-6">
@@ -32,7 +24,7 @@ const GroupInfo = ({ group, members }) => {
         </div>
         <div>
           <label className="text-sm font-medium text-gray-500">Ngày tạo</label>
-          <p className="text-gray-900 mt-1">{formatDate(group.creationDate)}</p>
+          <p className="text-gray-900 mt-1">{convertToVietnamTimeWithFormat(group.creationDate)}</p>
         </div>
         <div>
           <label className="text-sm font-medium text-gray-500">Trạng thái</label>

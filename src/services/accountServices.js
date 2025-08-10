@@ -6,4 +6,6 @@ export const accountServices = {
   get: (params) => api.get("/accounts/search", { params }),
   delete: (params) => api.delete(`/accounts/delete`, { params }),
   update: (params, data) => api.put(`/accounts/update`, data, { params }),
+  bulkCreateAccounts: (data) =>
+    api.post("/accounts/bulk-create-students", data),
 };

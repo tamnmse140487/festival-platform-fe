@@ -4,15 +4,28 @@ import { Plus, Eye, Edit, MapPin, Calendar, Users, Search, Grid, List, Trash2 } 
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { festivalServices } from '../../services/festivalServices';
+import { festivalSchoolServices } from '../../services/festivalSchoolServices';
 import { imageServices } from '../../services/imageServices';
-import { ROLE_NAME } from '../../utils/constants';
+import { FESTIVAL_APPROVAL_STATUS, FESTIVAL_STATUS, ROLE_NAME } from '../../utils/constants';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
+import AdminFestivalList from '../festivals/admin/AdminFestivalList';
+import { convertToVietnamTimeWithFormat } from '../../utils/formatters';
 
 const FestivalListPage = () => {
   const { user, hasRole } = useAuth();
+
+  if (hasRole([ROLE_NAME.ADMIN])) {
+    return <AdminFestivalList />;
+  }
+
+  return <UserFestivalList user={user} hasRole={hasRole} />;
+};
+
+const UserFestivalList = ({ user, hasRole }) => {
   const [festivals, setFestivals] = useState([]);
   const [festivalImages, setFestivalImages] = useState({});
+  const [approvalStatuses, setApprovalStatuses] = useState({});
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('grid');
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,8 +48,11 @@ const FestivalListPage = () => {
       const response = await festivalServices.get(params);
       const festivalsData = response.data || [];
       setFestivals(festivalsData);
-      
-      await loadFestivalImages(festivalsData);
+
+      await Promise.all([
+        loadFestivalImages(festivalsData),
+        loadApprovalStatuses(festivalsData)
+      ]);
     } catch (error) {
       console.error('Error loading festivals:', error);
       toast.error('Không thể tải danh sách lễ hội');
@@ -70,9 +86,38 @@ const FestivalListPage = () => {
     setFestivalImages(imagesMap);
   };
 
+  const loadApprovalStatuses = async (festivalsData) => {
+    const statusPromises = festivalsData.map(async (festival) => {
+      try {
+        const response = await festivalSchoolServices.get({ festivalId: festival.festivalId });
+        return {
+          festivalId: festival.festivalId,
+          approvalData: response.data && response.data.length > 0 ? response.data[0] : null
+        };
+      } catch (error) {
+        console.error(`Error loading approval status for festival ${festival.festivalId}:`, error);
+        return {
+          festivalId: festival.festivalId,
+          approvalData: null
+        };
+      }
+    });
+
+    const statusResults = await Promise.all(statusPromises);
+    const statusMap = {};
+    statusResults.forEach(result => {
+      statusMap[result.festivalId] = result.approvalData;
+    });
+    setApprovalStatuses(statusMap);
+  };
+
   const getFestivalImage = (festivalId) => {
     const images = festivalImages[festivalId] || [];
     return images.length > 0 ? images[0].imageUrl : '/api/placeholder/400/300';
+  };
+
+  const getApprovalStatus = (festivalId) => {
+    return approvalStatuses[festivalId];
   };
 
   const handleDelete = async () => {
@@ -92,12 +137,30 @@ const FestivalListPage = () => {
     }
   };
 
+  const shouldFilterApprovedOnly = hasRole([ROLE_NAME.USER, ROLE_NAME.STUDENT, ROLE_NAME.TEACHER]);
+
   const filteredFestivals = festivals.filter(festival => {
     const matchesSearch = festival.festivalName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       festival.theme?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       festival.location?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = statusFilter === 'all' || festival.status === statusFilter;
+
+    if (shouldFilterApprovedOnly) {
+      const approvalData = getApprovalStatus(festival.festivalId);
+
+      const isApproved = approvalData && approvalData.status === FESTIVAL_APPROVAL_STATUS.APPROVED;
+
+      const hasValidStatus = [
+        FESTIVAL_STATUS.PUBLISHED,
+        FESTIVAL_STATUS.ONGOING,
+        FESTIVAL_STATUS.COMPLETED
+      ].includes(festival.status);
+
+      if (!isApproved || !hasValidStatus) {
+        return false;
+      }
+    }
 
     return matchesSearch && matchesStatus;
   }).sort((a, b) => {
@@ -132,12 +195,27 @@ const FestivalListPage = () => {
     );
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+  const getApprovalBadge = (approvalData) => {
+    if (!approvalData) {
+      return (
+        <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+          Chưa đăng ký
+        </span>
+      );
+    }
+
+    const badges = {
+      'pending': { label: 'Chờ duyệt', class: 'bg-yellow-100 text-yellow-800' },
+      'approved': { label: 'Đã duyệt', class: 'bg-green-100 text-green-800' },
+      'rejected': { label: 'Đã từ chối', class: 'bg-red-100 text-red-800' }
+    };
+
+    const badge = badges[approvalData.status] || badges.pending;
+    return (
+      <span className={`px-3 py-1 rounded-full text-xs font-medium ${badge.class}`}>
+        {badge.label}
+      </span>
+    );
   };
 
   if (loading) {
@@ -193,10 +271,11 @@ const FestivalListPage = () => {
                 onChange={(e) => setStatusFilter(e.target.value)}
               >
                 <option value="all">Tất cả trạng thái</option>
-                <option value="draft">Bản nháp</option>
+                {!shouldFilterApprovedOnly && <option value="draft">Bản nháp</option>}
                 <option value="published">Đã công bố</option>
                 <option value="ongoing">Đang diễn ra</option>
                 <option value="completed">Đã kết thúc</option>
+                {!shouldFilterApprovedOnly && <option value="cancelled">Đã hủy</option>}
               </select>
 
               <select
@@ -216,8 +295,8 @@ const FestivalListPage = () => {
             <button
               onClick={() => setViewMode('grid')}
               className={`p-2 rounded-lg transition-colors ${viewMode === 'grid'
-                  ? 'bg-blue-100 text-blue-600'
-                  : 'text-gray-400 hover:text-gray-600'
+                ? 'bg-blue-100 text-blue-600'
+                : 'text-gray-400 hover:text-gray-600'
                 }`}
             >
               <Grid size={20} />
@@ -225,8 +304,8 @@ const FestivalListPage = () => {
             <button
               onClick={() => setViewMode('list')}
               className={`p-2 rounded-lg transition-colors ${viewMode === 'list'
-                  ? 'bg-blue-100 text-blue-600'
-                  : 'text-gray-400 hover:text-gray-600'
+                ? 'bg-blue-100 text-blue-600'
+                : 'text-gray-400 hover:text-gray-600'
                 }`}
             >
               <List size={20} />
@@ -259,23 +338,29 @@ const FestivalListPage = () => {
             {filteredFestivals.map(festival => (
               viewMode === 'grid' ? (
                 <FestivalCard
-                  key={festival.id}
+                  key={festival.festivalId}
                   festival={festival}
                   user={user}
+                  hasRole={hasRole}
                   onDelete={(festival) => setDeleteModal({ isOpen: true, festival })}
-                  formatDate={formatDate}
+                  formatDate={convertToVietnamTimeWithFormat}
                   getStatusBadge={getStatusBadge}
+                  getApprovalBadge={getApprovalBadge}
                   getFestivalImage={getFestivalImage}
+                  getApprovalStatus={getApprovalStatus}
                 />
               ) : (
                 <FestivalListItem
-                  key={festival.id}
+                  key={festival.festivalId}
                   festival={festival}
                   user={user}
+                  hasRole={hasRole}
                   onDelete={(festival) => setDeleteModal({ isOpen: true, festival })}
-                  formatDate={formatDate}
+                  formatDate={convertToVietnamTimeWithFormat}
                   getStatusBadge={getStatusBadge}
+                  getApprovalBadge={getApprovalBadge}
                   getFestivalImage={getFestivalImage}
+                  getApprovalStatus={getApprovalStatus}
                 />
               )
             ))}
@@ -318,8 +403,8 @@ const FestivalListPage = () => {
   );
 };
 
-const FestivalCard = ({ festival, user, onDelete, formatDate, getStatusBadge, getFestivalImage }) => {
-  const hasRole = (roles) => roles.includes(user?.role);
+const FestivalCard = ({ festival, user, hasRole, onDelete, formatDate, getStatusBadge, getApprovalBadge, getFestivalImage, getApprovalStatus }) => {
+  const approvalData = getApprovalStatus(festival.festivalId);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
@@ -332,8 +417,12 @@ const FestivalCard = ({ festival, user, onDelete, formatDate, getStatusBadge, ge
             e.target.src = '/api/placeholder/400/300';
           }}
         />
-        <div className="absolute top-4 left-4">
+        <div className="absolute top-4 left-4 ">
           {getStatusBadge(festival.status)}
+
+        </div>
+        <div className="absolute top-4 right-4 ">
+          {getApprovalBadge(approvalData)}
         </div>
       </div>
 
@@ -350,7 +439,7 @@ const FestivalCard = ({ festival, user, onDelete, formatDate, getStatusBadge, ge
           </div>
           <div className="flex items-center">
             <Calendar size={16} className="mr-2 flex-shrink-0" />
-            <span>{formatDate(festival.startDate)} - {formatDate(festival.endDate)}</span>
+            <span>{convertToVietnamTimeWithFormat(festival.startDate)} - {convertToVietnamTimeWithFormat(festival.endDate)}</span>
           </div>
         </div>
 
@@ -358,6 +447,13 @@ const FestivalCard = ({ festival, user, onDelete, formatDate, getStatusBadge, ge
           <span>{festival.maxFoodBooths || 0} gian ăn</span>
           <span>{festival.maxBeverageBooths || 0} gian uống</span>
         </div>
+
+        {approvalData && approvalData.rejectReason && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm font-medium text-red-800 mb-1">Lý do từ chối:</p>
+            <p className="text-sm text-red-700">{approvalData.rejectReason}</p>
+          </div>
+        )}
 
         <div className="flex space-x-2">
           <Link
@@ -389,8 +485,8 @@ const FestivalCard = ({ festival, user, onDelete, formatDate, getStatusBadge, ge
   );
 };
 
-const FestivalListItem = ({ festival, user, onDelete, formatDate, getStatusBadge, getFestivalImage }) => {
-  const hasRole = (roles) => roles.includes(user?.role);
+const FestivalListItem = ({ festival, user, hasRole, onDelete, formatDate, getStatusBadge, getApprovalBadge, getFestivalImage, getApprovalStatus }) => {
+  const approvalData = getApprovalStatus(festival.festivalId);
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-sm transition-shadow">
@@ -410,46 +506,54 @@ const FestivalListItem = ({ festival, user, onDelete, formatDate, getStatusBadge
               <h3 className="text-lg font-bold text-gray-900 mb-1">{festival.festivalName}</h3>
               <p className="text-gray-600 mb-2">{festival.theme}</p>
 
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-3">
                 <span className="flex items-center">
                   <MapPin size={14} className="mr-1" />
                   {festival.location}
                 </span>
                 <span className="flex items-center">
                   <Calendar size={14} className="mr-1" />
-                  {formatDate(festival.startDate)}
+                  {convertToVietnamTimeWithFormat(festival.startDate)}
                 </span>
               </div>
+
+              <div className="flex items-center space-x-2">
+                {getStatusBadge(festival.status)}
+                {getApprovalBadge(approvalData)}
+              </div>
+
+              {approvalData && approvalData.rejectReason && (
+                <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded">
+                  <p className="text-xs font-medium text-red-800">Lý do từ chối:</p>
+                  <p className="text-xs text-red-700">{approvalData.rejectReason}</p>
+                </div>
+              )}
             </div>
 
-            <div className="flex items-center space-x-3 ml-4">
-              {getStatusBadge(festival.status)}
-
-              <div className="flex space-x-2">
-                <Link
-                  to={`/app/festivals/${festival.festivalId}`}
-                  className="bg-blue-50 text-blue-700 py-2 px-4 rounded-lg hover:bg-blue-100 transition-colors font-medium"
-                >
-                  <Eye size={16} className="inline mr-1" />
-                  Xem
-                </Link>
-                {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && (
-                  <>
-                    <Link
-                      to={`/app/festivals/${festival.festivalId}/edit`}
-                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <Edit size={16} />
-                    </Link>
-                    <button
-                      onClick={() => onDelete(festival)}
-                      className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </>
-                )}
-              </div>
+            <div className="flex space-x-2 ml-4">
+              <Link
+                to={`/app/festivals/${festival.festivalId}`}
+                className="bg-blue-50 text-blue-700 py-2 px-4 rounded-lg hover:bg-blue-100 transition-colors font-medium"
+              >
+                <Eye size={16} className="inline mr-1" />
+                Xem
+              </Link>
+              {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && (
+                <>
+                  <Link
+                    to={`/app/festivals/${festival.festivalId}/edit`}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <Edit size={16} />
+                  </Link>
+                  <button
+                    onClick={() => onDelete(festival)}
+                    className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

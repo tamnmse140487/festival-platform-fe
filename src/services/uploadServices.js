@@ -1,6 +1,6 @@
-import { imageServices } from './imageServices';
+import { imageServices } from "./imageServices";
 
-const uploadImageToCloudinary = async (file, folder = 'festivals') => {
+const uploadImageToCloudinary = async (file, folder = "festivals") => {
   try {
     const formData = new FormData();
     formData.append("file", file);
@@ -25,7 +25,7 @@ const uploadImageToCloudinary = async (file, folder = 'festivals') => {
     return {
       url: data.secure_url,
       publicId: data.public_id,
-      originalName: file.name
+      originalName: file.name,
     };
   } catch (error) {
     console.error("Error uploading image:", error);
@@ -34,45 +34,46 @@ const uploadImageToCloudinary = async (file, folder = 'festivals') => {
 };
 
 export const uploadService = {
-  uploadImage: async (file, folder = 'festivals', entityData = {}) => {
+  uploadImage: async (file, folder = "festivals", entityData = {}) => {
     try {
-
       const uploadResult = await uploadImageToCloudinary(file, folder);
-      
+
       if (Object.keys(entityData).length > 0) {
         const imageData = {
           imageUrl: uploadResult.url,
           imageName: uploadResult.originalName,
-          ...entityData
+          ...entityData,
         };
-        
+
         await imageServices.addToEntity(imageData);
       }
-      
+
       return uploadResult.url;
     } catch (error) {
-      console.error('Upload failed:', error);
-      throw new Error('Không thể tải ảnh lên. Vui lòng thử lại.');
+      console.error("Upload failed:", error);
+      throw new Error("Không thể tải ảnh lên. Vui lòng thử lại.");
     }
   },
 
   uploadFestivalImage: async (file, festivalId) => {
-    return await uploadService.uploadImage(file, 'festivals', { festivalId });
+    return await uploadService.uploadImage(file, "festivals", { festivalId });
   },
 
   uploadMenuItemImage: async (file, menuItemId) => {
-    return await uploadService.uploadImage(file, 'menu-items', { menuItemId });
+    return await uploadService.uploadImage(file, "menu-items", { menuItemId });
   },
 
   uploadMapImage: async (file) => {
-    return await uploadService.uploadImage(file, 'maps');
+    return await uploadService.uploadImage(file, "maps");
   },
 
   uploadBoothImage: async (file, boothId) => {
-    return await uploadService.uploadImage(file, 'booths', { boothId });
+    return await uploadService.uploadImage(file, "booths", {
+      boothId: boothId,
+    });
   },
 
   uploadAvatarImage: async (file) => {
-    return await uploadService.uploadImage(file, 'avatars');
-  }
+    return await uploadService.uploadImage(file, "avatars");
+  },
 };
