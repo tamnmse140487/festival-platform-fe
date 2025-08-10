@@ -357,7 +357,6 @@ const FestivalDetailPage = () => {
                 </span>
               </div>
             </div>
-            {/* Hiển thị trạng thái phê duyệt cho SCHOOL_MANAGER */}
             {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && approvalData && (
               <div className="mb-4">
                 <div className="flex items-center space-x-2">

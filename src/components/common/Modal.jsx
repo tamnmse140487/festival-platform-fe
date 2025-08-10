@@ -52,7 +52,7 @@ const Modal = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-4">
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+          className="mt-0-important fixed inset-0 bg-black bg-opacity-50 transition-opacity"
           onClick={closable ? onClose : undefined}
         />
         

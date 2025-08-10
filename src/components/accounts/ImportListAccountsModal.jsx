@@ -77,7 +77,6 @@ const ImportListAccountsModal = ({ onClose, onSubmit, schoolId }) => {
     return (
         <div className="mt-0-important fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
-                {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b">
                     <h2 className="text-xl font-semibold text-gray-900">
                         Tạo tài khoản hàng loạt
@@ -93,9 +92,7 @@ const ImportListAccountsModal = ({ onClose, onSubmit, schoolId }) => {
                     </button>
                 </div>
 
-                {/* Body */}
                 <div className="p-6 space-y-4">
-                    {/* File Upload Area */}
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">
                             Chọn file Excel
@@ -158,7 +155,6 @@ const ImportListAccountsModal = ({ onClose, onSubmit, schoolId }) => {
                         )}
                     </div>
 
-                    {/* Instructions */}
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <div className="flex">
                             <div className="flex-shrink-0">
@@ -182,7 +178,6 @@ const ImportListAccountsModal = ({ onClose, onSubmit, schoolId }) => {
                     </div>
                 </div>
 
-                {/* Footer */}
                 <div className="flex items-center justify-end space-x-3 p-6 border-t bg-gray-50">
                     <button
                         type="button"
