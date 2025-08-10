@@ -39,7 +39,7 @@ const OrdersManagement = ({ boothId }) => {
     const fetchOrders = async () => {
         setLoading(true)
         try {
-            const ordersResponse = await ordersServices.get({ boothId })
+            const ordersResponse = await ordersServices.get({ boothId, pageSize: 100 })
             const ordersData = ordersResponse.data || []
 
             const ordersWithCustomers = await Promise.all(
