@@ -100,3 +100,12 @@ export const getRoleColor = (role) => {
   };
   return colors[role] || "bg-gray-100 text-gray-800";
 };
+
+export const TOPUP_PACKAGES = [
+  { value: 10000, label: "10.000 VND" },
+  { value: 50000, label: "50.000 VND" },
+  { value: 100000, label: "100.000 VND" },
+  { value: 200000, label: "200.000 VND" },
+  { value: 500000, label: "500.000 VND" },
+  { value: 1000000, label: "1.000.000 VND" },
+];
