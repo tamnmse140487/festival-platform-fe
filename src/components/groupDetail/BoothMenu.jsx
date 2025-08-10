@@ -16,6 +16,7 @@ const BoothMenu = ({ groupId }) => {
     try {
       const boothResponse = await boothServices.get({ groupId })
       const boothData = boothResponse.data?.[0] || null
+      console.log("boothData: ", boothData)
       setBooth(boothData)
 
       if (boothData?.boothId) {
@@ -34,7 +35,10 @@ const BoothMenu = ({ groupId }) => {
               const imageResponse = await imageServices.get({
                 boothMenuItemId: boothMenuItem.boothMenuItemId
               })
-              const imageData = imageResponse.data?.[0] || null
+
+              const imageData = (imageResponse.data || []).find(
+                (img) => img.boothMenuItemId === boothMenuItem.boothMenuItemId
+              ) || null
 
               return {
                 ...boothMenuItem,
@@ -176,7 +180,7 @@ const BoothMenu = ({ groupId }) => {
                     />
                   </div>
                 )}
-                
+
                 <div className="flex items-start justify-between mb-2">
                   <h6 className="font-medium text-gray-900 flex-1">
                     {item.itemName || 'Chưa có tên'}
@@ -214,15 +218,14 @@ const BoothMenu = ({ groupId }) => {
 
                   {item.quantityLimit && (
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full transition-all duration-300 ${
-                          ((item.remainingQuantity || 0) / item.quantityLimit) * 100 >= 90 ? 'bg-red-500' :
-                          ((item.remainingQuantity || 0) / item.quantityLimit) * 100 >= 70 ? 'bg-orange-500' :
-                          ((item.remainingQuantity || 0) / item.quantityLimit) * 100 >= 50 ? 'bg-yellow-500' :
-                          'bg-green-500'
-                        }`}
-                        style={{ 
-                          width: `${Math.min(((item.remainingQuantity || 0) / item.quantityLimit) * 100, 100)}%` 
+                      <div
+                        className={`h-2 rounded-full transition-all duration-300 ${((item.remainingQuantity || 0) / item.quantityLimit) * 100 >= 90 ? 'bg-red-500' :
+                            ((item.remainingQuantity || 0) / item.quantityLimit) * 100 >= 70 ? 'bg-orange-500' :
+                              ((item.remainingQuantity || 0) / item.quantityLimit) * 100 >= 50 ? 'bg-yellow-500' :
+                                'bg-green-500'
+                          }`}
+                        style={{
+                          width: `${Math.min(((item.remainingQuantity || 0) / item.quantityLimit) * 100, 100)}%`
                         }}
                       ></div>
                     </div>
