@@ -29,7 +29,7 @@ const AdminFestivalList = () => {
       setLoading(true);
 
       const [festivalsResponse, festivalSchoolsResponse] = await Promise.all([
-        festivalServices.get({}),
+        festivalServices.get({pageSize: 50}),
         festivalSchoolServices.get({})
       ]);
 
