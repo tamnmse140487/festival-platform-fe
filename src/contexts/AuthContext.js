@@ -67,8 +67,14 @@ export const AuthProvider = ({ children }) => {
             Array.isArray(roleResponse.data) &&
             roleResponse.data.length > 0
           ) {
-            userData[field] = roleResponse.data[0][field];
-            userData[fieldName] = roleResponse.data[0][fieldName];
+
+            const matchedAccount = roleResponse.data.find((item) => item.accountId === userData.id)
+
+            if (matchedAccount) {
+              userData[field] = matchedAccount[field];
+              userData[fieldName] = matchedAccount[fieldName];
+            }
+
           }
         } catch (roleError) {
           console.error(`Error fetching ${userData.role} data:`, roleError);
