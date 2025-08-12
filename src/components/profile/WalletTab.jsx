@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Wallet, DollarSign, CreditCard, Calendar, X } from 'lucide-react';
+import { Wallet, DollarSign, Plus, ArrowRight } from 'lucide-react';
 import Button from '../../components/common/Button';
 import { walletServices } from '../../services/walletServices';
 import { accountWalletHistoriesServices } from '../../services/accountWalletHistoryServices';
-import { paymentServices } from '../../services/paymentServices';
-import { PAYMENT_METHOD, PAYMENT_TYPE, TOPUP_PACKAGES } from '../../utils/constants';
+import { accountFestivalWalletsServices } from '../../services/accountFestivalWalletsServices';
 import TransactionList from './TransactionList';
+import TopupModal from './wallet/TopupModal';
+import CreateWalletModal from './wallet/CreateWalletModal';
+import TransferModal from './wallet/TransferModal';
+import EditWalletModal from './wallet/EditWalletModal';
+import FestivalWalletGrid from './wallet/FestivalWalletGrid';
 import toast from 'react-hot-toast';
+import { festivalServices } from '../../services/festivalServices';
 
 const WalletTab = ({ user }) => {
   const [walletData, setWalletData] = useState({
@@ -14,11 +19,18 @@ const WalletTab = ({ user }) => {
     walletId: null
   });
   const [transactions, setTransactions] = useState([]);
+  const [festivalWallets, setFestivalWallets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showTopupModal, setShowTopupModal] = useState(false);
+  const [showCreateWalletModal, setShowCreateWalletModal] = useState(false);
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedAmount, setSelectedAmount] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
-
+  const [transferAmount, setTransferAmount] = useState('');
+  const [selectedFestivalWallet, setSelectedFestivalWallet] = useState(null);
+  const [editingWallet, setEditingWallet] = useState(null);
+  const [editName, setEditName] = useState('');
 
   useEffect(() => {
     const fetchWalletData = async () => {
@@ -49,6 +61,8 @@ const WalletTab = ({ user }) => {
         });
         setTransactions(historyResponse.data || []);
 
+        await fetchFestivalWallets();
+
       } catch (error) {
         console.error('Error fetching wallet data:', error);
       } finally {
@@ -59,57 +73,135 @@ const WalletTab = ({ user }) => {
     fetchWalletData();
   }, [user?.id]);
 
-  const generateOrderId = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    return `${year}${month}${day}${hours}${minutes}${seconds}`;
+  const fetchFestivalWallets = async () => {
+    try {
+      const response = await accountFestivalWalletsServices.get({
+        accountId: user.id
+      });
+
+      const walletsWithFestival = await Promise.all(
+        response.data.map(async (wallet) => {
+          const festivalResponse = await festivalServices.get({
+            festivalId: wallet.festivalId
+          });
+          return {
+            ...wallet,
+            festivalName: festivalResponse.data[0].festivalName || 'Unknown Festival'
+          };
+
+        })
+      );
+
+      setFestivalWallets(walletsWithFestival);
+    } catch (error) {
+      console.error('Error fetching festival wallets:', error);
+      setFestivalWallets([]);
+    }
   };
 
-  const handleTopup = async () => {
-    if (!selectedAmount || !walletData.walletId) return;
+  const handleCreateWallet = async (festivalId, walletName) => {
+    try {
+      setIsProcessing(true);
+
+      const response = await accountFestivalWalletsServices.create({
+        accountId: user.id,
+        festivalId: festivalId,
+        name: walletName
+      });
+
+      await fetchFestivalWallets();
+
+      toast.success('Tạo ví phụ thành công');
+      setShowCreateWalletModal(false);
+
+    } catch (error) {
+      console.error('Error creating wallet:', error);
+      toast.error('Có lỗi xảy ra khi tạo ví. Vui lòng thử lại.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleTransfer = async () => {
+    if (!transferAmount || !selectedFestivalWallet || !walletData.walletId) return;
+
+    const amount = parseFloat(transferAmount);
+    if (amount <= 0 || amount > walletData.balance) {
+      toast.error('Số tiền không hợp lệ hoặc không đủ số dư');
+      return;
+    }
 
     try {
       setIsProcessing(true);
 
-      const orderId = generateOrderId();
-      const paymentData = {
-        orderId: orderId,
+      await accountFestivalWalletsServices.transferToFestivalWallet({
         walletId: walletData.walletId,
-        paymentMethod: PAYMENT_METHOD.BANK,
-        paymentType: PAYMENT_TYPE.TOPUP,
-        amountPaid: selectedAmount,
-        description: 'Nap vi'
-      };
-
-      const paymentResponse = await paymentServices.create(paymentData);
-
-      await accountWalletHistoriesServices.create({
-        accountId: user.id,
-        description: `Bạn đã nạp ${selectedAmount.toLocaleString('vi-VN')} VNĐ vào ví cá nhân`,
-        type: PAYMENT_TYPE.TOPUP,
-        amount: selectedAmount
+        accountFestivalWalletId: selectedFestivalWallet.id,
+        amount: amount
       });
 
-      const checkoutUrl = paymentResponse.data?.checkoutUrl
+      setWalletData(prev => ({
+        ...prev,
+        balance: prev.balance - amount
+      }));
 
-      if (checkoutUrl) {
-        window.location.href = checkoutUrl
-        toast.success('Tạo link thanh toán thành công')
-      } else {
-        toast.success('Tạo thanh toán thành công')
-      }
+      setFestivalWallets(prev =>
+        prev.map(wallet =>
+          wallet.id === selectedFestivalWallet.id
+            ? { ...wallet, balance: wallet.balance + amount }
+            : wallet
+        )
+      );
+
+      toast.success('Chuyển tiền thành công');
+      setShowTransferModal(false);
+      setTransferAmount('');
+      setSelectedFestivalWallet(null);
 
     } catch (error) {
-      console.error('Error during topup:', error);
-      toast.error('Có lỗi xảy ra khi nạp tiền. Vui lòng thử lại.');
+      console.error('Error during transfer:', error);
+      toast.error('Có lỗi xảy ra khi chuyển tiền. Vui lòng thử lại.');
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleEditWallet = async () => {
+    if (!editName.trim() || !editingWallet) return;
+
+    try {
+      setIsProcessing(true);
+
+      await accountFestivalWalletsServices.update({
+        id: editingWallet.id,
+        newName: editName.trim()
+      });
+
+      setFestivalWallets(prev =>
+        prev.map(wallet =>
+          wallet.id === editingWallet.id
+            ? { ...wallet, name: editName.trim() }
+            : wallet
+        )
+      );
+
+      toast.success('Cập nhật tên ví thành công');
+      setShowEditModal(false);
+      setEditingWallet(null);
+      setEditName('');
+
+    } catch (error) {
+      console.error('Error updating wallet:', error);
+      toast.error('Có lỗi xảy ra khi cập nhật ví. Vui lòng thử lại.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const openEditModal = (wallet) => {
+    setEditingWallet(wallet);
+    setEditName(wallet.name);
+    setShowEditModal(true);
   };
 
   if (loading) {
@@ -122,112 +214,107 @@ const WalletTab = ({ user }) => {
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-gray-900">Quản lý ví cá nhân</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-gray-900">Quản lý ví cá nhân</h3>
+        <div className="flex space-x-2">
+          <Button
+            onClick={() => setShowTopupModal(true)}
+            className="flex items-center space-x-2"
+          >
+            <DollarSign size={16} />
+            <span>Nạp tiền</span>
+          </Button>
+          <Button
+            onClick={() => setShowCreateWalletModal(true)}
+            variant="outline"
+            className="flex items-center space-x-2"
+          >
+            <Plus size={16} />
+            <span>Tạo ví phụ</span>
+          </Button>
+        </div>
+      </div>
 
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-6 text-white">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-blue-100 text-sm">Số dư hiện tại</p>
+            <p className="text-blue-100 text-sm">Ví chính - Số dư hiện tại</p>
             <p className="text-3xl font-bold">
               {walletData.balance.toLocaleString('vi-VN')} VND
             </p>
           </div>
-          <Wallet className="w-12 h-12 text-blue-200" />
+          <div className="flex items-center space-x-4">
+            <Wallet className="w-12 h-12 text-blue-200" />
+            <Button
+              onClick={() => setShowTransferModal(true)}
+              variant="outline"
+              className="text-red border-red hover:bg-white hover:text-blue-600"
+              disabled={festivalWallets.length === 0}
+            >
+              <ArrowRight size={16} className="mr-2" />
+              Chuyển tiền
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Button
-          className="flex items-center justify-center space-x-2"
-          onClick={() => setShowTopupModal(true)}
-        >
-          <DollarSign size={20} />
-          <span>Nạp tiền</span>
-        </Button>
-        <Button variant="outline" className="flex items-center justify-center space-x-2">
-          <CreditCard size={20} />
-          <span>Rút tiền</span>
-        </Button>
-        <Button variant="outline" className="flex items-center justify-center space-x-2">
-          <Calendar size={20} />
-          <span>Lịch sử</span>
-        </Button>
-      </div>
+      <FestivalWalletGrid
+        festivalWallets={festivalWallets}
+        onEditWallet={openEditModal}
+      />
 
       <TransactionList transactions={transactions} />
 
-      {showTopupModal && (
-        <div className="mt-0-important fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex items-center justify-between mb-6">
-              <h4 className="text-xl font-semibold text-gray-900">Nạp tiền vào ví</h4>
-              <button
-                onClick={() => {
-                  setShowTopupModal(false);
-                  setSelectedAmount(null);
-                }}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X size={24} />
-              </button>
-            </div>
+      <TopupModal
+        show={showTopupModal}
+        onClose={() => {
+          setShowTopupModal(false);
+          setSelectedAmount(null);
+        }}
+        user={user}
+        walletData={walletData}
+        selectedAmount={selectedAmount}
+        setSelectedAmount={setSelectedAmount}
+        isProcessing={isProcessing}
+        setIsProcessing={setIsProcessing}
+      />
 
-            <div className="space-y-4">
-              <p className="text-gray-600">Chọn số tiền muốn nạp:</p>
+      <CreateWalletModal
+        show={showCreateWalletModal}
+        onClose={() => setShowCreateWalletModal(false)}
+        onCreateWallet={handleCreateWallet}
+        isProcessing={isProcessing}
+      />
 
-              <div className="grid grid-cols-2 gap-3">
-                {TOPUP_PACKAGES.map((pkg) => (
-                  <button
-                    key={pkg.value}
-                    onClick={() => setSelectedAmount(pkg.value)}
-                    className={`p-3 rounded-lg border-2 transition-all ${selectedAmount === pkg.value
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                  >
-                    {pkg.label}
-                  </button>
-                ))}
-              </div>
+      <TransferModal
+        show={showTransferModal}
+        onClose={() => {
+          setShowTransferModal(false);
+          setTransferAmount('');
+          setSelectedFestivalWallet(null);
+        }}
+        festivalWallets={festivalWallets}
+        walletData={walletData}
+        transferAmount={transferAmount}
+        setTransferAmount={setTransferAmount}
+        selectedFestivalWallet={selectedFestivalWallet}
+        setSelectedFestivalWallet={setSelectedFestivalWallet}
+        onTransfer={handleTransfer}
+        isProcessing={isProcessing}
+      />
 
-              {selectedAmount && (
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-600">Số tiền nạp:</span>
-                    <span className="font-semibold">
-                      {selectedAmount.toLocaleString('vi-VN')} VND
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Phương thức:</span>
-                    <span className="text-blue-600">Chuyển khoản ngân hàng</span>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex space-x-3 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowTopupModal(false);
-                    setSelectedAmount(null);
-                  }}
-                  className="flex-1"
-                >
-                  Hủy
-                </Button>
-                <Button
-                  onClick={handleTopup}
-                  disabled={!selectedAmount || isProcessing}
-                  className="flex-1"
-                >
-                  {isProcessing ? 'Đang xử lý...' : 'Xác nhận nạp tiền'}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <EditWalletModal
+        show={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditingWallet(null);
+          setEditName('');
+        }}
+        editName={editName}
+        setEditName={setEditName}
+        onEdit={handleEditWallet}
+        isProcessing={isProcessing}
+      />
     </div>
   );
 };
