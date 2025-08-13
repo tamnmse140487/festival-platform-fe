@@ -1,41 +1,47 @@
 import React from 'react';
-import { DollarSign, CreditCard } from 'lucide-react';
+import { DollarSign, CreditCard, Wallet, Plus } from 'lucide-react';
+import { convertToVietnamTimeWithFormat } from '../../utils/formatters';
+import { HISTORY_TYPE } from '../../utils/constants';
 
 const TransactionList = ({ transactions }) => {
   const getTransactionIcon = (type) => {
     switch (type) {
-      case 'deposit':
+      case HISTORY_TYPE.TOPUP:
         return <DollarSign className="w-5 h-5 text-green-600" />;
-      case 'payment':
-        return <CreditCard className="w-5 h-5 text-red-600" />;
-      case 'refund':
+      case HISTORY_TYPE.REFUND:
         return <DollarSign className="w-5 h-5 text-blue-600" />;
+      case HISTORY_TYPE.CREATE_SUB_WALLET:
+        return <Plus className="w-5 h-5 text-purple-600" />;
+      case HISTORY_TYPE.PAYMENT:
+        return <CreditCard className="w-5 h-5 text-red-600" />;
       default:
-        return <DollarSign className="w-5 h-5 text-gray-600" />;
+        return <Wallet className="w-5 h-5 text-gray-600" />;
     }
   };
 
   const getTransactionColor = (type, amount) => {
+    if (type === HISTORY_TYPE.CREATE_SUB_WALLET) return 'text-purple-600';
     if (amount > 0) return 'text-green-600';
     return 'text-red-600';
   };
 
   const getBackgroundColor = (type) => {
     switch (type) {
-      case 'deposit':
+      case HISTORY_TYPE.TOPUP:
         return 'bg-green-100';
-      case 'payment':
-        return 'bg-red-100';
-      case 'refund':
+      case HISTORY_TYPE.REFUND:
         return 'bg-blue-100';
+      case HISTORY_TYPE.CREATE_SUB_WALLET:
+        return 'bg-purple-100';
+      case HISTORY_TYPE.PAYMENT:
+        return 'bg-red-100';
       default:
         return 'bg-gray-100';
     }
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN');
+  const shouldShowAmount = (type) => {
+    return type !== HISTORY_TYPE.CREATE_SUB_WALLET;
   };
 
   if (!transactions.length) {
@@ -61,12 +67,14 @@ const TransactionList = ({ transactions }) => {
               </div>
               <div>
                 <p className="font-medium text-gray-900">{transaction.description}</p>
-                <p className="text-sm text-gray-500">{formatDate(transaction.createdAt)}</p>
+                <p className="text-sm text-gray-500">{convertToVietnamTimeWithFormat(transaction.createdAt)}</p>
               </div>
             </div>
-            <div className={`text-lg font-semibold ${getTransactionColor(transaction.type, transaction.amount)}`}>
-              {transaction?.amount > 0 ? '+' : ''}{transaction.amount.toLocaleString('vi-VN')} VND
-            </div>
+            {shouldShowAmount(transaction.type) && (
+              <div className={`text-lg font-semibold ${getTransactionColor(transaction.type, transaction.amount)}`}>
+                {transaction?.amount > 0 ? '+' : ''}{transaction.amount.toLocaleString('vi-VN')} VND
+              </div>
+            )}
           </div>
         ))}
       </div>

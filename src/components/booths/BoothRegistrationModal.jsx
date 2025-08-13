@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { boothServices } from '../../services/boothServices';
 import { boothMenuItemServices } from '../../services/boothMenuItemServices';
 import { studentGroupServices } from '../../services/studentGroupServices';
+import { boothWalletServices } from '../../services/boothWalletServices';
 import { uploadService } from '../../services/uploadServices'; 
 import { ImageIcon, UploadIcon } from 'lucide-react';
 
@@ -214,6 +215,10 @@ const BoothRegistrationModal = ({ isOpen, onClose, mapLocations = [], festivalId
             });
 
             await Promise.all(imageUploadPromises);
+
+            await boothWalletServices.create({
+                boothId: boothId
+            })
 
             toast.success('Đăng ký gian hàng thành công! Vui lòng chờ giáo viên duyệt');
             form.resetFields();

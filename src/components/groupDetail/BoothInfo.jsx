@@ -90,7 +90,8 @@ const BoothInfo = ({ groupId, group, members }) => {
     )
   }
 
-  const handleStatusChange = (action, newStatus) => {
+  const handleStatusChange = (action, newStatus, booth) => {
+    console.log("booth info: ",booth )
     if (action === 'reject') {
       handleReject()
     } else {
@@ -201,7 +202,7 @@ const BoothInfo = ({ groupId, group, members }) => {
             type="primary"
             icon={<Check size={16} />}
             loading={actionLoading}
-            onClick={() => handleStatusChange('approve', BOOTH_STATUS.APPROVED)}
+            onClick={() => handleStatusChange('approve', BOOTH_STATUS.APPROVED, booth)}
           >
             Duyệt gian hàng
           </Button>
