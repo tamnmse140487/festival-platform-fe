@@ -44,6 +44,17 @@ const TransactionList = ({ transactions }) => {
     return type !== HISTORY_TYPE.CREATE_SUB_WALLET;
   };
 
+  const getAmountDisplay = (transaction) => {
+    const { type, amount } = transaction;
+    
+    if (type === HISTORY_TYPE.PAYMENT) {
+      return `-${Math.abs(amount).toLocaleString('vi-VN')} VND`;
+    }
+    
+    const sign = amount > 0 ? '+' : '';
+    return `${sign}${amount.toLocaleString('vi-VN')} VND`;
+  };
+
   if (!transactions.length) {
     return (
       <div>
@@ -72,7 +83,7 @@ const TransactionList = ({ transactions }) => {
             </div>
             {shouldShowAmount(transaction.type) && (
               <div className={`text-lg font-semibold ${getTransactionColor(transaction.type, transaction.amount)}`}>
-                {transaction?.amount > 0 ? '+' : ''}{transaction.amount.toLocaleString('vi-VN')} VND
+                {getAmountDisplay(transaction)}
               </div>
             )}
           </div>

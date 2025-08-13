@@ -238,7 +238,7 @@ const CreatePaymentModal = ({ visible, onCancel, onSuccess, boothId, menuItems, 
 
                 await accountWalletHistoriesServices.create({
                     accountId: selectedCustomer.id,
-                    description: `Thanh toán cho đơn hàng ${orderId} bằng ví chính`,
+                    description: `Thanh toán cho đơn hàng có mã ${orderId} bằng ví chính`,
                     amount: totalAmount,
                     type: HISTORY_TYPE.PAYMENT
                 })
@@ -268,7 +268,7 @@ const CreatePaymentModal = ({ visible, onCancel, onSuccess, boothId, menuItems, 
 
                 await accountWalletHistoriesServices.create({
                     accountId: selectedCustomer.id,
-                    description: `Thanh toán cho đơn hàng ${orderId} bằng ví phụ ${festivalWallet.name}`,
+                    description: `Thanh toán cho đơn hàng có mã ${orderId} bằng ví phụ ${festivalWallet.name}`,
                     amount: totalAmount,
                     type: HISTORY_TYPE.PAYMENT
                 })
