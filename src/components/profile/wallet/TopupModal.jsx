@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import Button from '../../../components/common/Button';
 import { paymentServices } from '../../../services/paymentServices';
 import { accountWalletHistoriesServices } from '../../../services/accountWalletHistoryServices';
-import { PAYMENT_METHOD, PAYMENT_TYPE, TOPUP_PACKAGES } from '../../../utils/constants';
+import { HISTORY_TYPE, PAYMENT_METHOD, PAYMENT_TYPE, TOPUP_PACKAGES } from '../../../utils/constants';
 import toast from 'react-hot-toast';
 
 const TopupModal = ({ 
@@ -18,26 +18,13 @@ const TopupModal = ({
 }) => {
   if (!show) return null;
 
-  const generateOrderId = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    return `${year}${month}${day}${hours}${minutes}${seconds}`;
-  };
-
   const handleTopup = async () => {
     if (!selectedAmount || !walletData.walletId) return;
 
     try {
       setIsProcessing(true);
 
-      const orderId = generateOrderId();
       const paymentData = {
-        orderId: orderId,
         walletId: walletData.walletId,
         paymentMethod: PAYMENT_METHOD.BANK,
         paymentType: PAYMENT_TYPE.TOPUP,
@@ -50,7 +37,7 @@ const TopupModal = ({
       await accountWalletHistoriesServices.create({
         accountId: user.id,
         description: `Bạn đã nạp ${selectedAmount.toLocaleString('vi-VN')} VNĐ vào ví cá nhân`,
-        type: PAYMENT_TYPE.TOPUP,
+        type: HISTORY_TYPE.TOPUP,
         amount: selectedAmount
       });
 

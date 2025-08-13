@@ -4,6 +4,7 @@ import Button from '../../../components/common/Button';
 import { festivalServices } from '../../../services/festivalServices';
 import { FESTIVAL_STATUS } from '../../../utils/constants';
 import toast from 'react-hot-toast';
+import { getFestivalStatusBadge } from '../../../utils/helpers';
 
 const CreateWalletModal = ({ show, onClose, onCreateWallet, isProcessing }) => {
   const [festivals, setFestivals] = useState([]);
@@ -23,6 +24,7 @@ const CreateWalletModal = ({ show, onClose, onCreateWallet, isProcessing }) => {
       const response = await festivalServices.get({
         status: FESTIVAL_STATUS.PUBLISHED
       });
+
       setFestivals(response.data || []);
     } catch (error) {
       console.error('Error fetching festivals:', error);
@@ -38,8 +40,8 @@ const CreateWalletModal = ({ show, onClose, onCreateWallet, isProcessing }) => {
       return;
     }
 
-    await onCreateWallet(selectedFestival.festivalId, walletName.trim());
-    
+    await onCreateWallet(selectedFestival.festivalId, selectedFestival.festivalName, walletName.trim());
+
     setSelectedFestival(null);
     setWalletName('');
   };
@@ -93,15 +95,14 @@ const CreateWalletModal = ({ show, onClose, onCreateWallet, isProcessing }) => {
                     <button
                       key={festival.festivalId}
                       onClick={() => setSelectedFestival(festival)}
-                      className={`w-full p-3 rounded-lg border-2 text-left transition-all ${
-                        selectedFestival?.festivalId === festival.festivalId
+                      className={`w-full p-3 rounded-lg border-2 text-left transition-all ${selectedFestival?.festivalId === festival.festivalId
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                        }`}
                     >
                       <div className="font-medium">{festival.festivalName}</div>
                       <div className="text-sm text-gray-600">
-                        Trạng thái: {festival.status}
+                        Trạng thái:  {getFestivalStatusBadge(festival.status)}
                       </div>
                     </button>
                   ))

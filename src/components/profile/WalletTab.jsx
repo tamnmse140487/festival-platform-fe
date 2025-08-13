@@ -12,6 +12,7 @@ import EditWalletModal from './wallet/EditWalletModal';
 import FestivalWalletGrid from './wallet/FestivalWalletGrid';
 import toast from 'react-hot-toast';
 import { festivalServices } from '../../services/festivalServices';
+import { HISTORY_TYPE, PAYMENT_TYPE } from '../../utils/constants';
 
 const WalletTab = ({ user }) => {
   const [walletData, setWalletData] = useState({
@@ -33,45 +34,45 @@ const WalletTab = ({ user }) => {
   const [editName, setEditName] = useState('');
 
   useEffect(() => {
-    const fetchWalletData = async () => {
-      if (!user?.id) return;
-
-      try {
-        setLoading(true);
-
-        let walletResponse = await walletServices.get({ userId: user.id });
-        if (walletResponse.data.length === 0) {
-          const createResponse = await walletServices.create({
-            accountId: user.id,
-            balance: 0
-          });
-          setWalletData({
-            balance: 0,
-            walletId: createResponse.data.walletId
-          });
-        } else {
-          setWalletData({
-            balance: walletResponse.data[0].balance,
-            walletId: walletResponse.data[0].walletId
-          });
-        }
-
-        const historyResponse = await accountWalletHistoriesServices.get({
-          accountId: user.id
-        });
-        setTransactions(historyResponse.data || []);
-
-        await fetchFestivalWallets();
-
-      } catch (error) {
-        console.error('Error fetching wallet data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchWalletData();
   }, [user?.id]);
+
+  const fetchWalletData = async () => {
+    if (!user?.id) return;
+
+    try {
+      setLoading(true);
+
+      let walletResponse = await walletServices.get({ userId: user.id });
+      if (walletResponse.data.length === 0) {
+        const createResponse = await walletServices.create({
+          accountId: user.id,
+          balance: 0
+        });
+        setWalletData({
+          balance: 0,
+          walletId: createResponse.data.walletId
+        });
+      } else {
+        setWalletData({
+          balance: walletResponse.data[0].balance,
+          walletId: walletResponse.data[0].walletId
+        });
+      }
+
+      const historyResponse = await accountWalletHistoriesServices.get({
+        accountId: user.id
+      });
+      setTransactions(historyResponse.data || []);
+
+      await fetchFestivalWallets();
+
+    } catch (error) {
+      console.error('Error fetching wallet data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchFestivalWallets = async () => {
     try {
@@ -99,7 +100,7 @@ const WalletTab = ({ user }) => {
     }
   };
 
-  const handleCreateWallet = async (festivalId, walletName) => {
+  const handleCreateWallet = async (festivalId, festivalName, walletName) => {
     try {
       setIsProcessing(true);
 
@@ -109,7 +110,16 @@ const WalletTab = ({ user }) => {
         name: walletName
       });
 
+      await accountWalletHistoriesServices.create({
+        accountId: user.id,
+        description: `Hệ thống đã tạo ví phụ cho lễ hội ${festivalName}`,
+        type: HISTORY_TYPE.CREATE_SUB_WALLET,
+        amount: 0
+      });
+
       await fetchFestivalWallets();
+
+      await fetchWalletData();
 
       toast.success('Tạo ví phụ thành công');
       setShowCreateWalletModal(false);

@@ -1,4 +1,5 @@
-import { ORDER_STATUS } from "./constants";
+import { CheckCircle, Clock, Edit, Trophy, X } from "lucide-react";
+import { FESTIVAL_STATUS, ORDER_STATUS } from "./constants";
 
 export const getRoleDisplayName = (role) => {
   const roleNames = {
@@ -117,3 +118,21 @@ export const getOrderStatusColor = (status) => {
   };
   return colors[status] || "bg-gray-100 text-gray-800";
 };
+
+export const getFestivalStatusBadge = (status) => {
+    const badges = {
+      [FESTIVAL_STATUS.DRAFT]: { label: 'Bản nháp', class: 'bg-gray-100 text-gray-800', icon: <Edit size={16} /> },
+      [FESTIVAL_STATUS.PUBLISHED]: { label: 'Đã công bố', class: 'bg-green-100 text-green-800', icon: <CheckCircle size={16} /> },
+      [FESTIVAL_STATUS.ONGOING]: { label: 'Đang diễn ra', class: 'bg-blue-100 text-blue-800', icon: <Clock size={16} /> },
+      [FESTIVAL_STATUS.COMPLETED]: { label: 'Đã kết thúc', class: 'bg-purple-100 text-purple-800', icon: <Trophy size={16} /> },
+      [FESTIVAL_STATUS.CANCELLED]: { label: 'Đã hủy', class: 'bg-red-100 text-red-800', icon: <X size={16} /> }
+    };
+
+    const badge = badges[status] || badges[FESTIVAL_STATUS.DRAFT];
+    return (
+      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${badge.class}`}>
+        {badge.icon}
+        <span className="ml-1">{badge.label}</span>
+      </span>
+    );
+  };
