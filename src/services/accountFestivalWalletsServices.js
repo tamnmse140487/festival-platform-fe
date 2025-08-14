@@ -7,7 +7,7 @@ export const accountFestivalWalletsServices = {
   update: (params, data) =>
     api.put(`/accountfestivalwallets/update`, {}, { params }),
   transferToFestivalWallet: (data) =>
-    api.post("/accountfestivalwallets/transfer-to-festivalwallet", data),
+    api.post("/accountfestivalwallets/transfer-to-account-festival-wallet", data),
   transferToWallet: (data) =>
-    api.post("/accountfestivalwallets/transfer-to-wallet", data),
+    api.post("/accountfestivalwallets/transfer-to-main-wallet", data),
 };

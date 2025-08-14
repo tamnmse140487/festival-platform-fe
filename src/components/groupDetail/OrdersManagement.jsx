@@ -6,11 +6,12 @@ import { ordersServices } from '../../services/orderServices'
 import { accountServices } from '../../services/accountServices'
 import { boothMenuItemServices } from '../../services/boothMenuItemServices'
 import { boothWalletServices } from '../../services/boothWalletServices'
-import { ORDER_STATUS_LABELS, ROLE_NAME } from '../../utils/constants'
+import { boothServices } from '../../services/boothServices'
+import { festivalServices } from '../../services/festivalServices'
+import { ORDER_STATUS_LABELS, ROLE_NAME, FESTIVAL_STATUS } from '../../utils/constants'
 import { useAuth } from '../../contexts/AuthContext'
 import CreatePaymentModal from './order/CreatePaymentModal'
 import OrdersTable from './order/OrdersTable'
-import { boothServices } from '../../services/boothServices'
 
 const OrdersManagement = ({ boothId }) => {
     const { user, hasRole } = useAuth()
@@ -20,6 +21,7 @@ const OrdersManagement = ({ boothId }) => {
     const [menuItems, setMenuItems] = useState([])
     const [boothBalance, setBoothBalance] = useState(0)
     const [festivalId, setFestivalId] = useState(null)
+    const [festival, setFestival] = useState(null)
     const [pagination, setPagination] = useState({
         current: 1,
         pageSize: 10,
@@ -99,9 +101,22 @@ const OrdersManagement = ({ boothId }) => {
         try {
             const boothResponse = await boothServices.get({ boothId: boothId })
             const boothData = boothResponse.data?.[0]
-            setFestivalId(boothData?.festivalId)
+            if (boothData?.festivalId) {
+                setFestivalId(boothData.festivalId)
+                await fetchFestivalInfo(boothData.festivalId)
+            }
         } catch (error) {
             console.error('Error fetching booth info:', error)
+        }
+    }
+
+    const fetchFestivalInfo = async (festivalId) => {
+        try {
+            const festivalResponse = await festivalServices.get({ festivalId: festivalId })
+            const festivalData = festivalResponse.data?.[0]
+            setFestival(festivalData)
+        } catch (error) {
+            console.error('Error fetching festival info:', error)
         }
     }
 
@@ -113,6 +128,10 @@ const OrdersManagement = ({ boothId }) => {
 
     const handleTableChange = (paginationInfo) => {
         fetchOrders(paginationInfo.current, paginationInfo.pageSize)
+    }
+
+    const canCreatePayment = () => {
+        return hasRole([ROLE_NAME.STUDENT]) && festival?.status === FESTIVAL_STATUS.PUBLISHED
     }
 
     useEffect(() => {
@@ -139,7 +158,7 @@ const OrdersManagement = ({ boothId }) => {
                         </div>
                     </Card>
                 </div>
-                {hasRole([ROLE_NAME.STUDENT]) && (
+                {canCreatePayment() && (
                     <AntButton
                         type="primary"
                         icon={<Plus size={16} />}

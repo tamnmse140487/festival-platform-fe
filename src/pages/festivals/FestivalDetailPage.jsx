@@ -69,7 +69,7 @@ const FestivalDetailPage = () => {
   }, [id]);
 
   useEffect(() => {
-    if (hasRole([ROLE_NAME.USER]) && user?.id) {
+    if (hasRole([ROLE_NAME.USER, ROLE_NAME.STUDENT]) && user?.id) {
       checkJoinStatus();
     }
   }, [id, user?.id]);
@@ -77,7 +77,7 @@ const FestivalDetailPage = () => {
   const checkJoinStatus = async () => {
     try {
       setCheckingJoinStatus(true);
-      const response = await accountWalletHistoriesServices.get({
+      const response = await accountFestivalWalletsServices.get({
         accountId: user.id,
         festivalId: parseInt(id)
       });
@@ -384,7 +384,7 @@ const FestivalDetailPage = () => {
 
           {getStatusActions()}
           
-          {hasRole([ROLE_NAME.USER]) && !checkingJoinStatus && !hasJoinedFestival && (
+          {hasRole([ROLE_NAME.USER, ROLE_NAME.STUDENT]) && !checkingJoinStatus && !hasJoinedFestival && (
             <Button 
               variant="primary"
               icon={<UserPlus size={16} />}

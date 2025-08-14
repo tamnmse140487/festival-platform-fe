@@ -146,7 +146,7 @@ const WalletTab = ({ user }) => {
 
       await accountFestivalWalletsServices.transferToFestivalWallet({
         walletId: walletData.walletId,
-        accountFestivalWalletId: selectedFestivalWallet.id,
+        accountFestivalWalletId: selectedFestivalWallet.accountFestivalWalletId,
         amount: amount
       });
 

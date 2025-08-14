@@ -14,16 +14,17 @@ import PaymentForm from './PaymentForm'
 import { accountWalletHistoriesServices } from '../../../services/accountWalletHistoryServices'
 import { accountFestivalWalletsServices } from '../../../services/accountFestivalWalletsServices'
 import { boothWalletServices } from '../../../services/boothWalletServices'
+import { boothMenuItemServices } from '../../../services/boothMenuItemServices'
 
 const CreatePaymentModal = ({ visible, onCancel, onSuccess, boothId, menuItems, festivalId }) => {
     const isAddingRef = useRef(false)
-    
+
     const [selectedCustomer, setSelectedCustomer] = useState(null)
     const [createPaymentLoading, setCreatePaymentLoading] = useState(false)
     const [billData, setBillData] = useState([])
     const [paymentMethod, setPaymentMethod] = useState('')
     const [notes, setNotes] = useState('')
-    
+
     const [mainWallet, setMainWallet] = useState(null)
     const [festivalWallet, setFestivalWallet] = useState(null)
     const [walletLoading, setWalletLoading] = useState(false)
@@ -39,9 +40,9 @@ const CreatePaymentModal = ({ visible, onCancel, onSuccess, boothId, menuItems, 
             setMainWallet(mainWalletData)
 
             if (festivalId) {
-                const festivalWalletResponse = await accountFestivalWalletsServices.get({ 
-                    accountId: customer.id, 
-                    festivalId: festivalId 
+                const festivalWalletResponse = await accountFestivalWalletsServices.get({
+                    accountId: customer.id,
+                    festivalId: festivalId
                 })
                 const festivalWalletData = festivalWalletResponse.data?.[0] || null
                 setFestivalWallet(festivalWalletData)
@@ -74,21 +75,34 @@ const CreatePaymentModal = ({ visible, onCancel, onSuccess, boothId, menuItems, 
     const addItemToBill = (values) => {
         if (isAddingRef.current) return
         isAddingRef.current = true
-        
+
         try {
             const selectedMenuItem = menuItems.find(
                 (item) => item.boothMenuItemId === values.menuItemId
             )
 
+            const availableQuantity = selectedMenuItem.quantityLimit - (selectedMenuItem.remainingQuantity || 0)
+
             const existingItemIndex = billData.findIndex(
                 (item) => item.menuItem.boothMenuItemId === selectedMenuItem.boothMenuItemId
             )
 
+            let currentQuantityInBill = 0
+            if (existingItemIndex !== -1) {
+                currentQuantityInBill = billData[existingItemIndex].quantity
+            }
+
+            const totalQuantityAfterAdd = currentQuantityInBill + Number(values.quantity)
+
+            if (totalQuantityAfterAdd > availableQuantity) {
+                toast.error(`Món "${selectedMenuItem.menuItem?.itemName}" đã hết. Số lượng còn lại: ${availableQuantity - currentQuantityInBill}`)
+                return
+            }
+
             if (existingItemIndex !== -1) {
                 setBillData((prev) => {
                     const newBillData = [...prev]
-                    const newQuantity =
-                        Number(newBillData[existingItemIndex].quantity) + Number(values.quantity)
+                    const newQuantity = totalQuantityAfterAdd
                     newBillData[existingItemIndex] = {
                         ...newBillData[existingItemIndex],
                         quantity: newQuantity,
@@ -125,6 +139,16 @@ const CreatePaymentModal = ({ visible, onCancel, onSuccess, boothId, menuItems, 
             return
         }
 
+        const currentItem = billData.find(item => item.id === itemId)
+        if (!currentItem) return
+
+        const availableQuantity = currentItem.menuItem.quantityLimit - (currentItem.menuItem.remainingQuantity || 0)
+
+        if (newQuantity > availableQuantity) {
+            toast.error(`Món "${currentItem.menuItem.menuItem?.itemName}" đã hết. Số lượng còn lại: ${availableQuantity}`)
+            return
+        }
+
         setBillData(prev => prev.map(item => {
             if (item.id === itemId) {
                 return {
@@ -141,6 +165,7 @@ const CreatePaymentModal = ({ visible, onCancel, onSuccess, boothId, menuItems, 
         return billData.reduce((total, item) => total + item.totalPrice, 0)
     }
 
+
     const handleConfirmPayment = async () => {
         if (!selectedCustomer) {
             toast.error('Vui lòng chọn khách hàng')
@@ -155,6 +180,16 @@ const CreatePaymentModal = ({ visible, onCancel, onSuccess, boothId, menuItems, 
         if (!paymentMethod) {
             toast.error('Vui lòng chọn phương thức thanh toán')
             return
+        }
+
+        for (const item of billData) {
+            const menuItem = item.menuItem
+            const newRemainingQuantity = (menuItem.remainingQuantity || 0) + item.quantity
+
+            if (newRemainingQuantity > menuItem.quantityLimit) {
+                toast.error(`Món "${menuItem.menuItem?.itemName}" đã hết. Số lượng còn lại: ${menuItem.quantityLimit - (menuItem.remainingQuantity || 0)}`)
+                return
+            }
         }
 
         setCreatePaymentLoading(true)
@@ -258,9 +293,9 @@ const CreatePaymentModal = ({ visible, onCancel, onSuccess, boothId, menuItems, 
                 }
 
                 const newCustomerBalance = festivalWallet.balance - totalAmount
-                await accountFestivalWalletsServices.update({ 
-                    id: festivalWallet.accountFestivalWalletId, 
-                    newBalance: newCustomerBalance 
+                await accountFestivalWalletsServices.update({
+                    id: festivalWallet.accountFestivalWalletId,
+                    newBalance: newCustomerBalance
                 })
 
                 const newBoothBalance = boothWallet.totalBalance + totalAmount
@@ -276,6 +311,20 @@ const CreatePaymentModal = ({ visible, onCancel, onSuccess, boothId, menuItems, 
                 toast.success('Thanh toán bằng ví phụ lễ hội thành công')
             } else {
                 throw new Error('Phương thức thanh toán không hợp lệ')
+            }
+
+            if (paymentMethod === 'WALLET_MAIN' || paymentMethod === 'WALLET_FESTIVAL') {
+                const updateQuantityPromises = billData.map(async (item) => {
+                    const menuItem = item.menuItem
+                    const newRemainingQuantity = (menuItem.remainingQuantity || 0) + item.quantity
+
+                    return boothMenuItemServices.update({
+                        id: menuItem.boothMenuItemId,
+                        remainingQuantity: newRemainingQuantity
+                    })
+                })
+
+                await Promise.all(updateQuantityPromises)
             }
 
             onSuccess()
@@ -307,7 +356,7 @@ const CreatePaymentModal = ({ visible, onCancel, onSuccess, boothId, menuItems, 
 
     const isPaymentMethodValid = () => {
         if (!paymentMethod) return false
-        
+
         if (paymentMethod === PAYMENT_METHOD.BANK) return true
         if (paymentMethod === 'WALLET_MAIN') {
             return mainWallet && mainWallet.balance >= getTotalAmount()
@@ -315,7 +364,7 @@ const CreatePaymentModal = ({ visible, onCancel, onSuccess, boothId, menuItems, 
         if (paymentMethod === 'WALLET_FESTIVAL') {
             return festivalWallet && festivalWallet.balance >= getTotalAmount()
         }
-        
+
         return false
     }
 
@@ -331,7 +380,7 @@ const CreatePaymentModal = ({ visible, onCancel, onSuccess, boothId, menuItems, 
             <Row gutter={24} className="min-h-[600px]">
                 <Col span={14} className="border-r border-gray-200 pr-6">
                     <div className="space-y-6">
-                        <CustomerSearch 
+                        <CustomerSearch
                             onCustomerSelected={handleCustomerSelected}
                             selectedCustomer={selectedCustomer}
                         />

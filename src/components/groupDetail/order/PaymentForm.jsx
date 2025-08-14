@@ -46,7 +46,7 @@ const PaymentForm = ({
             const hasEnoughBalance = mainWallet.balance >= totalAmount
             options.push(
                 <Option key="WALLET_MAIN" value="WALLET_MAIN" disabled={!hasEnoughBalance}>
-                    Ví chính 
+                    Ví chính
                     {!hasEnoughBalance && ' - Số dư không đủ'}
                 </Option>
             )
@@ -62,7 +62,7 @@ const PaymentForm = ({
             const hasEnoughBalance = festivalWallet.balance >= totalAmount
             options.push(
                 <Option key="WALLET_FESTIVAL" value="WALLET_FESTIVAL" disabled={!hasEnoughBalance}>
-                    Ví phụ {festivalWallet.name} ({festivalWallet.balance.toLocaleString()}đ)
+                    Ví phụ <span className='font-bold'>{festivalWallet.name}</span>
                     {!hasEnoughBalance && ' - Số dư không đủ'}
                 </Option>
             )

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { UtensilsCrossed, DollarSign } from 'lucide-react'
+import { UtensilsCrossed, DollarSign, Package } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { boothServices } from '../../services/boothServices'
 import { boothMenuItemServices } from '../../services/boothMenuItemServices'
@@ -76,6 +76,22 @@ const BoothMenu = ({ groupId }) => {
       'beverage': 'Thức uống',
     }
     return labels[itemType?.toLowerCase()] || itemType
+  }
+
+  const getQuantityStatusColor = (remainingQuantity, quantityLimit) => {
+    if (!quantityLimit) return 'text-gray-500'
+    const percentage = (remainingQuantity / quantityLimit) * 100
+    if (percentage >= 90) return 'text-red-600'
+    if (percentage >= 70) return 'text-orange-600'
+    if (percentage >= 50) return 'text-yellow-600'
+    return 'text-green-600'
+  }
+
+  const getQuantityStatus = (remainingQuantity, quantityLimit) => {
+    if (!quantityLimit) return 'Không giới hạn'
+    const available = quantityLimit - (remainingQuantity || 0)
+    if (available <= 0) return 'Hết hàng'
+    return `Còn ${available}/${quantityLimit}`
   }
 
   useEffect(() => {
@@ -176,17 +192,41 @@ const BoothMenu = ({ groupId }) => {
                   </p>
                 )}
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center text-green-600">
-                    <DollarSign size={16} className="mr-1" />
-                    <span className="font-semibold">
-                      {item.customPrice?.toLocaleString() || 0}đ
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center text-green-600">
+                      <DollarSign size={16} className="mr-1" />
+                      <span className="font-semibold">
+                        {item.customPrice?.toLocaleString() || 0}đ
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center text-gray-500">
+                      <Package size={14} className="mr-1" />
+                      <span>Số lượng:</span>
+                    </div>
+                    <span className={`font-medium ${getQuantityStatusColor(item.remainingQuantity, item.quantityLimit)}`}>
+                      {getQuantityStatus(item.remainingQuantity, item.quantityLimit)}
                     </span>
                   </div>
 
-                  <div className="text-sm text-gray-500">
-                    Giới hạn: {item.quantityLimit || 'Không giới hạn'}
-                  </div>
+                  {item.quantityLimit && (
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full transition-all duration-300 ${
+                          ((item.remainingQuantity || 0) / item.quantityLimit) * 100 >= 90 ? 'bg-red-500' :
+                          ((item.remainingQuantity || 0) / item.quantityLimit) * 100 >= 70 ? 'bg-orange-500' :
+                          ((item.remainingQuantity || 0) / item.quantityLimit) * 100 >= 50 ? 'bg-yellow-500' :
+                          'bg-green-500'
+                        }`}
+                        style={{ 
+                          width: `${Math.min(((item.remainingQuantity || 0) / item.quantityLimit) * 100, 100)}%` 
+                        }}
+                      ></div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

@@ -155,6 +155,23 @@ const BoothInfo = ({ groupId, group, members }) => {
             { id: location.locationId, isOccupied: true }
           )
         }
+
+        if (booth.festivalId && booth.boothType) {
+          const updateData = { id: booth.festivalId }
+
+          if (booth.boothType.toLowerCase() === 'food') {
+            updateData.registeredFoodBooths = (festival?.registeredFoodBooths || 0) + 1
+          } else {
+            updateData.registeredBeverageBooths = (festival?.registeredBeverageBooths || 0) + 1
+          }
+
+          await festivalServices.update(updateData)
+
+          setFestival(prev => ({
+            ...prev,
+            ...updateData
+          }))
+        }
       } else if (action === 'reject') {
         await boothServices.updateReject({
           boothId: booth.boothId,
