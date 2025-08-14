@@ -34,10 +34,10 @@ const TransferModal = ({
             <div className="space-y-2">
               {festivalWallets.map((wallet) => (
                 <button
-                  key={wallet.id}
+                  key={wallet.accountFestivalWalletId}
                   onClick={() => setSelectedFestivalWallet(wallet)}
                   className={`w-full p-3 rounded-lg border-2 text-left transition-all ${
-                    selectedFestivalWallet?.id === wallet.id
+                    selectedFestivalWallet?.accountFestivalWalletId === wallet.accountFestivalWalletId
                       ? 'border-blue-500 bg-blue-50'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}

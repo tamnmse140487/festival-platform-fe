@@ -9,6 +9,7 @@ import TopupModal from './wallet/TopupModal';
 import CreateWalletModal from './wallet/CreateWalletModal';
 import TransferModal from './wallet/TransferModal';
 import EditWalletModal from './wallet/EditWalletModal';
+import ReturnTransferModal from './wallet/ReturnTransferModal';
 import FestivalWalletGrid from './wallet/FestivalWalletGrid';
 import toast from 'react-hot-toast';
 import { festivalServices } from '../../services/festivalServices';
@@ -26,10 +27,13 @@ const WalletTab = ({ user }) => {
   const [showCreateWalletModal, setShowCreateWalletModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showReturnTransferModal, setShowReturnTransferModal] = useState(false);
   const [selectedAmount, setSelectedAmount] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [transferAmount, setTransferAmount] = useState('');
+  const [returnTransferAmount, setReturnTransferAmount] = useState('');
   const [selectedFestivalWallet, setSelectedFestivalWallet] = useState(null);
+  const [selectedReturnWallet, setSelectedReturnWallet] = useState(null);
   const [editingWallet, setEditingWallet] = useState(null);
   const [editName, setEditName] = useState('');
 
@@ -73,6 +77,19 @@ const WalletTab = ({ user }) => {
       setLoading(false);
     }
   };
+
+  const fetchHistory = async () => {
+    try {
+      const historyResponse = await accountWalletHistoriesServices.get({
+        accountId: user.id
+      });
+      setTransactions(historyResponse.data || []);
+
+    } catch (error) {
+      console.error('Error fetching history data:', error);
+    } finally {
+    }
+  }
 
   const fetchFestivalWallets = async () => {
     try {
@@ -118,7 +135,6 @@ const WalletTab = ({ user }) => {
       });
 
       await fetchFestivalWallets();
-
       await fetchWalletData();
 
       toast.success('Tạo ví phụ thành công');
@@ -150,6 +166,13 @@ const WalletTab = ({ user }) => {
         amount: amount
       });
 
+      await accountWalletHistoriesServices.create({
+        accountId: user.id,
+        description: `Chuyển ${amount} từ ví chính về ví ${selectedFestivalWallet.name}`,
+        amount: amount,
+        type: HISTORY_TYPE.TRANSFER
+      });
+
       setWalletData(prev => ({
         ...prev,
         balance: prev.balance - amount
@@ -167,9 +190,63 @@ const WalletTab = ({ user }) => {
       setShowTransferModal(false);
       setTransferAmount('');
       setSelectedFestivalWallet(null);
+      fetchHistory();
 
     } catch (error) {
       console.error('Error during transfer:', error);
+      toast.error('Có lỗi xảy ra khi chuyển tiền. Vui lòng thử lại.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleReturnTransfer = async () => {
+    if (!returnTransferAmount || !selectedReturnWallet || !walletData.walletId) return;
+
+    const amount = parseFloat(returnTransferAmount);
+    if (amount <= 0 || amount > selectedReturnWallet.balance) {
+      toast.error('Số tiền không hợp lệ hoặc không đủ số dư');
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+
+      await accountFestivalWalletsServices.transferToWallet({
+        walletId: walletData.walletId,
+        accountFestivalWalletId: selectedReturnWallet.accountFestivalWalletId,
+        amount: amount
+      });
+
+      await accountWalletHistoriesServices.create({
+        accountId: user.id,
+        description: `Chuyển ${amount} từ ${selectedReturnWallet.name} về ví chính`,
+        amount: amount,
+        type: HISTORY_TYPE.RETURN_TRANSFER
+      });
+
+      setWalletData(prev => ({
+        ...prev,
+        balance: prev.balance + amount
+      }));
+
+      setFestivalWallets(prev =>
+        prev.map(wallet =>
+          wallet.id === selectedReturnWallet.id
+            ? { ...wallet, balance: wallet.balance - amount }
+            : wallet
+        )
+      );
+
+      toast.success('Chuyển tiền về ví chính thành công');
+      setShowReturnTransferModal(false);
+      setReturnTransferAmount('');
+      setSelectedReturnWallet(null);
+
+      fetchHistory();
+
+    } catch (error) {
+      console.error('Error during return transfer:', error);
       toast.error('Có lỗi xảy ra khi chuyển tiền. Vui lòng thử lại.');
     } finally {
       setIsProcessing(false);
@@ -255,15 +332,26 @@ const WalletTab = ({ user }) => {
           </div>
           <div className="flex items-center space-x-4">
             <Wallet className="w-12 h-12 text-blue-200" />
-            <Button
-              onClick={() => setShowTransferModal(true)}
-              variant="outline"
-              className="text-red border-red hover:bg-white hover:text-blue-600"
-              disabled={festivalWallets.length === 0}
-            >
-              <ArrowRight size={16} className="mr-2" />
-              Chuyển tiền
-            </Button>
+            <div className="flex flex-col space-y-2">
+              <Button
+                onClick={() => setShowTransferModal(true)}
+                variant="outline"
+                className="text-red border-red hover:bg-white hover:text-blue-600"
+                disabled={festivalWallets.length === 0}
+              >
+                <ArrowRight size={16} className="mr-2" />
+                Chuyển tiền
+              </Button>
+              <Button
+                onClick={() => setShowReturnTransferModal(true)}
+                variant="outline"
+                className="text-red border-red hover:bg-white hover:text-blue-600"
+                disabled={festivalWallets.length === 0 || festivalWallets.every(w => w.balance === 0)}
+              >
+                <ArrowRight size={16} className="mr-2 rotate-180" />
+                Về ví chính
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -310,6 +398,22 @@ const WalletTab = ({ user }) => {
         selectedFestivalWallet={selectedFestivalWallet}
         setSelectedFestivalWallet={setSelectedFestivalWallet}
         onTransfer={handleTransfer}
+        isProcessing={isProcessing}
+      />
+
+      <ReturnTransferModal
+        show={showReturnTransferModal}
+        onClose={() => {
+          setShowReturnTransferModal(false);
+          setReturnTransferAmount('');
+          setSelectedReturnWallet(null);
+        }}
+        festivalWallets={festivalWallets}
+        returnTransferAmount={returnTransferAmount}
+        setReturnTransferAmount={setReturnTransferAmount}
+        selectedReturnWallet={selectedReturnWallet}
+        setSelectedReturnWallet={setSelectedReturnWallet}
+        onReturnTransfer={handleReturnTransfer}
         isProcessing={isProcessing}
       />
 

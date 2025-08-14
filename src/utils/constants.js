@@ -80,6 +80,8 @@ export const HISTORY_TYPE = {
   TOPUP: "topup",
   REFUND: "refund",
   CREATE_SUB_WALLET: "create_sub_wallet",
+  TRANSFER: "transfer",
+  RETURN_TRANSFER: "return_transfer",
   PAYMENT: "payment",
   COMMISSION: "commission",
 };
