@@ -6,13 +6,13 @@ import { boothServices } from '../../services/boothServices';
 import { boothMenuItemServices } from '../../services/boothMenuItemServices';
 import { studentGroupServices } from '../../services/studentGroupServices';
 import { boothWalletServices } from '../../services/boothWalletServices';
-import { uploadService } from '../../services/uploadServices'; 
+import { uploadService } from '../../services/uploadServices';
 import { ImageIcon, UploadIcon } from 'lucide-react';
 
 const { Option } = Select;
 const { TextArea } = Input;
 
-const BoothRegistrationModal = ({ isOpen, onClose, mapLocations = [], festivalId, menuItems = [] }) => {
+const BoothRegistrationModal = ({ isOpen, onClose, mapLocations = [], festivalId, festivalInfo, menuItems = [] }) => {
     const { user } = useAuth();
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
@@ -127,7 +127,7 @@ const BoothRegistrationModal = ({ isOpen, onClose, mapLocations = [], festivalId
             toast.error('Ảnh phải nhỏ hơn 5MB!');
             return false;
         }
-        return false; 
+        return false;
     };
 
     const handleFormSubmit = (values) => {

@@ -17,7 +17,8 @@ import {
   Handshake,
   Store,
   AlertCircle,
-  XCircle
+  XCircle,
+  UserPlus
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
@@ -28,6 +29,8 @@ import { mapLocationServices } from '../../services/mapLocationServices';
 import { festivalMenuServices } from '../../services/festivalMenuServices';
 import { menuItemServices } from '../../services/menuItemServices';
 import { imageServices } from '../../services/imageServices';
+import { accountFestivalWalletsServices } from '../../services/accountFestivalWalletsServices';
+import { accountWalletHistoriesServices } from '../../services/accountWalletHistoryServices'; 
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Modal from '../../components/common/Modal';
@@ -36,7 +39,7 @@ import ImagesTab from '../../components/festivalDetail/ImagesTab';
 import MapTab from '../../components/festivalDetail/MapTab';
 import MenuTab from '../../components/festivalDetail/MenuTab';
 import IngredientRegistrationModal from '../../components/festivalDetail/IngredientRegistrationModal';
-import { ROLE_NAME, FESTIVAL_STATUS, FESTIVAL_APPROVAL_STATUS, FESTIVAL_APPROVAL_STATUS_LABELS } from '../../utils/constants';
+import { ROLE_NAME, FESTIVAL_STATUS, FESTIVAL_APPROVAL_STATUS, FESTIVAL_APPROVAL_STATUS_LABELS, HISTORY_TYPE } from '../../utils/constants';
 import { convertToVietnamTimeWithFormat } from '../../utils/formatters';
 
 const FestivalDetailPage = () => {
@@ -54,12 +57,39 @@ const FestivalDetailPage = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showIngredientModal, setShowIngredientModal] = useState(false);
+  const [showJoinConfirmModal, setShowJoinConfirmModal] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
+  const [hasJoinedFestival, setHasJoinedFestival] = useState(false);
+  const [checkingJoinStatus, setCheckingJoinStatus] = useState(true);
 
   useEffect(() => {
     loadFestivalData();
   }, [id]);
+
+  useEffect(() => {
+    if (hasRole([ROLE_NAME.USER]) && user?.id) {
+      checkJoinStatus();
+    }
+  }, [id, user?.id]);
+
+  const checkJoinStatus = async () => {
+    try {
+      setCheckingJoinStatus(true);
+      const response = await accountWalletHistoriesServices.get({
+        accountId: user.id,
+        festivalId: parseInt(id)
+      });
+      
+      setHasJoinedFestival(response.data && response.data.length > 0);
+    } catch (error) {
+      console.error('Error checking join status:', error);
+      setHasJoinedFestival(false);
+    } finally {
+      setCheckingJoinStatus(false);
+    }
+  };
 
   const loadFestivalData = async () => {
     try {
@@ -140,26 +170,55 @@ const FestivalDetailPage = () => {
     }
   };
 
+  const handleJoinFestival = async () => {
+    try {
+      setIsJoining(true);
+      
+      await accountFestivalWalletsServices.create({
+        accountId: user.id,
+        festivalId: parseInt(id),
+        name: `Ví phụ của ${festival.festivalName}`,
+        balance: 0
+      });
+
+      await accountWalletHistoriesServices.create({
+        accountId: user.id,
+        description: `Hệ thống đã tạo ví phụ cho lễ hội ${festival.festivalName}`,
+        type: HISTORY_TYPE.CREATE_SUB_WALLET,
+        amount: 0
+      });
+
+      toast.success('Tham gia lễ hội thành công!');
+      setShowJoinConfirmModal(false);
+      setHasJoinedFestival(true);
+    } catch (error) {
+      console.error('Error joining festival:', error);
+      toast.error('Không thể tham gia lễ hội');
+    } finally {
+      setIsJoining(false);
+    }
+  };
+
   const handleIngredientModalClose = () => {
     setShowIngredientModal(false);
   };
 
   const getApprovalStatusBadge = (status) => {
     const badges = {
-      [FESTIVAL_APPROVAL_STATUS.PENDING]: { 
-        label: FESTIVAL_APPROVAL_STATUS_LABELS.pending, 
-        class: 'bg-yellow-100 text-yellow-800', 
-        icon: <AlertCircle size={16} /> 
+      [FESTIVAL_APPROVAL_STATUS.PENDING]: {
+        label: FESTIVAL_APPROVAL_STATUS_LABELS.pending,
+        class: 'bg-yellow-100 text-yellow-800',
+        icon: <AlertCircle size={16} />
       },
-      [FESTIVAL_APPROVAL_STATUS.APPROVED]: { 
-        label: FESTIVAL_APPROVAL_STATUS_LABELS.approved, 
-        class: 'bg-green-100 text-green-800', 
-        icon: <CheckCircle size={16} /> 
+      [FESTIVAL_APPROVAL_STATUS.APPROVED]: {
+        label: FESTIVAL_APPROVAL_STATUS_LABELS.approved,
+        class: 'bg-green-100 text-green-800',
+        icon: <CheckCircle size={16} />
       },
-      [FESTIVAL_APPROVAL_STATUS.REJECTED]: { 
-        label: FESTIVAL_APPROVAL_STATUS_LABELS.rejected, 
-        class: 'bg-red-100 text-red-800', 
-        icon: <XCircle size={16} /> 
+      [FESTIVAL_APPROVAL_STATUS.REJECTED]: {
+        label: FESTIVAL_APPROVAL_STATUS_LABELS.rejected,
+        class: 'bg-red-100 text-red-800',
+        icon: <XCircle size={16} />
       }
     };
 
@@ -324,9 +383,22 @@ const FestivalDetailPage = () => {
           )}
 
           {getStatusActions()}
+          
+          {hasRole([ROLE_NAME.USER]) && !checkingJoinStatus && !hasJoinedFestival && (
+            <Button 
+              variant="primary"
+              icon={<UserPlus size={16} />}
+              onClick={() => setShowJoinConfirmModal(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Đăng ký tham gia lễ hội
+            </Button>
+          )}
+
           <Button variant="outline" icon={<Share2 size={16} />}>
             Chia sẻ
           </Button>
+          
           {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && festival.organizerSchoolId === user.schoolId && (
             <Button
               icon={<Edit size={16} />}
@@ -335,7 +407,6 @@ const FestivalDetailPage = () => {
               Chỉnh sửa
             </Button>
           )}
-
         </div>
       </div>
 
@@ -393,7 +464,7 @@ const FestivalDetailPage = () => {
 
           {activeTab === 'overview' && <OverviewTab festival={festival} />}
           {activeTab === 'images' && <ImagesTab festivalImages={festivalImages} loading={loading} />}
-          {activeTab === 'map' && <MapTab festivalMap={festivalMap} mapLocations={mapLocations} festival={festival} festivalMenu={festivalMenu} menuItems={menuItems}  loading={loading} />}
+          {activeTab === 'map' && <MapTab festivalMap={festivalMap} mapLocations={mapLocations} festival={festival} festivalMenu={festivalMenu} menuItems={menuItems} loading={loading} />}
           {activeTab === 'menu' && <MenuTab festivalMenu={festivalMenu} menuItems={menuItems} loading={loading} />}
         </div>
 
@@ -452,11 +523,9 @@ const FestivalDetailPage = () => {
               </div>
             </Card.Content>
           </Card>
-
-         
         </div>
       </div>
-   
+
       <IngredientRegistrationModal
         isOpen={showIngredientModal}
         onClose={handleIngredientModalClose}
@@ -464,6 +533,40 @@ const FestivalDetailPage = () => {
         supplierId={user?.supplierId}
       />
 
+      <Modal isOpen={showJoinConfirmModal} onClose={() => setShowJoinConfirmModal(false)}>
+        <div className="p-6">
+          <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-blue-100 rounded-full">
+            <UserPlus className="w-6 h-6 text-blue-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-center text-gray-900 mb-2">
+            Xác nhận tham gia lễ hội
+          </h3>
+          <p className="text-center text-gray-600 mb-6">
+            Bạn có chắc chắn muốn tham gia lễ hội <span className="font-semibold">{festival?.festivalName}</span>?
+          </p>
+          <div className="flex space-x-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowJoinConfirmModal(false)}
+              className="flex-1"
+              disabled={isJoining}
+            >
+              Hủy bỏ
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleJoinFestival}
+              className="flex-1 bg-blue-600 hover:bg-blue-700"
+              disabled={isJoining}
+            >
+              {isJoining ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              ) : null}
+              Xác nhận tham gia
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

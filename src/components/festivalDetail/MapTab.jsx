@@ -5,13 +5,35 @@ import { FESTIVAL_STATUS, ROLE_NAME } from '../../utils/constants';
 import BoothRegistrationModal from '../booths/BoothRegistrationModal';
 import { useAuth } from '../../contexts/AuthContext';
 import Button from '../common/Button';
+import { convertToVietnamTimeWithFormat } from '../../utils/formatters';
 
 const MapTab = ({ festivalMap, mapLocations, festival, loading, menuItems = [] }) => {
+
   const { user, hasRole } = useAuth();
   const [showRegisterBoothModal, setShowRegisterBoothModal] = useState(false);
+  const [registrationMessage, setRegistrationMessage] = useState('');
 
   const handleRegisterBoothModalClose = () => {
     setShowRegisterBoothModal(false);
+  };
+
+  const handleRegisterBoothClick = () => {
+    // const now = Date.now();
+    // const registrationStart = new Date(festival.registrationStartDate).getTime();
+    // const registrationEnd = new Date(festival.registrationEndDate).getTime();
+
+    // if (now < registrationStart) {
+    //   setRegistrationMessage(`Chưa tới thời gian đăng ký. Thời gian đăng ký: ${convertToVietnamTimeWithFormat(festival.registrationStartDate)} - ${convertToVietnamTimeWithFormat(festival.registrationEndDate)}`);
+    //   return;
+    // }
+
+    // if (now > registrationEnd) {
+    //   setRegistrationMessage(`Đã hết thời gian đăng ký. Thời gian đăng ký: ${convertToVietnamTimeWithFormat(festival.registrationStartDate)} - ${convertToVietnamTimeWithFormat(festival.registrationEndDate)}`);
+    //   return;
+    // }
+
+    setRegistrationMessage('');
+    setShowRegisterBoothModal(true);
   };
 
   if (loading) {
@@ -56,7 +78,7 @@ const MapTab = ({ festivalMap, mapLocations, festival, loading, menuItems = [] }
                 {hasRole([ROLE_NAME.STUDENT]) && festival?.status === FESTIVAL_STATUS.PUBLISHED && (
                   <Button
                     icon={<Store size={16} />}
-                    onClick={() => setShowRegisterBoothModal(true)}
+                    onClick={handleRegisterBoothClick}
                     className='absolute right-0 -top-8'
                   >
                     Đăng ký gian hàng
@@ -65,6 +87,11 @@ const MapTab = ({ festivalMap, mapLocations, festival, loading, menuItems = [] }
               </div>
             </Card.Header>
             <Card.Content>
+              {registrationMessage && (
+                <div className="mb-4 p-3 bg-yellow-100 border border-yellow-300 rounded-lg text-yellow-800">
+                  {registrationMessage}
+                </div>
+              )}
               {mapLocations.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {mapLocations.map((location) => (
@@ -107,6 +134,7 @@ const MapTab = ({ festivalMap, mapLocations, festival, loading, menuItems = [] }
         onClose={handleRegisterBoothModalClose}
         mapLocations={mapLocations}
         festivalId={festival?.festivalId || festival?.id}
+        festivalInfo={festival}
         menuItems={menuItems}
       />
     </div>
