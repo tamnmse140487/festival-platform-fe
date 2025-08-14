@@ -55,6 +55,10 @@ const TransactionList = ({ transactions }) => {
     return `${sign}${amount.toLocaleString('vi-VN')} VND`;
   };
 
+  const sortedTransactions = [...transactions].sort((a, b) => {
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
   if (!transactions.length) {
     return (
       <div>
@@ -70,7 +74,7 @@ const TransactionList = ({ transactions }) => {
     <div>
       <h4 className="text-lg font-medium text-gray-900 mb-4">Lịch sử giao dịch</h4>
       <div className="space-y-3">
-        {transactions.map((transaction) => (
+        {sortedTransactions.map((transaction) => (
           <div key={transaction.historyId} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center space-x-3">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getBackgroundColor(transaction.type)}`}>

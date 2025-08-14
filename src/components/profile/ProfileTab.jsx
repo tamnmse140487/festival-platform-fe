@@ -4,16 +4,16 @@ import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import { getRoleDisplayName } from '../../utils/helpers';
 
-const ProfileTab = ({ profileData, isEditing, onEdit, onSave, onCancel, onChange, user }) => {
+const ProfileTab = ({ profileData, isEditing, onEdit, onSave, onCancel, onChange, user, isOwnProfile = true }) => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900">Thông tin cá nhân</h3>
-        {!isEditing ? (
+        {isOwnProfile && !isEditing ? (
           <Button size="sm" onClick={onEdit} icon={<Edit size={16} />}>
             Chỉnh sửa
           </Button>
-        ) : (
+        ) : isOwnProfile && isEditing ? (
           <div className="flex space-x-2">
             <Button variant="outline" size="sm" onClick={onCancel}>
               Hủy
@@ -22,7 +22,7 @@ const ProfileTab = ({ profileData, isEditing, onEdit, onSave, onCancel, onChange
               Lưu
             </Button>
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -31,7 +31,7 @@ const ProfileTab = ({ profileData, isEditing, onEdit, onSave, onCancel, onChange
           leftIcon={<User size={20} />}
           value={profileData.fullName}
           onChange={(e) => onChange('fullName', e.target.value)}
-          disabled={!isEditing}
+          disabled={!isEditing || !isOwnProfile}
         />
 
         <Input
@@ -40,7 +40,7 @@ const ProfileTab = ({ profileData, isEditing, onEdit, onSave, onCancel, onChange
           leftIcon={<Mail size={20} />}
           value={profileData.email}
           onChange={(e) => onChange('email', e.target.value)}
-          disabled={!isEditing}
+          disabled={!isEditing || !isOwnProfile}
         />
 
         <Input
@@ -48,7 +48,7 @@ const ProfileTab = ({ profileData, isEditing, onEdit, onSave, onCancel, onChange
           leftIcon={<Phone size={20} />}
           value={profileData.phone_number}
           onChange={(e) => onChange('phone_number', e.target.value)}
-          disabled={!isEditing}
+          disabled={!isEditing || !isOwnProfile}
         />
 
         <div>

@@ -162,7 +162,7 @@ export const protectedRoutes = [
 
   // Profile
   {
-    path: "/app/profile",
+    path: "/app/profile/:userId?/:tab?",
     element: <ProfilePage />,
     roles: []
   },

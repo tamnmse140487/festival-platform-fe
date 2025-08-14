@@ -83,7 +83,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     },
     {
       id: 'profile',
-      label: 'Hồ sơ cá nhân',
+      label: 'Quản lý cá nhân',
       icon: SquareUser,
       path: '/app/profile',
       roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.ADMIN, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT, ROLE_NAME.SUPPLIER]
