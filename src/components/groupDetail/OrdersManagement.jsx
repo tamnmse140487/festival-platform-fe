@@ -131,7 +131,7 @@ const OrdersManagement = ({ boothId }) => {
     }
 
     const canCreatePayment = () => {
-        return hasRole([ROLE_NAME.STUDENT]) && festival?.status === FESTIVAL_STATUS.PUBLISHED
+        return hasRole([ROLE_NAME.STUDENT]) && festival?.status === FESTIVAL_STATUS.ONGOING
     }
 
     useEffect(() => {
