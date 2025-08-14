@@ -64,9 +64,8 @@ export const PAYMENT_METHOD = {
   BANK: "bank",
 };
 
-
 export const PAYMENT_METHOD_LABELS = {
-  [PAYMENT_METHOD.ACCOUNT_POINTS]: "Điểm tích lũy", 
+  [PAYMENT_METHOD.ACCOUNT_POINTS]: "Điểm tích lũy",
   [PAYMENT_METHOD.CASH]: "Tiền mặt",
   [PAYMENT_METHOD.BANK]: "Chuyển khoản",
 };
@@ -82,6 +81,7 @@ export const HISTORY_TYPE = {
   REFUND: "refund",
   CREATE_SUB_WALLET: "create_sub_wallet",
   PAYMENT: "payment",
+  COMMISSION: "commission",
 };
 
 export const GROUP_ROLE = {

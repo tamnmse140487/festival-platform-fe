@@ -1,5 +1,5 @@
 import React from 'react';
-import { DollarSign, CreditCard, Wallet, Plus } from 'lucide-react';
+import { DollarSign, CreditCard, Wallet, Plus, TrendingUp } from 'lucide-react';
 import { convertToVietnamTimeWithFormat } from '../../utils/formatters';
 import { HISTORY_TYPE } from '../../utils/constants';
 
@@ -14,6 +14,8 @@ const TransactionList = ({ transactions }) => {
         return <Plus className="w-5 h-5 text-purple-600" />;
       case HISTORY_TYPE.PAYMENT:
         return <CreditCard className="w-5 h-5 text-red-600" />;
+      case HISTORY_TYPE.COMMISSION:
+        return <TrendingUp className="w-5 h-5 text-orange-600" />;
       default:
         return <Wallet className="w-5 h-5 text-gray-600" />;
     }
@@ -21,6 +23,7 @@ const TransactionList = ({ transactions }) => {
 
   const getTransactionColor = (type, amount) => {
     if (type === HISTORY_TYPE.CREATE_SUB_WALLET) return 'text-purple-600';
+    if (type === HISTORY_TYPE.COMMISSION) return 'text-orange-600';
     if (amount > 0) return 'text-green-600';
     return 'text-red-600';
   };
@@ -35,6 +38,8 @@ const TransactionList = ({ transactions }) => {
         return 'bg-purple-100';
       case HISTORY_TYPE.PAYMENT:
         return 'bg-red-100';
+      case HISTORY_TYPE.COMMISSION:
+        return 'bg-orange-100';
       default:
         return 'bg-gray-100';
     }
@@ -49,6 +54,10 @@ const TransactionList = ({ transactions }) => {
     
     if (type === HISTORY_TYPE.PAYMENT) {
       return `-${Math.abs(amount).toLocaleString('vi-VN')} VND`;
+    }
+    
+    if (type === HISTORY_TYPE.COMMISSION) {
+      return `+${Math.abs(amount).toLocaleString('vi-VN')} VND`;
     }
     
     const sign = amount > 0 ? '+' : '';

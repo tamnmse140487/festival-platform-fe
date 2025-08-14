@@ -53,7 +53,7 @@ export const getStatusBadge = (status, type = "default") => {
       },
     },
     location: {
-      true: { label: "Đã thuê", class: "bg-red-100 text-red-800" },
+      true: { label: "Đã đặt", class: "bg-red-100 text-red-800" },
       false: { label: "Trống", class: "bg-green-100 text-green-800" },
     },
   };
