@@ -2,34 +2,60 @@ import React, { useState, useEffect } from 'react'
 import { Search, User } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { accountServices } from '../../services/accountServices'
+import { schoolAccountRelationServices } from '../../services/schoolAccountRelationServices'
 import { roleServices } from '../../services/roleServices'
 import { ROLE_NAME } from '../../utils/constants'
 import Button from '../common/Button'
 import Input from '../common/Input'
 
-const InviteTeacherModal = ({ onClose, onSubmit }) => {
+const InviteTeacherModal = ({ onClose, onSubmit, currentUserId }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [teachers, setTeachers] = useState([])
   const [filteredTeachers, setFilteredTeachers] = useState([])
   const [selectedTeacher, setSelectedTeacher] = useState(null)
   const [loading, setLoading] = useState(false)
   const [teachersLoading, setTeachersLoading] = useState(false)
+  const [searchLoading, setSearchLoading] = useState(false)
 
   const fetchTeachers = async () => {
     setTeachersLoading(true)
+    setSearchLoading(true)
     try {
+      const currentUserRelationResponse = await schoolAccountRelationServices.get({ 
+        accountId: currentUserId 
+      })
+      
+      if (!currentUserRelationResponse.data || currentUserRelationResponse.data.length === 0) {
+        setTeachers([])
+        return
+      }
+      
+      const schoolId = currentUserRelationResponse.data[0].schoolId
+      
+      const schoolRelationsResponse = await schoolAccountRelationServices.get({ 
+        schoolId: schoolId 
+      })
+      
+      const schoolAccountIds = schoolRelationsResponse.data
+        ?.filter(relation => relation.relationType?.toLowerCase() === 'teacher')
+        ?.map(relation => relation.accountId) || []
+
       const roleResponse = await roleServices.get({ roleName: ROLE_NAME.TEACHER })
       const teacherRoleId = roleResponse.data?.[0]?.roleId
 
       if (teacherRoleId) {
         const teachersResponse = await accountServices.get({ role: teacherRoleId })
-        setTeachers(teachersResponse.data || [])
+        const filteredTeachers = (teachersResponse.data || []).filter(teacher => 
+          schoolAccountIds.includes(teacher.id)
+        )
+        setTeachers(filteredTeachers)
       }
     } catch (error) {
       toast.error('Không thể tải danh sách giáo viên')
       console.error('Error fetching teachers:', error)
     } finally {
       setTeachersLoading(false)
+      setSearchLoading(false)
     }
   }
 
@@ -58,12 +84,14 @@ const InviteTeacherModal = ({ onClose, onSubmit }) => {
   }, [])
 
   useEffect(() => {
-    const filtered = teachers.filter(teacher =>
-      teacher.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      teacher.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    setFilteredTeachers(filtered)
-  }, [searchTerm, teachers])
+    if (!searchLoading) {
+      const filtered = teachers.filter(teacher =>
+        teacher.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        teacher.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      setFilteredTeachers(filtered)
+    }
+  }, [searchTerm, teachers, searchLoading])
 
   const Avatar = ({ src, alt, size = "w-10 h-10" }) => {
     const [imageError, setImageError] = useState(false)
@@ -92,12 +120,19 @@ const InviteTeacherModal = ({ onClose, onSubmit }) => {
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Tìm kiếm giáo viên <span className="text-red-500">*</span>
         </label>
-        <Input
-          placeholder="Tìm theo tên hoặc email..."
-          leftIcon={<Search size={20} />}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+        <div className="relative">
+          <Input
+            placeholder="Tìm theo tên hoặc email..."
+            leftIcon={<Search size={20} />}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          {searchLoading && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+            </div>
+          )}
+        </div>
       </div>
 
       <div>
@@ -105,7 +140,7 @@ const InviteTeacherModal = ({ onClose, onSubmit }) => {
           Chọn giáo viên chủ nhiệm
         </label>
         <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg">
-          {teachersLoading ? (
+          {teachersLoading || searchLoading ? (
             <div className="text-center py-4">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
               <p className="text-gray-600 mt-2">Đang tải...</p>

@@ -47,7 +47,7 @@ export const ORDER_STATUS = {
   COMPLETED: "Completed",
   PENDING: "pending",
   PAID: "paid",
-  CANCELLED: "Cancelled",
+  CANCELLED: "cancelled",
 };
 
 export const ORDER_STATUS_LABELS = {

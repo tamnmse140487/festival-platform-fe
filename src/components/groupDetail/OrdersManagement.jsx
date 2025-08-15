@@ -8,7 +8,7 @@ import { boothMenuItemServices } from '../../services/boothMenuItemServices'
 import { boothWalletServices } from '../../services/boothWalletServices'
 import { boothServices } from '../../services/boothServices'
 import { festivalServices } from '../../services/festivalServices'
-import { ORDER_STATUS_LABELS, ROLE_NAME, FESTIVAL_STATUS } from '../../utils/constants'
+import { ORDER_STATUS_LABELS, ROLE_NAME, FESTIVAL_STATUS, ORDER_STATUS } from '../../utils/constants'
 import { useAuth } from '../../contexts/AuthContext'
 import CreatePaymentModal from './order/CreatePaymentModal'
 import OrdersTable from './order/OrdersTable'
@@ -27,6 +27,25 @@ const OrdersManagement = ({ boothId }) => {
         pageSize: 10,
         total: 0
     })
+
+    const handleUrlParams = async () => {
+        const urlParams = new URLSearchParams(window.location.search)
+        const cancel = urlParams.get('cancel')
+        const status = urlParams.get('status')
+        const orderCode = urlParams.get('orderCode')
+        
+        if (cancel === 'true' && status === 'CANCELLED' && orderCode) {
+            try {
+                await ordersServices.update({ 
+                    orderId: orderCode, 
+                    status: ORDER_STATUS.CANCELLED 
+                })
+                window.history.replaceState({}, document.title, window.location.pathname)
+            } catch (error) {
+                console.error('Error updating order:', error)
+            }
+        }
+    }
 
     const fetchOrders = async (page = 1, pageSize = 10) => {
         setLoading(true)
@@ -135,12 +154,17 @@ const OrdersManagement = ({ boothId }) => {
     }
 
     useEffect(() => {
-        if (boothId) {
-            fetchOrders()
-            fetchMenuItems()
-            fetchBoothWallet()
-            fetchBoothInfo()
+        const initializeComponent = async () => {
+            await handleUrlParams()
+            if (boothId) {
+                fetchOrders()
+                fetchMenuItems()
+                fetchBoothWallet()
+                fetchBoothInfo()
+            }
         }
+        
+        initializeComponent()
     }, [boothId])
 
     return (

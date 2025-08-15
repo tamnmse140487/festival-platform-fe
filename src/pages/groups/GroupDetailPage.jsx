@@ -12,7 +12,7 @@ import Button from '../../components/common/Button'
 import MemberList from '../../components/groups/MemberList'
 import AddMemberModal from '../../components/groups/AddMemberModal'
 import InviteTeacherModal from '../../components/groups/InviteTeacherModal'
-import GroupInfo from '../../components/groupDetail/GroupInfo' 
+import GroupInfo from '../../components/groupDetail/GroupInfo'
 import GroupBudget from '../../components/groupDetail/GroupBudget'
 import BoothInfo from '../../components/groupDetail/BoothInfo'
 import BoothMenu from '../../components/groupDetail/BoothMenu'
@@ -24,7 +24,7 @@ const GroupDetailPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuth()
-  
+
   const [group, setGroup] = useState(null)
   const [booth, setBooth] = useState(null)
   const [members, setMembers] = useState([])
@@ -35,7 +35,6 @@ const GroupDetailPage = () => {
   const [showAddMemberModal, setShowAddMemberModal] = useState(false)
   const [showInviteTeacherModal, setShowInviteTeacherModal] = useState(false)
 
-  // Xác định tab hiện tại từ URL
   const getCurrentTab = () => {
     const pathname = location.pathname
     if (pathname.endsWith('/members')) return 'members'
@@ -44,12 +43,11 @@ const GroupDetailPage = () => {
     if (pathname.endsWith('/orders')) return 'orders'
     if (pathname.endsWith('/chat')) return 'chat'
     if (pathname.endsWith('/documents')) return 'documents'
-    return 'info' // default
+    return 'info'
   }
 
   const activeTab = getCurrentTab()
 
-  // Tạo tabs động dựa trên trạng thái booth
   const getAvailableTabs = () => {
     const baseTabs = [
       { id: 'info', label: 'Thông tin', icon: <FileText size={16} />, path: '' },
@@ -58,7 +56,6 @@ const GroupDetailPage = () => {
       { id: 'menu', label: 'Menu', icon: <UtensilsCrossed size={16} />, path: '/menu' },
     ]
 
-    // Thêm tab orders nếu booth đã active
     if (booth?.status === BOOTH_STATUS.ACTIVE) {
       baseTabs.push({
         id: 'orders',
@@ -83,18 +80,18 @@ const GroupDetailPage = () => {
     try {
       const groupResponse = await studentGroupServices.get({ groupId })
       const groupData = groupResponse.data?.[0] || null
-      
+
       if (!groupData) {
         toast.error('Không tìm thấy nhóm')
         navigate('/app/groups')
         return
       }
-      
+
       setGroup(groupData)
     } catch (error) {
       toast.error('Không thể tải thông tin nhóm')
       console.error('Error fetching group:', error)
-      navigate('/app/groups') // Redirect về trang groups nếu không tìm thấy
+      navigate('/app/groups')
     } finally {
       setGroupLoading(false)
     }
@@ -216,7 +213,7 @@ const GroupDetailPage = () => {
     switch (activeTab) {
       case 'info':
         return <GroupInfo group={group} members={members} />
-      
+
       case 'members':
         return (
           <div className="space-y-4">
@@ -255,13 +252,13 @@ const GroupDetailPage = () => {
             />
           </div>
         )
-      
+
       case 'booth':
         return <BoothInfo groupId={groupId} group={group} members={members} />
-      
+
       case 'menu':
         return <BoothMenu groupId={groupId} />
-      
+
       case 'orders':
         return booth ? (
           <OrdersManagement boothId={booth.boothId} />
@@ -272,19 +269,18 @@ const GroupDetailPage = () => {
             <p className="text-gray-600">Vui lòng kiểm tra lại thông tin gian hàng của nhóm.</p>
           </div>
         )
-      
+
       case 'chat':
         return <ChatTab />
-      
+
       case 'documents':
         return <DocumentsTab />
-      
+
       default:
         return <GroupInfo group={group} members={members} />
     }
   }
 
-  // Fetch data khi component mount
   useEffect(() => {
     if (groupId) {
       fetchGroup()
@@ -292,14 +288,12 @@ const GroupDetailPage = () => {
     }
   }, [groupId])
 
-  // Fetch booth khi group đã load xong
   useEffect(() => {
     if (group) {
       fetchBooth()
     }
   }, [group])
 
-  // Loading state
   if (groupLoading) {
     return (
       <div className="text-center py-12">
@@ -309,7 +303,6 @@ const GroupDetailPage = () => {
     )
   }
 
-  // Error state - Group not found
   if (!group) {
     return (
       <div className="text-center py-12">
@@ -370,11 +363,10 @@ const GroupDetailPage = () => {
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
-              className={`flex items-center py-3 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
-                activeTab === tab.id
+              className={`flex items-center py-3 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${activeTab === tab.id
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
+                }`}
             >
               {tab.icon}
               <span className="ml-2">{tab.label}</span>
@@ -414,6 +406,7 @@ const GroupDetailPage = () => {
               <InviteTeacherModal
                 onClose={() => setShowInviteTeacherModal(false)}
                 onSubmit={handleInviteTeacher}
+                currentUserId={user?.id}
               />
             </div>
           </div>

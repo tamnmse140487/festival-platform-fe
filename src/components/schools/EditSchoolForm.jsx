@@ -46,7 +46,7 @@ const EditSchoolForm = ({ school, accountInfo, onClose, onEditSuccess }) => {
       onEditSuccess();
     } catch (error) {
       console.error('Error updating school:', error);
-      toast.error(error?.response?.data || 'Có lỗi xảy ra khi cập nhật thông tin');
+      toast.error(error?.response?.data?.message || 'Có lỗi xảy ra khi cập nhật thông tin');
     } finally {
       setIsLoading(false);
     }
