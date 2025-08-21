@@ -20,7 +20,7 @@ export const SocketProvider = ({ children }) => {
   const { user, token, isAuthenticated } = useAuth();
 
   const SOCKET_SERVER_URL =
-    process.env.NODE_ENV === "development"
+    process.env.REACT_APP_NODE_ENV === "development"
       ? process.env.REACT_APP_CHAT_SERVER_URL
       : process.env.REACT_APP_CHAT_SERVER_PROD;
 
@@ -35,17 +35,17 @@ export const SocketProvider = ({ children }) => {
       });
 
       newSocket.on("connect", () => {
-        console.log("🔌 Connected to chat server");
+        console.log("Connected to chat server");
         setIsConnected(true);
       });
 
       newSocket.on("disconnect", () => {
-        console.log("❌ Disconnected from chat server");
+        console.log("Disconnected from chat server");
         setIsConnected(false);
       });
 
       newSocket.on("new_message", (message) => {
-        console.log("📩 New message received:", message);
+        // console.log("New message received:", message);
         setMessages((prev) => ({
           ...prev,
           [message.groupId]: [...(prev[message.groupId] || []), message],
@@ -53,7 +53,7 @@ export const SocketProvider = ({ children }) => {
       });
 
       newSocket.on("message_history", (data) => {
-        console.log("📚 Message history received:", data);
+        // console.log("Message history received:", data);
         setMessages((prev) => ({
           ...prev,
           [data.groupId]: data.messages, 
@@ -80,11 +80,11 @@ export const SocketProvider = ({ children }) => {
       });
 
       newSocket.on("error", (error) => {
-        console.error("❌ Socket error:", error);
+        console.error("Socket error:", error);
       });
 
       newSocket.on("groups_joined", (data) => {
-        console.log("👥 Groups joined:", data);
+        // console.log("Groups joined:", data);
       });
 
       setSocket(newSocket);

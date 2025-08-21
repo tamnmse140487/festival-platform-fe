@@ -134,6 +134,7 @@ const ProfilePage = () => {
         email: accountData.email || "",
         phone_number: accountData.phoneNumber || "",
         avatarUrl: accountData.avatarUrl || "",
+        className: accountData.className || "",
         createdAt: accountData.createdAt,
         ...additionalData,
       }));
@@ -238,7 +239,7 @@ const ProfilePage = () => {
                   onSave={handleSave}
                   onCancel={() => setIsEditing(false)}
                   onChange={handleChange}
-                  user={targetUser}
+                  user={user}
                   isOwnProfile={isOwnProfile}
                 />
               )}

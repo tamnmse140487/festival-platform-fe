@@ -206,7 +206,7 @@ const BoothRegistrationModal = ({ isOpen, onClose, mapLocations = [], festivalId
                     const boothMenuItemId = response.data.boothMenuItemId;
 
                     try {
-                        await uploadService.uploadBoothImage(file, boothMenuItemId);
+                        await uploadService.uploadBoothMenuItemImage(file, boothMenuItemId);
                     } catch (uploadError) {
                         console.error(`Error uploading image for item ${menuItemId}:`, uploadError);
                         toast.warning(`Không thể upload ảnh cho món ${menuItems.find(m => m.itemId === menuItemId)?.itemName}`);

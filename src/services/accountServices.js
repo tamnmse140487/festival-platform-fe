@@ -12,4 +12,5 @@ export const accountServices = {
         "Content-Type": "multipart/form-data",
       },
     }),
+  sendEmail: (data) => api.post("/accounts/send-email", data),
 };

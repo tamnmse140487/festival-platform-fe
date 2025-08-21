@@ -8,6 +8,7 @@ const ChatTab = ({ groupId, user }) => {
   const [message, setMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [imageErrors, setImageErrors] = useState(new Set());
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -135,6 +136,34 @@ const ChatTab = ({ groupId, user }) => {
       minute: "2-digit",
     });
 
+  const handleImageError = (url, name) => {
+    console.error('❌ Image load failed:', { url, name });
+    setImageErrors(prev => new Set([...prev, url]));
+    
+    // Log detailed error info
+    fetch(url, { method: 'HEAD', mode: 'cors' })
+      .then(response => {
+        console.log('Image URL test:', {
+          url,
+          status: response.status,
+          ok: response.ok,
+          headers: Object.fromEntries(response.headers.entries())
+        });
+      })
+      .catch(error => {
+        console.error('Image URL fetch error:', error);
+      });
+  };
+
+  const handleImageLoad = (url) => {
+    console.log('✅ Image loaded successfully:', url);
+    setImageErrors(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(url);
+      return newSet;
+    });
+  };
+
   const renderMessage = (msg) => {
     const isOwnMessage = msg.senderId === user.id;
     const attachments = msg.attachments || [];
@@ -158,21 +187,54 @@ const ChatTab = ({ groupId, user }) => {
             </div>
           )}
           <div className="break-words">{msg.contentText}</div>
+
           {attachments.length > 0 && (
             <div className="mt-2">
               {attachments.map((att, i) => {
                 const type = att.file_type ?? att.fileType;
                 const url = att.file_url ?? att.fileUrl;
                 const name = att.file_name ?? att.fileName;
+                const hasError = imageErrors.has(url);
+                
                 return (
                   <div key={i} className="border-t border-opacity-30 pt-2">
                     {type === "image" ? (
-                      <img
-                        src={url}
-                        alt={name}
-                        className="max-w-full rounded cursor-pointer"
-                        onClick={() => window.open(url, "_blank")}
-                      />
+                      <div className="relative">
+                        {!hasError ? (
+                          <img
+                            src={url}
+                            alt={name}
+                            className="max-w-full rounded cursor-pointer transition-opacity duration-200"
+                            onClick={() => window.open(url, "_blank")}
+                            onLoad={() => handleImageLoad(url)}
+                            onError={() => handleImageError(url, name)}
+                            crossOrigin="anonymous"
+                            referrerPolicy="no-referrer"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded p-4 text-center">
+                            <div className="text-gray-500 mb-2">
+                              <Paperclip size={24} className="mx-auto" />
+                            </div>
+                            <p className="text-sm text-gray-600 mb-2">
+                              Không thể tải ảnh: {name}
+                            </p>
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`text-sm underline ${
+                                isOwnMessage
+                                  ? "text-blue-100 hover:text-white"
+                                  : "text-blue-600 hover:text-blue-800"
+                              }`}
+                            >
+                              Mở trong tab mới
+                            </a>
+                          </div>
+                        )}
+                      </div>
                     ) : (
                       <a
                         href={url}

@@ -72,6 +72,12 @@ export const uploadService = {
       boothId: boothId,
     });
   },
+  
+  uploadBoothMenuItemImage: async (file, boothMenuItemId) => {
+    return await uploadService.uploadImage(file, "boothMenuItems", {
+      boothMenuItemId: boothMenuItemId,
+    });
+  },
 
   uploadAvatarImage: async (file) => {
     return await uploadService.uploadImage(file, "avatars");

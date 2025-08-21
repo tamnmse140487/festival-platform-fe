@@ -137,8 +137,11 @@ const CreateSchoolForm = ({ onClose, onSchoolCreated }) => {
 
                 const schoolResponse = await schoolServices.create(schoolData);
                 if (schoolResponse.data) {
-                    toast.success("Tạo trường học thành công!");
-                    onSchoolCreated(schoolResponse.data);
+                    const sendMailResponse = await accountServices.sendEmail(formData.email)
+                    if (sendMailResponse.data) {
+                        toast.success("Tạo trường học thành công!");
+                        onSchoolCreated(schoolResponse.data);
+                    }
                 }
 
             }

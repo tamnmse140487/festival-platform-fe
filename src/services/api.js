@@ -10,7 +10,7 @@ const api = axios.create({
 });
 
 const base =
-  process.env.NODE_ENV === "development"
+  process.env.REACT_APP_NODE_ENV === "development"
     ? process.env.REACT_APP_CHAT_SERVER_URL
     : process.env.REACT_APP_CHAT_SERVER_PROD;
 

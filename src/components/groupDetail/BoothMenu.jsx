@@ -32,7 +32,7 @@ const BoothMenu = ({ groupId }) => {
               const menuItemData = menuItemResponse.data?.[0] || {}
 
               const imageResponse = await imageServices.get({
-                boothId: boothMenuItem.boothMenuItemId
+                boothMenuItemId: boothMenuItem.boothMenuItemId
               })
               const imageData = imageResponse.data?.[0] || null
 
