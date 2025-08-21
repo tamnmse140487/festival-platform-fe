@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Calendar,
@@ -18,29 +18,36 @@ import {
   Store,
   AlertCircle,
   XCircle,
-  UserPlus
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
-import { useAuth } from '../../contexts/AuthContext';
-import { festivalServices } from '../../services/festivalServices';
-import { festivalSchoolServices } from '../../services/festivalSchoolServices';
-import { festivalMapServices } from '../../services/festivalMapServices';
-import { mapLocationServices } from '../../services/mapLocationServices';
-import { festivalMenuServices } from '../../services/festivalMenuServices';
-import { menuItemServices } from '../../services/menuItemServices';
-import { imageServices } from '../../services/imageServices';
-import { accountFestivalWalletsServices } from '../../services/accountFestivalWalletsServices';
-import { accountWalletHistoriesServices } from '../../services/accountWalletHistoryServices'; 
-import Button from '../../components/common/Button';
-import Card from '../../components/common/Card';
-import Modal from '../../components/common/Modal';
-import OverviewTab from '../../components/festivalDetail/OverviewTab';
-import ImagesTab from '../../components/festivalDetail/ImagesTab';
-import MapTab from '../../components/festivalDetail/MapTab';
-import MenuTab from '../../components/festivalDetail/MenuTab';
-import IngredientRegistrationModal from '../../components/festivalDetail/IngredientRegistrationModal';
-import { ROLE_NAME, FESTIVAL_STATUS, FESTIVAL_APPROVAL_STATUS, FESTIVAL_APPROVAL_STATUS_LABELS, HISTORY_TYPE } from '../../utils/constants';
-import { convertToVietnamTimeWithFormat } from '../../utils/formatters';
+  UserPlus,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
+import { useAuth } from "../../contexts/AuthContext";
+import { festivalServices } from "../../services/festivalServices";
+import { festivalSchoolServices } from "../../services/festivalSchoolServices";
+import { festivalMapServices } from "../../services/festivalMapServices";
+import { mapLocationServices } from "../../services/mapLocationServices";
+import { festivalMenuServices } from "../../services/festivalMenuServices";
+import { menuItemServices } from "../../services/menuItemServices";
+import { imageServices } from "../../services/imageServices";
+import { accountFestivalWalletsServices } from "../../services/accountFestivalWalletsServices";
+import { accountWalletHistoriesServices } from "../../services/accountWalletHistoryServices";
+import Button from "../../components/common/Button";
+import Card from "../../components/common/Card";
+import Modal from "../../components/common/Modal";
+import OverviewTab from "../../components/festivalDetail/OverviewTab";
+import ImagesTab from "../../components/festivalDetail/ImagesTab";
+import MapTab from "../../components/festivalDetail/MapTab";
+import MenuTab from "../../components/festivalDetail/MenuTab";
+import IngredientRegistrationModal from "../../components/festivalDetail/IngredientRegistrationModal";
+import {
+  ROLE_NAME,
+  FESTIVAL_STATUS,
+  FESTIVAL_APPROVAL_STATUS,
+  FESTIVAL_APPROVAL_STATUS_LABELS,
+  HISTORY_TYPE,
+} from "../../utils/constants";
+import { convertToVietnamTimeWithFormat } from "../../utils/formatters";
+import dayjs from "dayjs";
 
 const FestivalDetailPage = () => {
   const { id } = useParams();
@@ -54,7 +61,7 @@ const FestivalDetailPage = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [approvalData, setApprovalData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showIngredientModal, setShowIngredientModal] = useState(false);
   const [showJoinConfirmModal, setShowJoinConfirmModal] = useState(false);
@@ -79,12 +86,12 @@ const FestivalDetailPage = () => {
       setCheckingJoinStatus(true);
       const response = await accountFestivalWalletsServices.get({
         accountId: user.id,
-        festivalId: parseInt(id)
+        festivalId: parseInt(id),
       });
-      
+
       setHasJoinedFestival(response.data && response.data.length > 0);
     } catch (error) {
-      console.error('Error checking join status:', error);
+      console.error("Error checking join status:", error);
       setHasJoinedFestival(false);
     } finally {
       setCheckingJoinStatus(false);
@@ -99,7 +106,7 @@ const FestivalDetailPage = () => {
         festivalServices.get({ festivalId: parseInt(id) }),
         imageServices.get({ festivalId: parseInt(id) }),
         festivalMapServices.get({ festivalId: parseInt(id) }),
-        festivalMenuServices.get({ festivalId: parseInt(id) })
+        festivalMenuServices.get({ festivalId: parseInt(id) }),
       ];
 
       if (hasRole([ROLE_NAME.SCHOOL_MANAGER])) {
@@ -113,7 +120,7 @@ const FestivalDetailPage = () => {
         festivalImagesResponse,
         mapResponse,
         menuResponse,
-        approvalResponse
+        approvalResponse,
       ] = responses;
 
       if (festivalResponse.data && festivalResponse.data.length > 0) {
@@ -128,7 +135,9 @@ const FestivalDetailPage = () => {
         const map = mapResponse.data[0];
         setFestivalMap(map);
 
-        const locationsResponse = await mapLocationServices.get({ mapId: map.mapId });
+        const locationsResponse = await mapLocationServices.get({
+          mapId: map.mapId,
+        });
         setMapLocations(locationsResponse.data || []);
       }
 
@@ -136,7 +145,9 @@ const FestivalDetailPage = () => {
         const menu = menuResponse.data[0];
         setFestivalMenu(menu);
 
-        const itemsResponse = await menuItemServices.get({ menuId: menu.menuId });
+        const itemsResponse = await menuItemServices.get({
+          menuId: menu.menuId,
+        });
         if (itemsResponse.data) {
           setMenuItems(itemsResponse.data);
         }
@@ -147,10 +158,9 @@ const FestivalDetailPage = () => {
           setApprovalData(approvalResponse.data[0]);
         }
       }
-
     } catch (error) {
-      console.error('Error loading festival data:', error);
-      toast.error('Không thể tải thông tin lễ hội');
+      console.error("Error loading festival data:", error);
+      toast.error("Không thể tải thông tin lễ hội");
     } finally {
       setLoading(false);
     }
@@ -160,11 +170,11 @@ const FestivalDetailPage = () => {
     try {
       setIsUpdatingStatus(true);
       await festivalServices.update({ id: parseInt(id), status: newStatus });
-      setFestival(prev => ({ ...prev, status: newStatus }));
-      toast.success('Cập nhật trạng thái lễ hội thành công!');
+      setFestival((prev) => ({ ...prev, status: newStatus }));
+      toast.success("Cập nhật trạng thái lễ hội thành công!");
     } catch (error) {
-      console.error('Error updating festival status:', error);
-      toast.error('Không thể cập nhật trạng thái lễ hội');
+      console.error("Error updating festival status:", error);
+      toast.error("Không thể cập nhật trạng thái lễ hội");
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -173,27 +183,63 @@ const FestivalDetailPage = () => {
   const handleJoinFestival = async () => {
     try {
       setIsJoining(true);
-      
+
+      const now = dayjs().tz("Asia/Ho_Chi_Minh");
+      const start = dayjs
+        .utc(festival.registrationStartDate)
+        .tz("Asia/Ho_Chi_Minh");
+      const end = dayjs
+        .utc(festival.registrationEndDate)
+        .tz("Asia/Ho_Chi_Minh");
+
+      if (!start.isValid() || !end.isValid()) {
+        toast.error(
+          "Khoảng thời gian đăng ký không hợp lệ. Vui lòng liên hệ ban tổ chức."
+        );
+        setIsJoining(false);
+        return;
+      }
+
+      if (now.isBefore(start)) {
+        toast.error(
+          `Hiện tại CHƯA tới ngày được đăng ký tham gia. Vui lòng quay lại từ ${convertToVietnamTimeWithFormat(
+            festival.registrationStartDate
+          )}.`
+        );
+        setIsJoining(false);
+        return;
+      }
+
+      if (now.isAfter(end)) {
+        toast.error(
+          `Thời gian đăng ký đã KẾT THÚC vào ${convertToVietnamTimeWithFormat(
+            festival.registrationEndDate
+          )}.`
+        );
+        setIsJoining(false);
+        return;
+      }
+
       await accountFestivalWalletsServices.create({
         accountId: user.id,
         festivalId: parseInt(id),
         name: `Ví phụ của ${festival.festivalName}`,
-        balance: 0
+        balance: 0,
       });
 
       await accountWalletHistoriesServices.create({
         accountId: user.id,
         description: `Hệ thống đã tạo ví phụ cho lễ hội ${festival.festivalName}`,
         type: HISTORY_TYPE.CREATE_SUB_WALLET,
-        amount: 0
+        amount: 0,
       });
 
-      toast.success('Tham gia lễ hội thành công!');
+      toast.success("Tham gia lễ hội thành công!");
       setShowJoinConfirmModal(false);
       setHasJoinedFestival(true);
     } catch (error) {
-      console.error('Error joining festival:', error);
-      toast.error('Không thể tham gia lễ hội');
+      console.error("Error joining festival:", error);
+      toast.error("Không thể tham gia lễ hội");
     } finally {
       setIsJoining(false);
     }
@@ -207,24 +253,26 @@ const FestivalDetailPage = () => {
     const badges = {
       [FESTIVAL_APPROVAL_STATUS.PENDING]: {
         label: FESTIVAL_APPROVAL_STATUS_LABELS.pending,
-        class: 'bg-yellow-100 text-yellow-800',
-        icon: <AlertCircle size={16} />
+        class: "bg-yellow-100 text-yellow-800",
+        icon: <AlertCircle size={16} />,
       },
       [FESTIVAL_APPROVAL_STATUS.APPROVED]: {
         label: FESTIVAL_APPROVAL_STATUS_LABELS.approved,
-        class: 'bg-green-100 text-green-800',
-        icon: <CheckCircle size={16} />
+        class: "bg-green-100 text-green-800",
+        icon: <CheckCircle size={16} />,
       },
       [FESTIVAL_APPROVAL_STATUS.REJECTED]: {
         label: FESTIVAL_APPROVAL_STATUS_LABELS.rejected,
-        class: 'bg-red-100 text-red-800',
-        icon: <XCircle size={16} />
-      }
+        class: "bg-red-100 text-red-800",
+        icon: <XCircle size={16} />,
+      },
     };
 
     const badge = badges[status] || badges[FESTIVAL_APPROVAL_STATUS.PENDING];
     return (
-      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${badge.class}`}>
+      <span
+        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${badge.class}`}
+      >
         {badge.icon}
         <span className="ml-1">{badge.label}</span>
       </span>
@@ -254,8 +302,10 @@ const FestivalDetailPage = () => {
   if (!festival) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900">Không tìm thấy lễ hội</h2>
-        <Button onClick={() => navigate('/app/festivals')} className="mt-4">
+        <h2 className="text-2xl font-bold text-gray-900">
+          Không tìm thấy lễ hội
+        </h2>
+        <Button onClick={() => navigate("/app/festivals")} className="mt-4">
           Quay lại danh sách
         </Button>
       </div>
@@ -264,16 +314,38 @@ const FestivalDetailPage = () => {
 
   const getStatusBadge = (status) => {
     const badges = {
-      [FESTIVAL_STATUS.DRAFT]: { label: 'Bản nháp', class: 'bg-gray-100 text-gray-800', icon: <Edit size={16} /> },
-      [FESTIVAL_STATUS.PUBLISHED]: { label: 'Đã công bố', class: 'bg-green-100 text-green-800', icon: <CheckCircle size={16} /> },
-      [FESTIVAL_STATUS.ONGOING]: { label: 'Đang diễn ra', class: 'bg-blue-100 text-blue-800', icon: <Clock size={16} /> },
-      [FESTIVAL_STATUS.COMPLETED]: { label: 'Đã kết thúc', class: 'bg-purple-100 text-purple-800', icon: <Trophy size={16} /> },
-      [FESTIVAL_STATUS.CANCELLED]: { label: 'Đã hủy', class: 'bg-red-100 text-red-800', icon: <X size={16} /> }
+      [FESTIVAL_STATUS.DRAFT]: {
+        label: "Bản nháp",
+        class: "bg-gray-100 text-gray-800",
+        icon: <Edit size={16} />,
+      },
+      [FESTIVAL_STATUS.PUBLISHED]: {
+        label: "Đã công bố",
+        class: "bg-green-100 text-green-800",
+        icon: <CheckCircle size={16} />,
+      },
+      [FESTIVAL_STATUS.ONGOING]: {
+        label: "Đang diễn ra",
+        class: "bg-blue-100 text-blue-800",
+        icon: <Clock size={16} />,
+      },
+      [FESTIVAL_STATUS.COMPLETED]: {
+        label: "Đã kết thúc",
+        class: "bg-purple-100 text-purple-800",
+        icon: <Trophy size={16} />,
+      },
+      [FESTIVAL_STATUS.CANCELLED]: {
+        label: "Đã hủy",
+        class: "bg-red-100 text-red-800",
+        icon: <X size={16} />,
+      },
     };
 
     const badge = badges[status] || badges[FESTIVAL_STATUS.DRAFT];
     return (
-      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${badge.class}`}>
+      <span
+        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${badge.class}`}
+      >
         {badge.icon}
         <span className="ml-1">{badge.label}</span>
       </span>
@@ -281,7 +353,11 @@ const FestivalDetailPage = () => {
   };
 
   const getStatusActions = () => {
-    if (hasRole([ROLE_NAME.SCHOOL_MANAGER]) && festival.status === FESTIVAL_STATUS.DRAFT && approvalData?.status === FESTIVAL_APPROVAL_STATUS.APPROVED) {
+    if (
+      hasRole([ROLE_NAME.SCHOOL_MANAGER]) &&
+      festival.status === FESTIVAL_STATUS.DRAFT &&
+      approvalData?.status === FESTIVAL_APPROVAL_STATUS.APPROVED
+    ) {
       return (
         <button
           onClick={() => handleStatusUpdate(FESTIVAL_STATUS.PUBLISHED)}
@@ -298,7 +374,10 @@ const FestivalDetailPage = () => {
       );
     }
 
-    if (hasRole([ROLE_NAME.SCHOOL_MANAGER]) && festival.schoolId === user.schoolId) {
+    if (
+      hasRole([ROLE_NAME.SCHOOL_MANAGER]) &&
+      festival.schoolId === user.schoolId
+    ) {
       if (festival.status === FESTIVAL_STATUS.PUBLISHED) {
         return (
           <div className="flex space-x-2">
@@ -352,10 +431,10 @@ const FestivalDetailPage = () => {
   };
 
   const tabs = [
-    { id: 'overview', label: 'Tổng quan', icon: <Calendar size={16} /> },
-    { id: 'images', label: 'Hình ảnh', icon: <ImageIcon size={16} /> },
-    { id: 'map', label: 'Bản đồ', icon: <MapPin size={16} /> },
-    { id: 'menu', label: 'Thực đơn', icon: <ShoppingCart size={16} /> }
+    { id: "overview", label: "Tổng quan", icon: <Calendar size={16} /> },
+    { id: "images", label: "Hình ảnh", icon: <ImageIcon size={16} /> },
+    { id: "map", label: "Bản đồ", icon: <MapPin size={16} /> },
+    { id: "menu", label: "Thực đơn", icon: <ShoppingCart size={16} /> },
   ];
 
   return (
@@ -364,7 +443,7 @@ const FestivalDetailPage = () => {
         <div className="flex items-center space-x-4">
           <Button
             variant="ghost"
-            onClick={() => navigate('/app/festivals')}
+            onClick={() => navigate("/app/festivals")}
             icon={<ArrowLeft size={20} />}
           >
             Quay lại
@@ -372,48 +451,56 @@ const FestivalDetailPage = () => {
         </div>
 
         <div className="flex items-center space-x-3">
-          {hasRole([ROLE_NAME.SUPPLIER]) && festival.status === FESTIVAL_STATUS.PUBLISHED && (
-            <Button
-              variant="success"
-              icon={<Handshake size={16} />}
-              onClick={() => setShowIngredientModal(true)}
-            >
-              Đăng ký cung cấp nguyên liệu
-            </Button>
-          )}
+          {hasRole([ROLE_NAME.SUPPLIER]) &&
+            festival.status === FESTIVAL_STATUS.PUBLISHED && (
+              <Button
+                variant="success"
+                icon={<Handshake size={16} />}
+                onClick={() => setShowIngredientModal(true)}
+              >
+                Đăng ký cung cấp nguyên liệu
+              </Button>
+            )}
 
           {getStatusActions()}
-          
-          {hasRole([ROLE_NAME.USER, ROLE_NAME.STUDENT]) && !checkingJoinStatus && !hasJoinedFestival && (
-            <Button 
-              variant="primary"
-              icon={<UserPlus size={16} />}
-              onClick={() => setShowJoinConfirmModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Đăng ký tham gia lễ hội
-            </Button>
-          )}
+
+          {hasRole([ROLE_NAME.USER, ROLE_NAME.STUDENT]) &&
+            !checkingJoinStatus &&
+            !hasJoinedFestival && (
+              <Button
+                variant="primary"
+                icon={<UserPlus size={16} />}
+                onClick={() => setShowJoinConfirmModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Đăng ký tham gia lễ hội
+              </Button>
+            )}
 
           <Button variant="outline" icon={<Share2 size={16} />}>
             Chia sẻ
           </Button>
-          
-          {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && festival.organizerSchoolId === user.schoolId && (
-            <Button
-              icon={<Edit size={16} />}
-              onClick={() => navigate(`/app/festivals/${id}/edit`)}
-            >
-              Chỉnh sửa
-            </Button>
-          )}
+
+          {hasRole([ROLE_NAME.SCHOOL_MANAGER]) &&
+            festival.organizerSchoolId === user.schoolId && (
+              <Button
+                icon={<Edit size={16} />}
+                onClick={() => navigate(`/app/festivals/${id}/edit`)}
+              >
+                Chỉnh sửa
+              </Button>
+            )}
         </div>
       </div>
 
       <Card className="overflow-hidden">
         <div className="relative h-64 lg:h-80">
           <img
-            src={festivalImages.length > 0 ? festivalImages[0].imageUrl : '/api/placeholder/800/400'}
+            src={
+              festivalImages.length > 0
+                ? festivalImages[0].imageUrl
+                : "/api/placeholder/800/400"
+            }
             alt={festival.festivalName}
             className="w-full h-full object-cover"
           />
@@ -424,19 +511,24 @@ const FestivalDetailPage = () => {
               <div className="flex items-center space-x-4 text-sm">
                 <span className="flex items-center">
                   <ShoppingCart size={16} className="mr-1" />
-                  {festival.maxFoodBooths + festival.maxBeverageBooths} gian hàng
+                  {festival.maxFoodBooths + festival.maxBeverageBooths} gian
+                  hàng
                 </span>
               </div>
             </div>
             {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && approvalData && (
               <div className="mb-4">
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm opacity-75">Trạng thái phê duyệt:</span>
+                  <span className="text-sm opacity-75">
+                    Trạng thái phê duyệt:
+                  </span>
                   {getApprovalStatusBadge(approvalData.status)}
                 </div>
               </div>
             )}
-            <h1 className="text-3xl lg:text-4xl font-bold mb-2">{festival.festivalName}</h1>
+            <h1 className="text-3xl lg:text-4xl font-bold mb-2">
+              {festival.festivalName}
+            </h1>
             <p className="text-xl opacity-90">{festival.theme}</p>
           </div>
         </div>
@@ -450,10 +542,11 @@ const FestivalDetailPage = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
+                  className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                    activeTab === tab.id
+                      ? "border-blue-500 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
                 >
                   {tab.icon}
                   <span className="ml-2">{tab.label}</span>
@@ -462,10 +555,27 @@ const FestivalDetailPage = () => {
             </nav>
           </div>
 
-          {activeTab === 'overview' && <OverviewTab festival={festival} />}
-          {activeTab === 'images' && <ImagesTab festivalImages={festivalImages} loading={loading} />}
-          {activeTab === 'map' && <MapTab festivalMap={festivalMap} mapLocations={mapLocations} festival={festival} festivalMenu={festivalMenu} menuItems={menuItems} loading={loading} />}
-          {activeTab === 'menu' && <MenuTab festivalMenu={festivalMenu} menuItems={menuItems} loading={loading} />}
+          {activeTab === "overview" && <OverviewTab festival={festival} />}
+          {activeTab === "images" && (
+            <ImagesTab festivalImages={festivalImages} loading={loading} />
+          )}
+          {activeTab === "map" && (
+            <MapTab
+              festivalMap={festivalMap}
+              mapLocations={mapLocations}
+              festival={festival}
+              festivalMenu={festivalMenu}
+              menuItems={menuItems}
+              loading={loading}
+            />
+          )}
+          {activeTab === "menu" && (
+            <MenuTab
+              festivalMenu={festivalMenu}
+              menuItems={menuItems}
+              loading={loading}
+            />
+          )}
         </div>
 
         <div className="space-y-6">
@@ -476,7 +586,9 @@ const FestivalDetailPage = () => {
             <Card.Content>
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Địa điểm</label>
+                  <label className="text-sm font-medium text-gray-500">
+                    Địa điểm
+                  </label>
                   <p className="text-gray-900 flex items-center">
                     <MapPin size={16} className="mr-1 text-gray-400" />
                     {festival.location}
@@ -484,18 +596,24 @@ const FestivalDetailPage = () => {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Thời gian diễn ra</label>
+                  <label className="text-sm font-medium text-gray-500">
+                    Thời gian diễn ra
+                  </label>
                   <div className="text-gray-900">
                     <div className="flex items-center mb-1">
                       <Calendar size={16} className="mr-1 text-gray-400" />
                       <span className="text-sm">Bắt đầu:</span>
                     </div>
-                    <p className="ml-5">{convertToVietnamTimeWithFormat(festival.startDate)}</p>
+                    <p className="ml-5">
+                      {convertToVietnamTimeWithFormat(festival.startDate)}
+                    </p>
                     <div className="flex items-center mb-1 mt-2">
                       <Calendar size={16} className="mr-1 text-gray-400" />
                       <span className="text-sm">Kết thúc:</span>
                     </div>
-                    <p className="ml-5">{convertToVietnamTimeWithFormat(festival.endDate)}</p>
+                    <p className="ml-5">
+                      {convertToVietnamTimeWithFormat(festival.endDate)}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -510,15 +628,23 @@ const FestivalDetailPage = () => {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Gian hàng đồ ăn</span>
-                  <span className="font-semibold">{festival.maxFoodBooths}</span>
+                  <span className="font-semibold">
+                    {festival.maxFoodBooths}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Gian hàng đồ uống</span>
-                  <span className="font-semibold">{festival.maxBeverageBooths}</span>
+                  <span className="font-semibold">
+                    {festival.maxBeverageBooths}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center pt-4 border-t">
-                  <span className="text-gray-600 font-medium">Tổng số gian hàng</span>
-                  <span className="font-bold text-blue-600">{festival.maxFoodBooths + festival.maxBeverageBooths}</span>
+                  <span className="text-gray-600 font-medium">
+                    Tổng số gian hàng
+                  </span>
+                  <span className="font-bold text-blue-600">
+                    {festival.maxFoodBooths + festival.maxBeverageBooths}
+                  </span>
                 </div>
               </div>
             </Card.Content>
@@ -533,7 +659,10 @@ const FestivalDetailPage = () => {
         supplierId={user?.supplierId}
       />
 
-      <Modal isOpen={showJoinConfirmModal} onClose={() => setShowJoinConfirmModal(false)}>
+      <Modal
+        isOpen={showJoinConfirmModal}
+        onClose={() => setShowJoinConfirmModal(false)}
+      >
         <div className="p-6">
           <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-blue-100 rounded-full">
             <UserPlus className="w-6 h-6 text-blue-600" />
@@ -542,7 +671,8 @@ const FestivalDetailPage = () => {
             Xác nhận tham gia lễ hội
           </h3>
           <p className="text-center text-gray-600 mb-6">
-            Bạn có chắc chắn muốn tham gia lễ hội <span className="font-semibold">{festival?.festivalName}</span>?
+            Bạn có chắc chắn muốn tham gia lễ hội{" "}
+            <span className="font-semibold">{festival?.festivalName}</span>?
           </p>
           <div className="flex space-x-3">
             <Button

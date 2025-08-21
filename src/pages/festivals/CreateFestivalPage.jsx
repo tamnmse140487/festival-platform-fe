@@ -1,25 +1,25 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { ArrowLeft, Save } from 'lucide-react';
-import { toast } from 'react-hot-toast';
-import useModal from 'antd/es/modal/useModal';
-import { useAuth } from '../../contexts/AuthContext';
-import { festivalServices } from '../../services/festivalServices';
-import { festivalSchoolServices } from '../../services/festivalSchoolServices';
-import { festivalMapServices } from '../../services/festivalMapServices';
-import { mapLocationServices } from '../../services/mapLocationServices';
-import { festivalMenuServices } from '../../services/festivalMenuServices';
-import { menuItemServices } from '../../services/menuItemServices';
-import { uploadService } from '../../services/uploadServices';
-import Button from '../../components/common/Button';
-import Card from '../../components/common/Card';
-import BasicInfoForm from '../../components/festivals/BasicInfoForm';
-import DateTimeForm from '../../components/festivals/DateTimeForm';
-import BoothConfigForm from '../../components/festivals/BoothConfigForm';
-import FestivalImageUploadForm from '../../components/festivals/FestivalImageUploadForm';
-import MapConfigForm from '../../components/festivals/MapConfigForm';
-import MenuConfigForm from '../../components/festivals/MenuConfigForm';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { ArrowLeft, Save } from "lucide-react";
+import { toast } from "react-hot-toast";
+import useModal from "antd/es/modal/useModal";
+import { useAuth } from "../../contexts/AuthContext";
+import { festivalServices } from "../../services/festivalServices";
+import { festivalSchoolServices } from "../../services/festivalSchoolServices";
+import { festivalMapServices } from "../../services/festivalMapServices";
+import { mapLocationServices } from "../../services/mapLocationServices";
+import { festivalMenuServices } from "../../services/festivalMenuServices";
+import { menuItemServices } from "../../services/menuItemServices";
+import { uploadService } from "../../services/uploadServices";
+import Button from "../../components/common/Button";
+import Card from "../../components/common/Card";
+import BasicInfoForm from "../../components/festivals/BasicInfoForm";
+import DateTimeForm from "../../components/festivals/DateTimeForm";
+import BoothConfigForm from "../../components/festivals/BoothConfigForm";
+import FestivalImageUploadForm from "../../components/festivals/FestivalImageUploadForm";
+import MapConfigForm from "../../components/festivals/MapConfigForm";
+import MenuConfigForm from "../../components/festivals/MenuConfigForm";
 
 const CreateFestivalPage = () => {
   const navigate = useNavigate();
@@ -30,37 +30,44 @@ const CreateFestivalPage = () => {
   const [selectedImages, setSelectedImages] = useState([]);
   const [selectedMapImage, setSelectedMapImage] = useState(null);
   const [previewMapImage, setPreviewMapImage] = useState(null);
-  const [mapLocations, setMapLocations] = useState([
-    { locationName: '', locationType: 'booth', coordinates: '' }
-  ]);
+  const [mapLocations, setMapLocations] = useState([]);
   const [menuItems, setMenuItems] = useState([
     {
-      itemName: '',
-      description: '',
-      itemType: 'food',
+      itemName: "",
+      description: "",
+      itemType: "food",
       minPrice: 0,
-      maxPrice: 0
-    }
+      maxPrice: 0,
+    },
   ]);
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm({
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm({
     defaultValues: {
-      festivalName: '',
-      theme: '',
-      description: '',
-      location: '',
-      startDate: '',
-      endDate: '',
-      registrationStartDate: '',
-      registrationEndDate: '',
-      maxFoodBooths: '',
-      maxBeverageBooths: '',
-      mapName: '',
-      mapType: 'layout',
-      menuName: '',
-      menuDescription: ''
-    }
+      festivalName: "",
+      theme: "",
+      description: "",
+      location: "",
+      startDate: "",
+      endDate: "",
+      registrationStartDate: "",
+      registrationEndDate: "",
+      maxFoodBooths: "",
+      maxBeverageBooths: "",
+      mapName: "",
+      mapType: "layout",
+      menuName: "",
+      menuDescription: "",
+    },
   });
+
+  const totalBooths =
+    (parseInt(watch("maxFoodBooths")) || 0) +
+    (parseInt(watch("maxBeverageBooths")) || 0);
 
   const handleImageChange = (images) => {
     setSelectedImages(images);
@@ -82,11 +89,13 @@ const CreateFestivalPage = () => {
         description: data.description,
         startDate: new Date(data.startDate).toISOString(),
         endDate: new Date(data.endDate).toISOString(),
-        registrationStartDate: new Date(data.registrationStartDate).toISOString(),
+        registrationStartDate: new Date(
+          data.registrationStartDate
+        ).toISOString(),
         registrationEndDate: new Date(data.registrationEndDate).toISOString(),
         location: data.location,
         maxFoodBooths: parseInt(data.maxFoodBooths) || 0,
-        maxBeverageBooths: parseInt(data.maxBeverageBooths) || 0
+        maxBeverageBooths: parseInt(data.maxBeverageBooths) || 0,
       };
 
       const festivalResponse = await festivalServices.create(festivalData);
@@ -99,18 +108,18 @@ const CreateFestivalPage = () => {
       }
       await festivalSchoolServices.create({
         festivalId: festivalId,
-        schoolId: user.schoolId
+        schoolId: user.schoolId,
       });
 
-      let mapUrl = '';
+      let mapUrl = "";
       if (selectedMapImage) {
-        mapUrl = await uploadService.uploadImage(selectedMapImage, 'maps');
+        mapUrl = await uploadService.uploadImage(selectedMapImage, "maps");
       }
       const mapData = {
         festivalId: festivalId,
         mapName: data.mapName,
         mapType: data.mapType,
-        mapUrl: mapUrl
+        mapUrl: mapUrl,
       };
       const mapResponse = await festivalMapServices.create(mapData);
       const mapId = mapResponse.data.mapId;
@@ -122,14 +131,14 @@ const CreateFestivalPage = () => {
             locationName: location.locationName,
             locationType: location.locationType,
             isOccupied: false,
-            coordinates: location.coordinates
+            coordinates: location.coordinates,
           });
         }
       }
       const menuData = {
         festivalId: festivalId,
         menuName: data.menuName,
-        description: data.menuDescription
+        description: data.menuDescription,
       };
       const menuResponse = await festivalMenuServices.create(menuData);
       const menuId = menuResponse.data.menuId;
@@ -142,16 +151,16 @@ const CreateFestivalPage = () => {
             description: item.description,
             itemType: item.itemType,
             minPrice: parseFloat(item.minPrice) || 0,
-            maxPrice: parseFloat(item.maxPrice) || 0
+            maxPrice: parseFloat(item.maxPrice) || 0,
           });
         }
       }
 
-      toast.success('Tạo lễ hội thành công!');
-      navigate('/app/festivals');
+      toast.success("Tạo lễ hội thành công!");
+      navigate("/app/festivals");
     } catch (error) {
-      console.error('Error creating festival:', error);
-      toast.error('Có lỗi xảy ra khi tạo lễ hội');
+      console.error("Error creating festival:", error);
+      toast.error("Có lỗi xảy ra khi tạo lễ hội");
     } finally {
       setIsLoading(false);
     }
@@ -159,10 +168,10 @@ const CreateFestivalPage = () => {
 
   const onSubmit = (data) => {
     modal.confirm({
-      title: 'Xác nhận tạo lễ hội',
-      content: 'Bạn có chắc chắn muốn tạo lễ hội này không?',
-      okText: 'Xác nhận',
-      cancelText: 'Hủy bỏ',
+      title: "Xác nhận tạo lễ hội",
+      content: "Bạn có chắc chắn muốn tạo lễ hội này không?",
+      okText: "Xác nhận",
+      cancelText: "Hủy bỏ",
       onOk: () => processCreateFestival(data),
     });
   };
@@ -174,14 +183,16 @@ const CreateFestivalPage = () => {
         <div className="flex items-center space-x-4">
           <Button
             variant="ghost"
-            onClick={() => navigate('/app/festivals')}
+            onClick={() => navigate("/app/festivals")}
             icon={<ArrowLeft size={20} />}
           >
             Quay lại
           </Button>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Tạo lễ hội mới</h1>
-            <p className="text-gray-600 mt-1">Điền thông tin để tạo lễ hội cho trường của bạn</p>
+            <p className="text-gray-600 mt-1">
+              Điền thông tin để tạo lễ hội cho trường của bạn
+            </p>
           </div>
         </div>
 
@@ -190,7 +201,11 @@ const CreateFestivalPage = () => {
             <div className="lg:col-span-2 space-y-6">
               <BasicInfoForm register={register} errors={errors} />
               <DateTimeForm register={register} errors={errors} watch={watch} />
-              <BoothConfigForm register={register} errors={errors} watch={watch} />
+              <BoothConfigForm
+                register={register}
+                errors={errors}
+                watch={watch}
+              />
               <FestivalImageUploadForm
                 selectedImages={selectedImages}
                 onImageChange={handleImageChange}
@@ -204,6 +219,7 @@ const CreateFestivalPage = () => {
                 selectedMapImage={selectedMapImage}
                 previewMapImage={previewMapImage}
                 onMapImageChange={handleMapImageChange}
+                totalBooths={totalBooths}
               />
               <MenuConfigForm
                 register={register}
@@ -243,7 +259,7 @@ const CreateFestivalPage = () => {
                       type="button"
                       variant="outline"
                       fullWidth
-                      onClick={() => navigate('/app/festivals')}
+                      onClick={() => navigate("/app/festivals")}
                       disabled={isLoading}
                     >
                       Hủy bỏ
@@ -255,16 +271,6 @@ const CreateFestivalPage = () => {
           </div>
         </form>
       </div>
-
-      {/* {isLoading && (
-        <div className="mt-0-important fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 flex flex-col items-center space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p className="text-lg font-medium text-gray-900">Dữ liệu đang được xử lý</p>
-            <p className="text-sm text-gray-600">Vui lòng chờ trong giây lát</p>
-          </div>
-        </div>
-      )} */}
     </>
   );
 };

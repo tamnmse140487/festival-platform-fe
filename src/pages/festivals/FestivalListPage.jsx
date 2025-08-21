@@ -466,7 +466,7 @@ const FestivalCard = ({ festival, user, hasRole, onDelete, formatDate, getStatus
           {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && (
             <>
             {/* tạm thời ẩn */}
-              {/* <Link
+              <Link
                 to={`/app/festivals/${festival.festivalId}/edit`}
                 className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
@@ -477,7 +477,7 @@ const FestivalCard = ({ festival, user, hasRole, onDelete, formatDate, getStatus
                 className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
               >
                 <Trash2 size={16} />
-              </button> */}
+              </button>
             </>
           )}
         </div>

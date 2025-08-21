@@ -12,10 +12,9 @@ const ImportListAccountsModal = ({ onClose, onSubmit, schoolId }) => {
             return
         }
 
-        // Kiểm tra định dạng file
         const allowedTypes = [
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
-            'application/vnd.ms-excel' // .xls
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
+            'application/vnd.ms-excel' 
         ]
         
         if (!allowedTypes.includes(file.type)) {
@@ -23,8 +22,7 @@ const ImportListAccountsModal = ({ onClose, onSubmit, schoolId }) => {
             return
         }
 
-        // Kiểm tra kích thước file (tối đa 10MB)
-        const maxSize = 10 * 1024 * 1024 // 10MB
+        const maxSize = 10 * 1024 * 1024 
         if (file.size > maxSize) {
             toast.error('File quá lớn. Kích thước tối đa là 10MB')
             return
@@ -35,7 +33,6 @@ const ImportListAccountsModal = ({ onClose, onSubmit, schoolId }) => {
 
     const handleRemoveFile = () => {
         setSelectedFile(null)
-        // Reset input file
         document.getElementById('excel-file-input').value = ''
     }
 
@@ -53,7 +50,6 @@ const ImportListAccountsModal = ({ onClose, onSubmit, schoolId }) => {
         setUploading(true)
 
         try {
-            // Tạo FormData để gửi multipart/form-data
             const formData = new FormData()
             formData.append('ExcelFile', selectedFile)
             formData.append('SchoolId', schoolId)

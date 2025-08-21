@@ -230,7 +230,8 @@ const BoothRegistrationModal = ({ isOpen, onClose, mapLocations = [], festivalId
             onClose();
         } catch (error) {
             console.error('Error registering booth:', error);
-            toast.error('Không thể đăng ký gian hàng');
+            // toast.error('Không thể đăng ký gian hàng');
+            toast.error(error?.response?.data?.detail ||error?.response?.data?.message || "Không thể đăng ký gian hàng" );
         } finally {
             setLoading(false);
         }

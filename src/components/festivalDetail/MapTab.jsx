@@ -1,38 +1,59 @@
-import React, { useState } from 'react';
-import { MapPin, Store } from 'lucide-react';
-import Card from '../common/Card';
-import { FESTIVAL_STATUS, ROLE_NAME } from '../../utils/constants';
-import BoothRegistrationModal from '../booths/BoothRegistrationModal';
-import { useAuth } from '../../contexts/AuthContext';
-import Button from '../common/Button';
-import { convertToVietnamTimeWithFormat } from '../../utils/formatters';
+import React, { useState } from "react";
+import { MapPin, Store } from "lucide-react";
+import Card from "../common/Card";
+import { FESTIVAL_STATUS, ROLE_NAME } from "../../utils/constants";
+import BoothRegistrationModal from "../booths/BoothRegistrationModal";
+import { useAuth } from "../../contexts/AuthContext";
+import Button from "../common/Button";
+import { convertToVietnamTimeWithFormat } from "../../utils/formatters";
+import dayjs from "dayjs";
 
-const MapTab = ({ festivalMap, mapLocations, festival, loading, menuItems = [] }) => {
-
+const MapTab = ({
+  festivalMap,
+  mapLocations,
+  festival,
+  loading,
+  menuItems = [],
+}) => {
   const { user, hasRole } = useAuth();
   const [showRegisterBoothModal, setShowRegisterBoothModal] = useState(false);
-  const [registrationMessage, setRegistrationMessage] = useState('');
+  const [registrationMessage, setRegistrationMessage] = useState("");
 
   const handleRegisterBoothModalClose = () => {
     setShowRegisterBoothModal(false);
   };
 
   const handleRegisterBoothClick = () => {
-    // const now = Date.now();
-    // const registrationStart = new Date(festival.registrationStartDate).getTime();
-    // const registrationEnd = new Date(festival.registrationEndDate).getTime();
+    const now = dayjs().tz("Asia/Ho_Chi_Minh");
+    const start = dayjs
+      .utc(festival.registrationStartDate)
+      .tz("Asia/Ho_Chi_Minh");
+    const end = dayjs.utc(festival.registrationEndDate).tz("Asia/Ho_Chi_Minh");
 
-    // if (now < registrationStart) {
-    //   setRegistrationMessage(`Chưa tới thời gian đăng ký. Thời gian đăng ký: ${convertToVietnamTimeWithFormat(festival.registrationStartDate)} - ${convertToVietnamTimeWithFormat(festival.registrationEndDate)}`);
-    //   return;
-    // }
+    if (!start.isValid() || !end.isValid()) {
+      setRegistrationMessage("Thời gian đăng ký không hợp lệ.");
+      return;
+    }
 
-    // if (now > registrationEnd) {
-    //   setRegistrationMessage(`Đã hết thời gian đăng ký. Thời gian đăng ký: ${convertToVietnamTimeWithFormat(festival.registrationStartDate)} - ${convertToVietnamTimeWithFormat(festival.registrationEndDate)}`);
-    //   return;
-    // }
+    if (now.isBefore(start)) {
+      setRegistrationMessage(
+        `Chưa tới thời gian đăng ký. Thời gian đăng ký từ ${convertToVietnamTimeWithFormat(
+          festival.registrationStartDate
+        )} đến ${convertToVietnamTimeWithFormat(festival.registrationEndDate)}`
+      );
+      return;
+    }
 
-    setRegistrationMessage('');
+    if (now.isAfter(end)) {
+      setRegistrationMessage(
+        `Đã hết thời gian đăng ký. Thời gian đăng ký từ ${convertToVietnamTimeWithFormat(
+          festival.registrationStartDate
+        )} đến ${convertToVietnamTimeWithFormat(festival.registrationEndDate)}`
+      );
+      return;
+    }
+
+    setRegistrationMessage("");
     setShowRegisterBoothModal(true);
   };
 
@@ -74,16 +95,17 @@ const MapTab = ({ festivalMap, mapLocations, festival, loading, menuItems = [] }
           <Card>
             <Card.Header>
               <Card.Title>Vị trí trên bản đồ</Card.Title>
-              <div className='relative'>
-                {hasRole([ROLE_NAME.STUDENT]) && festival?.status === FESTIVAL_STATUS.PUBLISHED && (
-                  <Button
-                    icon={<Store size={16} />}
-                    onClick={handleRegisterBoothClick}
-                    className='absolute right-0 -top-8'
-                  >
-                    Đăng ký gian hàng
-                  </Button>
-                )}
+              <div className="relative">
+                {hasRole([ROLE_NAME.STUDENT]) &&
+                  festival?.status === FESTIVAL_STATUS.PUBLISHED && (
+                    <Button
+                      icon={<Store size={16} />}
+                      onClick={handleRegisterBoothClick}
+                      className="absolute right-0 -top-8"
+                    >
+                      Đăng ký gian hàng
+                    </Button>
+                  )}
               </div>
             </Card.Header>
             <Card.Content>
@@ -95,24 +117,36 @@ const MapTab = ({ festivalMap, mapLocations, festival, loading, menuItems = [] }
               {mapLocations.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {mapLocations.map((location) => (
-                    <div key={location.locationId || location.id} className="p-4 border border-gray-200 rounded-lg">
+                    <div
+                      key={location.locationId || location.id}
+                      className="p-4 border border-gray-200 rounded-lg"
+                    >
                       <h4 className="font-medium text-gray-900">
                         {location.coordinates && `${location.coordinates} - `}
                         {location.locationName}
                       </h4>
-                      <p className="text-sm text-gray-600">Loại: {location.locationType}</p>
+                      <p className="text-sm text-gray-600">
+                        Loại: {location.locationType}
+                      </p>
 
-                      <span className={`inline-block mt-2 px-2 py-1 rounded-full text-xs ${location.isOccupied
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-green-100 text-green-800'
-                        }`}>
-                        {location.isOccupied ? 'Đã có nhóm đăng ký' : 'Còn trống'}
+                      <span
+                        className={`inline-block mt-2 px-2 py-1 rounded-full text-xs ${
+                          location.isOccupied
+                            ? "bg-red-100 text-red-800"
+                            : "bg-green-100 text-green-800"
+                        }`}
+                      >
+                        {location.isOccupied
+                          ? "Đã có nhóm đăng ký"
+                          : "Còn trống"}
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-600">Chưa có vị trí nào được thiết lập.</p>
+                <p className="text-gray-600">
+                  Chưa có vị trí nào được thiết lập.
+                </p>
               )}
             </Card.Content>
           </Card>
@@ -122,8 +156,12 @@ const MapTab = ({ festivalMap, mapLocations, festival, loading, menuItems = [] }
           <Card.Content>
             <div className="text-center py-8">
               <MapPin className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có bản đồ</h3>
-              <p className="text-gray-600">Bản đồ lễ hội chưa được thiết lập.</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Chưa có bản đồ
+              </h3>
+              <p className="text-gray-600">
+                Bản đồ lễ hội chưa được thiết lập.
+              </p>
             </div>
           </Card.Content>
         </Card>

@@ -33,16 +33,22 @@ const OrdersManagement = ({ boothId }) => {
         const cancel = urlParams.get('cancel')
         const status = urlParams.get('status')
         const orderCode = urlParams.get('orderCode')
-        
+
         if (cancel === 'true' && status === 'CANCELLED' && orderCode) {
             try {
-                await ordersServices.update({ 
-                    orderId: orderCode, 
-                    status: ORDER_STATUS.CANCELLED 
-                })
-                window.history.replaceState({}, document.title, window.location.pathname)
+                const orderResponse = await ordersServices.get({ orderId: orderCode })
+
+                if (orderResponse && orderResponse.data.length > 0 && orderResponse.data[0].status === ORDER_STATUS.PENDING) {
+                    await ordersServices.update({
+                        orderId: orderCode,
+                        status: ORDER_STATUS.CANCELLED
+                    })
+                    window.history.replaceState({}, document.title, window.location.pathname)
+                } else {
+                    console.log('Order is not in PENDING status, skip updating')
+                }
             } catch (error) {
-                console.error('Error updating order:', error)
+                console.error('Error handling order:', error)
             }
         }
     }
@@ -50,10 +56,10 @@ const OrdersManagement = ({ boothId }) => {
     const fetchOrders = async (page = 1, pageSize = 10) => {
         setLoading(true)
         try {
-            const ordersResponse = await ordersServices.get({ 
-                boothId, 
+            const ordersResponse = await ordersServices.get({
+                boothId,
                 page: page,
-                pageSize: pageSize 
+                pageSize: pageSize
             })
             const ordersData = ordersResponse.data || []
             const totalCount = ordersResponse.totalCount || 0
@@ -163,7 +169,7 @@ const OrdersManagement = ({ boothId }) => {
                 fetchBoothInfo()
             }
         }
-        
+
         initializeComponent()
     }, [boothId])
 
@@ -193,7 +199,7 @@ const OrdersManagement = ({ boothId }) => {
                 )}
             </div>
 
-            <OrdersTable 
+            <OrdersTable
                 orders={orders}
                 loading={loading}
                 pagination={pagination}
