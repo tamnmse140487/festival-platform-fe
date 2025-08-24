@@ -27,7 +27,7 @@ const SchoolDetailModal = ({ school, onClose, onSchoolUpdated }) => {
         }
       } catch (error) {
         console.error('Lỗi khi lấy thông tin tài khoản:', error);
-        toast.error(error?.response?.data);
+        toast.error(error?.response?.data?.message);
       } finally {
         setIsLoadingAccount(false);
       }

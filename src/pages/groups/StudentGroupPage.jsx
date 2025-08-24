@@ -1,152 +1,198 @@
-import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Plus, Search, Users, DollarSign, Calendar, Eye, Edit, Filter, CheckCircle, Clock } from 'lucide-react'
-import { toast } from 'react-hot-toast'
-import { useAuth } from '../../contexts/AuthContext'
-import { studentGroupServices } from '../../services/studentGroupServices'
-import { groupMemberServices } from '../../services/groupMemberServices'
-import { schoolAccountRelationServices } from '../../services/schoolAccountRelationServices'
-import { GROUP_ROLE, ROLE_NAME } from '../../utils/constants'
-import Button from '../../components/common/Button'
-import Input from '../../components/common/Input'
-import Card from '../../components/common/Card'
-import Modal from '../../components/common/Modal'
-import CreateGroupModal from '../../components/groups/CreateGroupModal'
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Plus,
+  Search,
+  Users,
+  DollarSign,
+  Calendar,
+  Eye,
+  Edit,
+  Filter,
+  CheckCircle,
+  Clock,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
+import { useAuth } from "../../contexts/AuthContext";
+import { studentGroupServices } from "../../services/studentGroupServices";
+import { groupMemberServices } from "../../services/groupMemberServices";
+import { schoolAccountRelationServices } from "../../services/schoolAccountRelationServices";
+import { GROUP_ROLE, ROLE_NAME } from "../../utils/constants";
+import Button from "../../components/common/Button";
+import Input from "../../components/common/Input";
+import Card from "../../components/common/Card";
+import Modal from "../../components/common/Modal";
+import CreateGroupModal from "../../components/groups/CreateGroupModal";
+import { accountServices } from "../../services/accountServices";
 
 const StudentGroupPage = () => {
-  const { user, hasRole } = useAuth()
-  const navigate = useNavigate()
-  const [groups, setGroups] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [showCreateModal, setShowCreateModal] = useState(false)
+  const { user, hasRole } = useAuth();
+  const navigate = useNavigate();
+  const [groups, setGroups] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const [prefillClassName, setPrefillClassName] = useState("");
+  const [loadingClassName, setLoadingClassName] = useState(false);
+
+  const openCreateGroupModal = async () => {
+    if (!user?.id) return setShowCreateModal(true);
+    try {
+      setLoadingClassName(true);
+      const res = await accountServices.get({ id: user.id });
+      const cls = res?.data?.[0]?.className || "";
+      setPrefillClassName(cls);
+    } catch (e) {
+      console.error("Không lấy được className của tài khoản:", e);
+      toast.error("Không lấy được thông tin lớp học của bạn");
+      setPrefillClassName("");
+    } finally {
+      setLoadingClassName(false);
+      setShowCreateModal(true);
+    }
+  };
 
   const fetchGroups = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      let groupsData = []
+      let groupsData = [];
 
       if (user?.role === ROLE_NAME.SCHOOL_MANAGER) {
         const groupResponses = await studentGroupServices.get({
-          schoolId: user?.schoolId
-        })
+          schoolId: user?.schoolId,
+        });
 
-        groupsData = groupResponses.data || []
+        groupsData = groupResponses.data || [];
       } else {
         const memberResponse = await groupMemberServices.get({
-          accountId: user?.id
-        })
+          accountId: user?.id,
+        });
 
-        const groupIds = memberResponse.data || []
+        const groupIds = memberResponse.data || [];
 
         if (groupIds.length === 0) {
-          setGroups([])
-          return
+          setGroups([]);
+          return;
         }
 
         const groupPromises = groupIds.map(async (member) => {
           try {
             const response = await studentGroupServices.get({
               groupId: member.groupId,
-            })
-            return response.data
+            });
+            return response.data;
           } catch (error) {
-            console.error(`Error fetching group ${member.groupId}:`, error)
-            return null
+            console.error(`Error fetching group ${member.groupId}:`, error);
+            return null;
           }
-        })
+        });
 
-        const groupResponses = await Promise.all(groupPromises)
+        const groupResponses = await Promise.all(groupPromises);
 
         groupsData = groupResponses
-          .filter(group => group !== null)
-          .flatMap(group => {
-            return Array.isArray(group) ? group : [group]
-          })
-
+          .filter((group) => group !== null)
+          .flatMap((group) => {
+            return Array.isArray(group) ? group : [group];
+          });
       }
 
-      setGroups(groupsData)
-
+      setGroups(groupsData);
     } catch (error) {
-      toast.error('Không thể tải danh sách nhóm')
-      console.error('Error fetching groups:', error)
-      setGroups([])
+      toast.error("Không thể tải danh sách nhóm");
+      console.error("Error fetching groups:", error);
+      setGroups([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleCreateGroup = async (groupData) => {
     try {
       const relationResponse = await schoolAccountRelationServices.get({
-        accountId: user?.id
-      })
+        accountId: user?.id,
+      });
 
       if (!relationResponse.data || relationResponse.data.length === 0) {
-        toast.error('Không tìm thấy thông tin trường học')
-        return
+        toast.error("Không tìm thấy thông tin trường học");
+        return;
       }
 
-      const schoolId = relationResponse.data[0].schoolId
+      const schoolId = relationResponse.data[0].schoolId;
 
       const groupResponse = await studentGroupServices.create({
         schoolId: schoolId,
         accountId: user?.id,
-        ...groupData
-      })
+        ...groupData,
+      });
 
       if (groupResponse.data?.groupId) {
         await groupMemberServices.create({
           groupId: groupResponse.data.groupId,
           accountId: user?.id,
-          role: GROUP_ROLE.LEADER
-        })
+          role: GROUP_ROLE.LEADER,
+        });
       }
 
-      toast.success('Tạo nhóm thành công')
-      setShowCreateModal(false)
-      fetchGroups()
+      toast.success("Tạo nhóm thành công");
+      setShowCreateModal(false);
+      fetchGroups();
     } catch (error) {
-      toast.error('Tạo nhóm thất bại')
-      console.error('Error creating group:', error)
+      toast.error("Tạo nhóm thất bại");
+      console.error("Error creating group:", error);
     }
-  }
+  };
 
   const handleViewDetails = (group) => {
-    navigate(`/app/groups/${group.groupId}`)
-  }
+    navigate(`/app/groups/${group.groupId}`);
+  };
 
-  const filteredGroups = groups.filter(group => {
-    const matchesSearch = group.groupName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      group.className?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === 'all' || group.status === statusFilter
-    return matchesSearch && matchesStatus
-  })
+  const filteredGroups = groups.filter((group) => {
+    const matchesSearch =
+      group.groupName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      group.className?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || group.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   useEffect(() => {
     if (user?.id) {
-      fetchGroups()
+      fetchGroups();
     }
-  }, [user?.id])
+  }, [user?.id]);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Quản lý Nhóm học sinh</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Quản lý Nhóm học sinh
+          </h1>
           <p className="text-gray-600 mt-1">
-            Quản lý {user?.role === ROLE_NAME.SCHOOL_MANAGER ? 'tất cả nhóm học sinh' : 'nhóm của bạn'} tại trường học.
+            Quản lý{" "}
+            {user?.role === ROLE_NAME.SCHOOL_MANAGER
+              ? "tất cả nhóm học sinh"
+              : "nhóm của bạn"}{" "}
+            tại trường học.
           </p>
         </div>
 
         {hasRole([ROLE_NAME.STUDENT]) && (
           <Button
-            icon={<Plus size={20} />}
-            onClick={() => setShowCreateModal(true)}
+            icon={!loadingClassName && <Plus size={20} />}
+            onClick={openCreateGroupModal}
+            disabled={loadingClassName}
           >
-            Tạo nhóm mới
+            {loadingClassName ? (
+              <div className="flex items-center space-x-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Đang tải...</span>
+              </div>
+            ) : (
+              "Tạo nhóm mới"
+            )}
           </Button>
         )}
       </div>
@@ -187,26 +233,35 @@ const StudentGroupPage = () => {
           ) : filteredGroups.length === 0 ? (
             <div className="text-center py-12">
               <Users className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Không tìm thấy nhóm nào</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Không tìm thấy nhóm nào
+              </h3>
               <p className="text-gray-600 mb-6">
-                {searchTerm || statusFilter !== 'all'
-                  ? 'Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.'
-                  : 'Chưa có nhóm học sinh nào được tạo.'
-                }
+                {searchTerm || statusFilter !== "all"
+                  ? "Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm."
+                  : "Chưa có nhóm học sinh nào được tạo."}
               </p>
 
               {hasRole([ROLE_NAME.STUDENT]) && (
                 <Button
-                  onClick={() => setShowCreateModal(true)}
-                  icon={<Plus size={16} />}
+                  icon={!loadingClassName && <Plus size={20} />}
+                  onClick={openCreateGroupModal}
+                  disabled={loadingClassName}
                 >
-                  Tạo nhóm đầu tiên
+                  {loadingClassName ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Đang tải...</span>
+                    </div>
+                  ) : (
+                    "Tạo nhóm đầu tiên"
+                  )}
                 </Button>
               )}
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredGroups.map(group => (
+              {filteredGroups.map((group) => (
                 <GroupCard
                   key={group.groupId}
                   group={group}
@@ -227,15 +282,17 @@ const StudentGroupPage = () => {
         <CreateGroupModal
           onClose={() => setShowCreateModal(false)}
           onSubmit={handleCreateGroup}
+          defaultClassName={prefillClassName}
+          lockClassName={!!prefillClassName}
         />
       </Modal>
     </div>
-  )
-}
+  );
+};
 
 const GroupCard = ({ group, onViewDetails }) => {
   const getStatusBadge = (status) => {
-    return status === 'active' ? (
+    return status === "active" ? (
       <div className="flex items-center space-x-1">
         <CheckCircle size={14} className="text-green-600" />
         <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
@@ -249,16 +306,16 @@ const GroupCard = ({ group, onViewDetails }) => {
           Tạm dừng
         </span>
       </div>
-    )
-  }
+    );
+  };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    })
-  }
+    return new Date(dateString).toLocaleDateString("vi-VN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  };
 
   return (
     <Card hover className="h-full transition-all duration-200 hover:shadow-lg">
@@ -278,7 +335,9 @@ const GroupCard = ({ group, onViewDetails }) => {
               </div>
 
               <div className="space-y-1 text-sm text-gray-600">
-                <p><span className="font-medium">Lớp:</span> {group.className}</p>
+                <p>
+                  <span className="font-medium">Lớp:</span> {group.className}
+                </p>
                 <div className="flex items-center space-x-1">
                   <Calendar size={14} />
                   <span>Tạo: {formatDate(group.creationDate)}</span>
@@ -295,7 +354,9 @@ const GroupCard = ({ group, onViewDetails }) => {
                 <div className="p-1 bg-blue-200 rounded">
                   <DollarSign size={14} className="text-blue-700" />
                 </div>
-                <span className="text-xs font-medium text-blue-800">Ngân sách</span>
+                <span className="text-xs font-medium text-blue-800">
+                  Ngân sách
+                </span>
               </div>
               <div className="text-right">
                 <div className="text-lg font-bold text-blue-700">
@@ -318,7 +379,7 @@ const GroupCard = ({ group, onViewDetails }) => {
         </Button>
       </Card.Content>
     </Card>
-  )
-}
+  );
+};
 
-export default StudentGroupPage
+export default StudentGroupPage;

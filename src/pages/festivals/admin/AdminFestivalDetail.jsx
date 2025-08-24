@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, MapPin, Users, Phone, Mail, Globe, Info, Map, UtensilsCrossed, Store, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Users, Phone, Mail, Globe, Info, Map, UtensilsCrossed, Store, CheckCircle, DollarSign } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { festivalServices } from '../../../services/festivalServices';
 import { festivalSchoolServices } from '../../../services/festivalSchoolServices';
 import { imageServices } from '../../../services/imageServices';
+import { FESTIVAL_STATUS } from '../../../utils/constants';
 
 import AdminOverviewTab from '../../../components/festivals/admin/AdminOverviewTab';
 import AdminMapTab from '../../../components/festivals/admin/AdminMapTab';
 import AdminMenuTab from '../../../components/festivals/admin/AdminMenuTab';
 import AdminBoothsTab from '../../../components/festivals/admin/AdminBoothsTab';
 import AdminApprovalTab from '../../../components/festivals/admin/AdminApprovalTab';
+import AdminRevenueTab from '../../../components/festivals/admin/AdminRevenueTab';
 
-const AdminFestivalDetail = () => {
+const AdminFestivalDetail = ({ user }) => {
     const { id } = useParams();
     const [festival, setFestival] = useState(null);
     const [festivalSchool, setFestivalSchool] = useState(null);
@@ -57,38 +59,53 @@ const AdminFestivalDetail = () => {
         }));
     };
 
-    const tabs = [
-        {
-            id: 'approval',
-            name: 'Kiểm duyệt',
-            icon: CheckCircle,
-            component: AdminApprovalTab
-        },
-        {
-            id: 'overview',
-            name: 'Tổng quan',
-            icon: Info,
-            component: AdminOverviewTab
-        },
-        {
-            id: 'map',
-            name: 'Bản đồ',
-            icon: Map,
-            component: AdminMapTab
-        },
-        {
-            id: 'menu',
-            name: 'Thực đơn',
-            icon: UtensilsCrossed,
-            component: AdminMenuTab
-        },
-        {
-            id: 'booths',
-            name: 'Các gian hàng',
-            icon: Store,
-            component: AdminBoothsTab
+    const getTabsConfig = () => {
+        const baseTabs = [
+            {
+                id: 'approval',
+                name: 'Kiểm duyệt',
+                icon: CheckCircle,
+                component: AdminApprovalTab
+            },
+            {
+                id: 'overview',
+                name: 'Tổng quan',
+                icon: Info,
+                component: AdminOverviewTab
+            },
+            {
+                id: 'map',
+                name: 'Bản đồ',
+                icon: Map,
+                component: AdminMapTab
+            },
+            {
+                id: 'menu',
+                name: 'Thực đơn',
+                icon: UtensilsCrossed,
+                component: AdminMenuTab
+            },
+            {
+                id: 'booths',
+                name: 'Các gian hàng',
+                icon: Store,
+                component: AdminBoothsTab
+            }
+        ];
+
+        if (festival && festival.status === FESTIVAL_STATUS.COMPLETED) {
+            baseTabs.push({
+                id: 'revenue',
+                name: 'Tổng kết doanh thu',
+                icon: DollarSign,
+                component: AdminRevenueTab
+            });
         }
-    ];
+
+        return baseTabs;
+    };
+
+    const tabs = getTabsConfig();
 
     const getApprovalStatusBadge = (status) => {
         const badges = {
@@ -152,6 +169,11 @@ const AdminFestivalDetail = () => {
                     <div className="flex items-center space-x-3 mb-2">
                         <h1 className="text-3xl font-bold text-gray-900">{festival.festivalName}</h1>
                         {festivalSchool && getApprovalStatusBadge(festivalSchool.status)}
+                        {festival.status === FESTIVAL_STATUS.COMPLETED && (
+                            <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                Đã hoàn thành
+                            </span>
+                        )}
                     </div>
                     <p className="text-gray-600">{festival.theme}</p>
                 </div>
@@ -199,14 +221,14 @@ const AdminFestivalDetail = () => {
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div className="border-b border-gray-200">
-                    <nav className="flex space-x-8 px-6" aria-label="Tabs">
+                    <nav className="flex space-x-8 px-6 overflow-x-auto" aria-label="Tabs">
                         {tabs.map((tab) => {
                             const Icon = tab.icon;
                             return (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors ${activeTab === tab.id
+                                    className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors whitespace-nowrap ${activeTab === tab.id
                                         ? 'border-blue-500 text-blue-600'
                                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                         }`}
@@ -225,6 +247,7 @@ const AdminFestivalDetail = () => {
                             festival={festival}
                             festivalSchool={festivalSchool}
                             onStatusUpdate={updateFestivalSchoolStatus}
+                            user={user}
                         />
                     )}
                 </div>

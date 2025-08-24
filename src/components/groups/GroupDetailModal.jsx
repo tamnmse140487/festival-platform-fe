@@ -9,7 +9,7 @@ import Button from '../common/Button'
 import MemberList from './MemberList'
 import AddMemberModal from './AddMemberModal'
 import InviteTeacherModal from './InviteTeacherModal'
-//các tabs
+
 import GroupInfo from '../groupDetail/GroupInfo'
 import GroupBudget from '../groupDetail/GroupBudget'
 import BoothInfo from '../groupDetail/BoothInfo'

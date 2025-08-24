@@ -116,7 +116,7 @@ const RegisterPage = () => {
       }
     } catch (error) {
       console.error('Registration error:', error);
-      toast.error(error?.response?.data)
+      toast.error(error?.response?.data?.message)
       toast.error('Có lỗi xảy ra. Vui lòng thử lại.');
     } finally {
       setIsLoading(false);

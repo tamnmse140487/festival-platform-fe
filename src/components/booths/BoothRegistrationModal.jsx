@@ -5,13 +5,14 @@ import { useAuth } from '../../contexts/AuthContext';
 import { boothServices } from '../../services/boothServices';
 import { boothMenuItemServices } from '../../services/boothMenuItemServices';
 import { studentGroupServices } from '../../services/studentGroupServices';
-import { uploadService } from '../../services/uploadServices'; 
+import { boothWalletServices } from '../../services/boothWalletServices';
+import { uploadService } from '../../services/uploadServices';
 import { ImageIcon, UploadIcon } from 'lucide-react';
 
 const { Option } = Select;
 const { TextArea } = Input;
 
-const BoothRegistrationModal = ({ isOpen, onClose, mapLocations = [], festivalId, menuItems = [] }) => {
+const BoothRegistrationModal = ({ isOpen, onClose, mapLocations = [], festivalId, festivalInfo, menuItems = [] }) => {
     const { user } = useAuth();
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
@@ -126,7 +127,7 @@ const BoothRegistrationModal = ({ isOpen, onClose, mapLocations = [], festivalId
             toast.error('Ảnh phải nhỏ hơn 5MB!');
             return false;
         }
-        return false; 
+        return false;
     };
 
     const handleFormSubmit = (values) => {
@@ -205,7 +206,7 @@ const BoothRegistrationModal = ({ isOpen, onClose, mapLocations = [], festivalId
                     const boothMenuItemId = response.data.boothMenuItemId;
 
                     try {
-                        await uploadService.uploadBoothImage(file, boothMenuItemId);
+                        await uploadService.uploadBoothMenuItemImage(file, boothMenuItemId);
                     } catch (uploadError) {
                         console.error(`Error uploading image for item ${menuItemId}:`, uploadError);
                         toast.warning(`Không thể upload ảnh cho món ${menuItems.find(m => m.itemId === menuItemId)?.itemName}`);
@@ -214,6 +215,10 @@ const BoothRegistrationModal = ({ isOpen, onClose, mapLocations = [], festivalId
             });
 
             await Promise.all(imageUploadPromises);
+
+            await boothWalletServices.create({
+                boothId: boothId
+            })
 
             toast.success('Đăng ký gian hàng thành công! Vui lòng chờ giáo viên duyệt');
             form.resetFields();
@@ -225,7 +230,8 @@ const BoothRegistrationModal = ({ isOpen, onClose, mapLocations = [], festivalId
             onClose();
         } catch (error) {
             console.error('Error registering booth:', error);
-            toast.error('Không thể đăng ký gian hàng');
+            // toast.error('Không thể đăng ký gian hàng');
+            toast.error(error?.response?.data?.detail ||error?.response?.data?.message || "Không thể đăng ký gian hàng" );
         } finally {
             setLoading(false);
         }

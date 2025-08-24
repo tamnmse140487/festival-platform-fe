@@ -65,7 +65,6 @@ export const PAYMENT_METHOD = {
 };
 
 export const PAYMENT_METHOD_LABELS = {
-  [PAYMENT_METHOD.WALLET]: "Ví điện tử",
   [PAYMENT_METHOD.ACCOUNT_POINTS]: "Điểm tích lũy",
   [PAYMENT_METHOD.CASH]: "Tiền mặt",
   [PAYMENT_METHOD.BANK]: "Chuyển khoản",
@@ -75,6 +74,16 @@ export const PAYMENT_TYPE = {
   TOPUP: "topup",
   REFUND: "refund",
   ORDER: "order",
+};
+
+export const HISTORY_TYPE = {
+  TOPUP: "topup",
+  REFUND: "refund",
+  CREATE_SUB_WALLET: "create_sub_wallet",
+  TRANSFER: "transfer",
+  RETURN_TRANSFER: "return_transfer",
+  PAYMENT: "payment",
+  COMMISSION: "commission",
 };
 
 export const GROUP_ROLE = {

@@ -134,7 +134,7 @@ const AccountManagementPage = () => {
             fetchAccounts()
         } catch (error) {
             toast.error('Tạo tài khoản thất bại')
-            toast.error(error?.response?.data)
+            toast.error(error?.response?.data?.message)
             console.error('Error creating account:', error)
         }
     }
@@ -161,7 +161,6 @@ const AccountManagementPage = () => {
         } catch (error) {
             console.error('Error importing accounts:', error)
             
-            // Xử lý các loại lỗi khác nhau
             if (error.response?.status === 400) {
                 const errorMessage = error.response?.data?.message || error.response?.data || 'Dữ liệu file không hợp lệ'
                 toast.error(`Lỗi: ${errorMessage}`)

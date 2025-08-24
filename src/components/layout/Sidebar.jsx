@@ -39,27 +39,27 @@ const Sidebar = ({ isOpen, onClose }) => {
       path: '/app/festivals',
       roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.STUDENT, ROLE_NAME.SUPPLIER, ROLE_NAME.TEACHER, ROLE_NAME.USER]
     },
-    {
-      id: 'suppliers',
-      label: 'Nhà cung cấp',
-      icon: Store,
-      path: '/app/suppliers',
-      roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER]
-    },
-    {
-      id: 'ingredients',
-      label: 'Quản lý nguyên liệu',
-      icon: ChefHat,
-      path: '/app/ingredients',
-      roles: [ROLE_NAME.SUPPLIER, ROLE_NAME.ADMIN]
-    },
-    {
-      id: 'supplies',
-      label: 'Quản lý cung cấp',
-      icon: Handshake,
-      path: '/app/supplies',
-      roles: [ROLE_NAME.SUPPLIER, ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER]
-    },
+    // {
+    //   id: 'suppliers',
+    //   label: 'Nhà cung cấp',
+    //   icon: Store,
+    //   path: '/app/suppliers',
+    //   roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER]
+    // },
+    // {
+    //   id: 'ingredients',
+    //   label: 'Quản lý nguyên liệu',
+    //   icon: ChefHat,
+    //   path: '/app/ingredients',
+    //   roles: [ROLE_NAME.SUPPLIER, ROLE_NAME.ADMIN]
+    // },
+    // {
+    //   id: 'supplies',
+    //   label: 'Quản lý cung cấp',
+    //   icon: Handshake,
+    //   path: '/app/supplies',
+    //   roles: [ROLE_NAME.SUPPLIER, ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER]
+    // },
     {
       id: 'schools',
       label: 'Quản lý trường',
@@ -83,7 +83,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     },
     {
       id: 'profile',
-      label: 'Hồ sơ cá nhân',
+      label: 'Quản lý cá nhân',
       icon: SquareUser,
       path: '/app/profile',
       roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.ADMIN, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT, ROLE_NAME.SUPPLIER]

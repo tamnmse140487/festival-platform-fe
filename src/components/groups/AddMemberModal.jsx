@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Search, X, UserPlus, User } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { accountServices } from '../../services/accountServices'
+import { schoolAccountRelationServices } from '../../services/schoolAccountRelationServices'
 import { GROUP_ROLE, GROUP_ROLE_LABELS, ROLE_NAME } from '../../utils/constants'
 import Button from '../common/Button'
 import Input from '../common/Input'
@@ -23,13 +24,32 @@ const AddMemberModal = ({ onClose, onSubmit, currentUserId }) => {
 
         setSearchLoading(true)
         try {
+            const currentUserRelationResponse = await schoolAccountRelationServices.get({ 
+                accountId: currentUserId 
+            })
+            
+            if (!currentUserRelationResponse.data || currentUserRelationResponse.data.length === 0) {
+                setSuggestions([])
+                return
+            }
+            
+            const schoolId = currentUserRelationResponse.data[0].schoolId
+            
+            const schoolRelationsResponse = await schoolAccountRelationServices.get({ 
+                schoolId: schoolId 
+            })
+            
+            const schoolAccountIds = schoolRelationsResponse.data
+                ?.filter(relation => relation.relationType?.toLowerCase() === 'student')
+                ?.map(relation => relation.accountId) || []
+
             const roleResponse = await roleServices.get({ roleName: ROLE_NAME.STUDENT })
             const studentRoleId = roleResponse.data?.[0]?.roleId
 
             const response = await accountServices.get({ email: email, role: studentRoleId })
             
             const filteredData = (response.data || []).filter(account => 
-                account.id !== currentUserId
+                account.id !== currentUserId && schoolAccountIds.includes(account.id)
             )
             
             setSuggestions(filteredData)
@@ -160,7 +180,7 @@ const AddMemberModal = ({ onClose, onSubmit, currentUserId }) => {
                             ) : (
                                 <>
                                     <div className="text-xs font-medium text-gray-500 mb-2">Gợi ý:</div>
-                                    <div className="space-y-1">
+                                    <div className="space-y-1 overflow-y-auto max-h-64" >
                                         {suggestions.map(account => (
                                             <div
                                                 key={account.id}

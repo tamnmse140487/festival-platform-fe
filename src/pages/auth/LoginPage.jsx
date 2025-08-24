@@ -13,7 +13,9 @@ const LoginPage = () => {
 
   const { register, handleSubmit, formState: { errors } } = useForm();
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data, event) => {
+    event?.preventDefault();
+
     setIsLoading(true);
     try {
       const result = await login(data);

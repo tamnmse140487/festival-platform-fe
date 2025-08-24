@@ -90,7 +90,7 @@ const BoothInfo = ({ groupId, group, members }) => {
     )
   }
 
-  const handleStatusChange = (action, newStatus) => {
+  const handleStatusChange = (action, newStatus, booth) => {
     if (action === 'reject') {
       handleReject()
     } else {
@@ -155,10 +155,27 @@ const BoothInfo = ({ groupId, group, members }) => {
             { id: location.locationId, isOccupied: true }
           )
         }
+
+        if (booth.festivalId && booth.boothType) {
+          const updateData = { id: booth.festivalId }
+
+          if (booth.boothType.toLowerCase() === 'food') {
+            updateData.registeredFoodBooths = (festival?.registeredFoodBooths || 0) + 1
+          } else {
+            updateData.registeredBeverageBooths = (festival?.registeredBeverageBooths || 0) + 1
+          }
+
+          await festivalServices.update(updateData)
+
+          setFestival(prev => ({
+            ...prev,
+            ...updateData
+          }))
+        }
       } else if (action === 'reject') {
-        await boothServices.updateReject({ 
-          boothId: booth.boothId, 
-          rejectReason: rejectionReason 
+        await boothServices.updateReject({
+          boothId: booth.boothId,
+          rejectReason: rejectionReason
         })
       } else {
         const apiMap = {
@@ -168,8 +185,8 @@ const BoothInfo = ({ groupId, group, members }) => {
         await apiMap[action]({ boothId: booth.boothId })
       }
 
-      setBooth(prev => ({ 
-        ...prev, 
+      setBooth(prev => ({
+        ...prev,
         status: newStatus,
         ...(rejectionReason && { rejectionReason })
       }))
@@ -190,6 +207,21 @@ const BoothInfo = ({ groupId, group, members }) => {
   }
 
   const renderActionButtons = () => {
+    if (booth.status === BOOTH_STATUS.APPROVED && hasRole([ROLE_NAME.TEACHER, ROLE_NAME.STUDENT])) {
+      return (
+        <div className="flex space-x-3 mt-4">
+          <Button
+            type="primary"
+            icon={<Check size={16} />}
+            loading={actionLoading}
+            onClick={() => handleStatusChange('activate', BOOTH_STATUS.ACTIVE, booth)}
+          >
+            Kích hoạt gian hàng
+          </Button>
+        </div>
+      )
+    }
+
     if (!booth || !isHomeroomTeacher()) {
       return null
     }
@@ -201,7 +233,7 @@ const BoothInfo = ({ groupId, group, members }) => {
             type="primary"
             icon={<Check size={16} />}
             loading={actionLoading}
-            onClick={() => handleStatusChange('approve', BOOTH_STATUS.APPROVED)}
+            onClick={() => handleStatusChange('approve', BOOTH_STATUS.APPROVED, booth)}
           >
             Duyệt gian hàng
           </Button>
@@ -212,21 +244,6 @@ const BoothInfo = ({ groupId, group, members }) => {
             onClick={() => handleStatusChange('reject', BOOTH_STATUS.REJECTED)}
           >
             Từ chối gian hàng
-          </Button>
-        </div>
-      )
-    }
-
-    if (booth.status === BOOTH_STATUS.APPROVED) {
-      return (
-        <div className="flex space-x-3 mt-4">
-          <Button
-            type="primary"
-            icon={<Check size={16} />}
-            loading={actionLoading}
-            onClick={() => handleStatusChange('activate', BOOTH_STATUS.ACTIVE)}
-          >
-            Kích hoạt gian hàng
           </Button>
         </div>
       )
