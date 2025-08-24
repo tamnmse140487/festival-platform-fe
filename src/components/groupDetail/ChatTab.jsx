@@ -140,7 +140,6 @@ const ChatTab = ({ groupId, user }) => {
     console.error('❌ Image load failed:', { url, name });
     setImageErrors(prev => new Set([...prev, url]));
     
-    // Log detailed error info
     fetch(url, { method: 'HEAD', mode: 'cors' })
       .then(response => {
         console.log('Image URL test:', {
@@ -156,7 +155,6 @@ const ChatTab = ({ groupId, user }) => {
   };
 
   const handleImageLoad = (url) => {
-    console.log('✅ Image loaded successfully:', url);
     setImageErrors(prev => {
       const newSet = new Set(prev);
       newSet.delete(url);
