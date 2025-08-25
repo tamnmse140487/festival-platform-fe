@@ -5,5 +5,8 @@ export const festivalServices = {
   create: (data) => api.post("/festivals/create", data),
   update: (params) => api.put(`/festivals/update`, {}, { params }),
   delete: (params) => api.delete(`/festivals/delete`, { params }),
-  calculateCommission: (data) => api.post("/festivals/calculate-commission", data),
+  calculateCommission: (data) =>
+    api.post("/festivals/calculate-commission", data),
+  getDetailFestival: (festivalId) => api.get(`/festivals/${festivalId}`),
+  editFestival: (data) => api.put(`/festivals/update-info`, data),
 };

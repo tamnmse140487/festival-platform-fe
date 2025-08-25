@@ -147,6 +147,7 @@ const CreateSchoolForm = ({ onClose, onSchoolCreated }) => {
             }
         } catch (error) {
             console.error('Error creating school:', error);
+            toast.error(error?.response?.data?.detail || 'Có lỗi xảy ra khi tạo trường học')
             setErrors({ form: error?.response?.data || 'Có lỗi xảy ra khi tạo trường học' });
         } finally {
             setIsLoading(false);

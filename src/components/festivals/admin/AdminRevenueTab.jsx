@@ -73,7 +73,6 @@ const AdminRevenueTab = ({ festival }) => {
                 festivalId: festival.festivalId
             });
 
-            console.log("walletResponse: ", walletResponse)
 
             if (walletResponse.data && walletResponse.data.length > 0) {
                 setFestivalWallet(walletResponse.data[0]);
