@@ -1,18 +1,38 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { User, Camera } from 'lucide-react';
 import Card from '../../components/common/Card';
 import { getRoleDisplayName } from '../../utils/helpers';
 import { convertToVietnamTimeWithFormat } from '../../utils/formatters';
 
-const ProfileSidebar = ({ profileData, user }) => {
+const ProfileSidebar = ({ 
+  profileData, 
+  user, 
+  isEditing, 
+  onAvatarChange, 
+  previewAvatar 
+}) => {
+  const fileInputRef = useRef(null);
+
+  const handleAvatarClick = () => {
+    if (isEditing) {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleFileChange = (e) => {
+    if (onAvatarChange) {
+      onAvatarChange(e);
+    }
+  };
+
   return (
     <Card>
       <Card.Content>
         <div className="text-center">
           <div className="relative inline-block mb-4">
-            {profileData.avatarUrl ? (
+            {previewAvatar || profileData.avatarUrl ? (
               <img
-                src={profileData.avatarUrl}
+                src={previewAvatar || profileData.avatarUrl}
                 alt="Avatar"
                 className="w-24 h-24 rounded-full object-cover mx-auto"
               />
@@ -21,9 +41,22 @@ const ProfileSidebar = ({ profileData, user }) => {
                 <User className="w-12 h-12 text-blue-600" />
               </div>
             )}
-            <button className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors">
-              <Camera size={16} />
-            </button>
+            {isEditing && (
+              <button
+                type="button"
+                onClick={handleAvatarClick}
+                className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors"
+              >
+                <Camera size={16} />
+              </button>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+            />
           </div>
 
           <h3 className="text-lg font-semibold text-gray-900 mb-1">

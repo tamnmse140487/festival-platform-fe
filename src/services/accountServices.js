@@ -13,4 +13,6 @@ export const accountServices = {
       },
     }),
   sendEmail: (data) => api.post("/accounts/send-email", data),
+  updatePassword: (params) =>
+    api.put(`/accounts/update-password`, {}, { params }),
 };

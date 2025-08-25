@@ -16,7 +16,6 @@ const BoothMenu = ({ groupId }) => {
     try {
       const boothResponse = await boothServices.get({ groupId })
       const boothData = boothResponse.data?.[0] || null
-      console.log("boothData: ", boothData)
       setBooth(boothData)
 
       if (boothData?.boothId) {

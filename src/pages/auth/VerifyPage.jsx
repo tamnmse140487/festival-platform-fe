@@ -22,7 +22,6 @@ const VerifyPage = () => {
       const statusParam = (searchParams.get("status") || "").toLowerCase();
 
       const id = Number(idParam);
-      console.log("id: ", id);
       if (!id || Number.isNaN(id)) {
         setUiState({
           type: "error",

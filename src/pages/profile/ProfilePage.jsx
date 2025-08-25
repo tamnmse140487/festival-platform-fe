@@ -23,6 +23,9 @@ const ProfilePage = () => {
 
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState(null);
+  const [previewAvatar, setPreviewAvatar] = useState(null);
+  const [originalData, setOriginalData] = useState({});
   const [profileData, setProfileData] = useState({
     fullName: "",
     email: "",
@@ -60,9 +63,8 @@ const ProfilePage = () => {
 
   useEffect(() => {
     const currentPath = location.pathname;
-    const expectedPath = `/app/profile/${userId || user?.id}${
-      activeTab !== "profile" ? `/${activeTab}` : ""
-    }`;
+    const expectedPath = `/app/profile/${userId || user?.id}${activeTab !== "profile" ? `/${activeTab}` : ""
+      }`;
 
     if (currentPath !== expectedPath && (userId || user?.id)) {
       navigate(expectedPath, { replace: true });
@@ -93,26 +95,30 @@ const ProfilePage = () => {
       };
 
       if (
-        accountData.role === ROLE_NAME.SCHOOL_MANAGER &&
-        accountData.schoolId
+        user.role === ROLE_NAME.SCHOOL_MANAGER &&
+        user.schoolId
       ) {
         const schoolResponse = await schoolServices.get({
-          id: accountData.schoolId,
+          accountId: accountData.id,
         });
-        additionalData.schoolInfo = schoolResponse.data[0];
-        accountData.avatarUrl =
-          schoolResponse.data[0]?.logoUrl || accountData.avatarUrl;
+        const schoolData = schoolResponse.data[0];
+        additionalData.schoolInfo = {
+          ...schoolData,
+          originalContactInfo: schoolData?.contactInfo,
+          originalDescription: schoolData?.description
+        };
+        accountData.avatarUrl = schoolData?.logoUrl || accountData.avatarUrl;
       } else if (
-        accountData.role === ROLE_NAME.SUPPLIER &&
-        accountData.supplierId
+        user.role === ROLE_NAME.SUPPLIER &&
+        user.supplierId
       ) {
         const supplierResponse = await supplierServices.get({
           supplierId: accountData.supplierId,
         });
         additionalData.supplierInfo = supplierResponse.data[0];
       } else if (
-        accountData.role === ROLE_NAME.STUDENT ||
-        accountData.role === ROLE_NAME.TEACHER
+        user.role === ROLE_NAME.STUDENT ||
+        user.role === ROLE_NAME.TEACHER
       ) {
         const relationResponse = await schoolAccountRelationServices.get({
           accountId: targetUserId,
@@ -128,8 +134,7 @@ const ProfilePage = () => {
         }
       }
 
-      setProfileData((prev) => ({
-        ...prev,
+      const newProfileData = {
         fullName: accountData.fullName || "",
         email: accountData.email || "",
         phone_number: accountData.phoneNumber || "",
@@ -137,7 +142,10 @@ const ProfilePage = () => {
         className: accountData.className || "",
         createdAt: accountData.createdAt,
         ...additionalData,
-      }));
+      };
+
+      setProfileData(newProfileData);
+      setOriginalData(newProfileData);
     } catch (error) {
       console.error("Error fetching user data:", error);
       navigate("/app/profile", { replace: true });
@@ -156,10 +164,28 @@ const ProfilePage = () => {
 
   const handleSave = () => {
     setIsEditing(false);
+    setSelectedAvatar(null);
+    setPreviewAvatar(null);
+    fetchUserData();
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setSelectedAvatar(null);
+    setPreviewAvatar(null);
+    setProfileData(originalData);
   };
 
   const handleChange = (field, value) => {
     setProfileData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedAvatar(file);
+      setPreviewAvatar(URL.createObjectURL(file));
+    }
   };
 
   if (loading) {
@@ -197,7 +223,13 @@ const ProfilePage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-1">
-          <ProfileSidebar profileData={profileData} user={targetUser} />
+          <ProfileSidebar 
+            profileData={profileData} 
+            user={user} 
+            isEditing={isEditing}
+            onAvatarChange={handleAvatarChange}
+            previewAvatar={previewAvatar}
+          />
         </div>
 
         <div className="lg:col-span-3">
@@ -216,11 +248,10 @@ const ProfilePage = () => {
                     <button
                       key={tab.id}
                       onClick={() => handleTabChange(tab.id)}
-                      className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                        activeTab === tab.id
-                          ? "border-blue-500 text-blue-600"
-                          : "border-transparent text-gray-500 hover:text-gray-700"
-                      }`}
+                      className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
+                        ? "border-blue-500 text-blue-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700"
+                        }`}
                     >
                       {tab.icon}
                       <span className="ml-2">{tab.label}</span>
@@ -234,13 +265,17 @@ const ProfilePage = () => {
               {activeTab === "profile" && (
                 <ProfileTab
                   profileData={profileData}
+                  originalData={originalData}
                   isEditing={isEditing && isOwnProfile}
                   onEdit={() => isOwnProfile && setIsEditing(true)}
                   onSave={handleSave}
-                  onCancel={() => setIsEditing(false)}
+                  onCancel={handleCancel}
                   onChange={handleChange}
                   user={user}
                   isOwnProfile={isOwnProfile}
+                  selectedAvatar={selectedAvatar}
+                  previewAvatar={previewAvatar}
+                  onDataUpdate={fetchUserData}
                 />
               )}
               {activeTab === "wallet" && isOwnProfile && (

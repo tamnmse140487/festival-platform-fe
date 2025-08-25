@@ -84,7 +84,6 @@ const AccountManagementPage = () => {
 
             } else if (user?.role === ROLE_NAME.ADMIN) {
                 const accountResponse = await accountServices.get()
-                console.log("Account response:", accountResponse)
                 setAccounts(accountResponse.data || [])
             }
 
@@ -142,7 +141,6 @@ const AccountManagementPage = () => {
     const handleImportAccounts = async (formData) => {
         try {
             const response = await accountServices.importAccounts(formData)
-            console.log("response: ", response)
             if (response.data) {
                 toast.success(`Tạo tài khoản hàng loạt thành công! Đã tạo ${response.data.createdAccounts?.length || 0} tài khoản`)
                 
