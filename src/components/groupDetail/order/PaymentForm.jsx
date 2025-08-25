@@ -58,23 +58,6 @@ const PaymentForm = ({
             )
         }
 
-        if (festivalWallet) {
-            const hasEnoughBalance = festivalWallet.balance >= totalAmount
-            options.push(
-                <Option key="WALLET_FESTIVAL" value="WALLET_FESTIVAL" disabled={!hasEnoughBalance}>
-                    Ví phụ <span className='font-bold'>{festivalWallet.name}</span>
-                    {!hasEnoughBalance && ' - Số dư không đủ'}
-                </Option>
-            )
-        } else {
-            options.push(
-                <Option key="WALLET_FESTIVAL" value="WALLET_FESTIVAL" disabled>
-                    Ví phụ lễ hội - Khách hàng chưa có ví phụ cho lễ hội này
-                </Option>
-            )
-        }
-
-
         return options
     }
 
@@ -110,14 +93,13 @@ const PaymentForm = ({
                     </Select>
                 </Form.Item>
 
-                {((paymentMethod === 'WALLET_MAIN' && mainWallet && mainWallet.balance < totalAmount) ||
-                    (paymentMethod === 'WALLET_FESTIVAL' && festivalWallet && festivalWallet.balance < totalAmount)) && (
-                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                            <div className="text-red-600 text-sm">
-                                Số dư trong ví hiện tại không đủ để thanh toán
-                            </div>
+                {((paymentMethod === 'WALLET_MAIN' && mainWallet && mainWallet.balance < totalAmount)) && (
+                    <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="text-red-600 text-sm">
+                            Số dư trong ví hiện tại không đủ để thanh toán
                         </div>
-                    )}
+                    </div>
+                )}
 
                 <Form.Item label="Ghi chú">
                     <Input.TextArea

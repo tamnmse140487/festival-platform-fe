@@ -29,8 +29,6 @@ import { mapLocationServices } from "../../services/mapLocationServices";
 import { festivalMenuServices } from "../../services/festivalMenuServices";
 import { menuItemServices } from "../../services/menuItemServices";
 import { imageServices } from "../../services/imageServices";
-import { accountFestivalWalletsServices } from "../../services/accountFestivalWalletsServices";
-import { accountWalletHistoriesServices } from "../../services/accountWalletHistoryServices";
 import Button from "../../components/common/Button";
 import Card from "../../components/common/Card";
 import Modal from "../../components/common/Modal";
@@ -77,26 +75,8 @@ const FestivalDetailPage = () => {
 
   useEffect(() => {
     if (hasRole([ROLE_NAME.USER, ROLE_NAME.STUDENT]) && user?.id) {
-      checkJoinStatus();
     }
   }, [id, user?.id]);
-
-  const checkJoinStatus = async () => {
-    try {
-      setCheckingJoinStatus(true);
-      const response = await accountFestivalWalletsServices.get({
-        accountId: user.id,
-        festivalId: parseInt(id),
-      });
-
-      setHasJoinedFestival(response.data && response.data.length > 0);
-    } catch (error) {
-      console.error("Error checking join status:", error);
-      setHasJoinedFestival(false);
-    } finally {
-      setCheckingJoinStatus(false);
-    }
-  };
 
   const loadFestivalData = async () => {
     try {
@@ -177,71 +157,6 @@ const FestivalDetailPage = () => {
       toast.error("Không thể cập nhật trạng thái lễ hội");
     } finally {
       setIsUpdatingStatus(false);
-    }
-  };
-
-  const handleJoinFestival = async () => {
-    try {
-      setIsJoining(true);
-
-      const now = dayjs().tz("Asia/Ho_Chi_Minh");
-      const start = dayjs
-        .utc(festival.registrationStartDate)
-        .tz("Asia/Ho_Chi_Minh");
-      const end = dayjs
-        .utc(festival.registrationEndDate)
-        .tz("Asia/Ho_Chi_Minh");
-
-      if (!start.isValid() || !end.isValid()) {
-        toast.error(
-          "Khoảng thời gian đăng ký không hợp lệ. Vui lòng liên hệ ban tổ chức."
-        );
-        setIsJoining(false);
-        return;
-      }
-
-      if (now.isBefore(start)) {
-        toast.error(
-          `Hiện tại CHƯA tới ngày được đăng ký tham gia. Vui lòng quay lại từ ${convertToVietnamTimeWithFormat(
-            festival.registrationStartDate
-          )}.`
-        );
-        setIsJoining(false);
-        return;
-      }
-
-      if (now.isAfter(end)) {
-        toast.error(
-          `Thời gian đăng ký đã KẾT THÚC vào ${convertToVietnamTimeWithFormat(
-            festival.registrationEndDate
-          )}.`
-        );
-        setIsJoining(false);
-        return;
-      }
-
-      await accountFestivalWalletsServices.create({
-        accountId: user.id,
-        festivalId: parseInt(id),
-        name: `Ví phụ của ${festival.festivalName}`,
-        balance: 0,
-      });
-
-      await accountWalletHistoriesServices.create({
-        accountId: user.id,
-        description: `Hệ thống đã tạo ví phụ cho lễ hội ${festival.festivalName}`,
-        type: HISTORY_TYPE.CREATE_SUB_WALLET,
-        amount: 0,
-      });
-
-      toast.success("Tham gia lễ hội thành công!");
-      setShowJoinConfirmModal(false);
-      setHasJoinedFestival(true);
-    } catch (error) {
-      console.error("Error joining festival:", error);
-      toast.error("Không thể tham gia lễ hội");
-    } finally {
-      setIsJoining(false);
     }
   };
 
@@ -542,11 +457,10 @@ const FestivalDetailPage = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === tab.id
+                  className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
                       ? "border-blue-500 text-blue-600"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
+                    }`}
                 >
                   {tab.icon}
                   <span className="ml-2">{tab.label}</span>
@@ -685,7 +599,7 @@ const FestivalDetailPage = () => {
             </Button>
             <Button
               variant="primary"
-              onClick={handleJoinFestival}
+              onClick={() => {}}
               className="flex-1 bg-blue-600 hover:bg-blue-700"
               disabled={isJoining}
             >
