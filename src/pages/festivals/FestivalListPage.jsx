@@ -463,22 +463,24 @@ const FestivalCard = ({ festival, user, hasRole, onDelete, formatDate, getStatus
             <Eye size={16} className="inline mr-1" />
             Xem chi tiết
           </Link>
-          {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && festival.status === FESTIVAL_STATUS.DRAFT && (
-            <>
-              <Link
-                to={`/app/festivals/${festival.festivalId}/edit`}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <Edit size={16} />
-              </Link>
-              <button
-                onClick={() => onDelete(festival)}
-                className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
-              >
-                <Trash2 size={16} />
-              </button>
-            </>
-          )}
+          {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && festival.status === FESTIVAL_STATUS.DRAFT &&
+            approvalData?.status === FESTIVAL_APPROVAL_STATUS.PENDING &&
+            (
+              <>
+                <Link
+                  to={`/app/festivals/${festival.festivalId}/edit`}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <Edit size={16} />
+                </Link>
+                <button
+                  onClick={() => onDelete(festival)}
+                  className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </>
+            )}
         </div>
       </div>
     </div>
@@ -538,22 +540,23 @@ const FestivalListItem = ({ festival, user, hasRole, onDelete, formatDate, getSt
                 <Eye size={16} className="inline mr-1" />
                 Xem
               </Link>
-              {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && festival.status === FESTIVAL_STATUS.DRAFT && (
-                <>
-                  <Link
-                    to={`/app/festivals/${festival.festivalId}/edit`}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <Edit size={16} />
-                  </Link>
-                  <button
-                    onClick={() => onDelete(festival)}
-                    className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </>
-              )}
+              {hasRole([ROLE_NAME.SCHOOL_MANAGER]) && festival.status === FESTIVAL_STATUS.DRAFT &&
+                approvalData?.status === FESTIVAL_APPROVAL_STATUS.PENDING && (
+                  <>
+                    <Link
+                      to={`/app/festivals/${festival.festivalId}/edit`}
+                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <Edit size={16} />
+                    </Link>
+                    <button
+                      onClick={() => onDelete(festival)}
+                      className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </>
+                )}
             </div>
           </div>
         </div>
