@@ -23,6 +23,7 @@ import {
   GROUP_ROLE_LABELS,
   getRoleColor,
   BOOTH_STATUS,
+  ROLE_NAME,
 } from "../../utils/constants";
 import Button from "../../components/common/Button";
 import MemberList from "../../components/groups/MemberList";
@@ -40,7 +41,7 @@ const GroupDetailPage = () => {
   const { groupId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
 
   const [group, setGroup] = useState(null);
   const [booth, setBooth] = useState(null);
@@ -102,20 +103,24 @@ const GroupDetailPage = () => {
       });
     }
 
-    baseTabs.push(
-      {
-        id: "chat",
-        label: "Chat",
-        icon: <MessageCircle size={16} />,
-        path: "/chat",
-      },
-      {
-        id: "documents",
-        label: "Tài liệu",
-        icon: <File size={16} />,
-        path: "/documents",
-      }
-    );
+    if (hasRole([ROLE_NAME.STUDENT, ROLE_NAME.TEACHER])) {
+      baseTabs.push(
+        {
+          id: "chat",
+          label: "Chat",
+          icon: <MessageCircle size={16} />,
+          path: "/chat",
+        },
+        {
+          id: "documents",
+          label: "Tài liệu",
+          icon: <File size={16} />,
+          path: "/documents",
+        }
+      );
+
+    }
+
 
     return baseTabs;
   };
@@ -326,10 +331,10 @@ const GroupDetailPage = () => {
         );
 
       case "chat":
-        return <ChatTab groupId={groupId} user={user}/>;
+        return <ChatTab groupId={groupId} user={user} />;
 
       case "documents":
-        return <DocumentsTab groupId={groupId} user={user}/>;
+        return <DocumentsTab groupId={groupId} user={user} />;
 
       default:
         return <GroupInfo group={group} members={members} />;
@@ -417,7 +422,9 @@ const GroupDetailPage = () => {
             </div>
           </div>
         </div>
-        <Button icon={<MessageCircle size={16} />}>Nhắn tin nhóm</Button>
+        {hasRole([ROLE_NAME.STUDENT, ROLE_NAME.TEACHER]) && (
+          <Button onClick={() => navigate(`/app/groups/${groupId}/chat`)} icon={<MessageCircle size={16} />}>Nhắn tin nhóm</Button>
+        )}
       </div>
 
       <div className="border-b border-gray-200">
@@ -426,11 +433,10 @@ const GroupDetailPage = () => {
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
-              className={`flex items-center py-3 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
-                activeTab === tab.id
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
+              className={`flex items-center py-3 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${activeTab === tab.id
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
             >
               {tab.icon}
               <span className="ml-2">{tab.label}</span>
@@ -443,44 +449,48 @@ const GroupDetailPage = () => {
         {renderTabContent()}
       </div>
 
-      {showAddMemberModal && (
-        <div className="mt-0-important fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-md">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Thêm thành viên
-              </h3>
-            </div>
-            <div className="p-6">
-              <AddMemberModal
-                onClose={() => setShowAddMemberModal(false)}
-                onSubmit={handleAddMember}
-                currentUserId={user?.id}
-              />
+      {
+        showAddMemberModal && (
+          <div className="mt-0-important fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg w-full max-w-md">
+              <div className="p-6 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Thêm thành viên
+                </h3>
+              </div>
+              <div className="p-6">
+                <AddMemberModal
+                  onClose={() => setShowAddMemberModal(false)}
+                  onSubmit={handleAddMember}
+                  currentUserId={user?.id}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
-      {showInviteTeacherModal && (
-        <div className="mt-0-important fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-md">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Mời giáo viên chủ nhiệm
-              </h3>
-            </div>
-            <div className="p-6">
-              <InviteTeacherModal
-                onClose={() => setShowInviteTeacherModal(false)}
-                onSubmit={handleInviteTeacher}
-                currentUserId={user?.id}
-              />
+      {
+        showInviteTeacherModal && (
+          <div className="mt-0-important fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg w-full max-w-md">
+              <div className="p-6 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Mời giáo viên chủ nhiệm
+                </h3>
+              </div>
+              <div className="p-6">
+                <InviteTeacherModal
+                  onClose={() => setShowInviteTeacherModal(false)}
+                  onSubmit={handleInviteTeacher}
+                  currentUserId={user?.id}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };
 

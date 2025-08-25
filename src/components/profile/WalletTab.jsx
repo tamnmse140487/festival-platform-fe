@@ -3,7 +3,6 @@ import { Wallet, DollarSign, Plus, ArrowRight } from 'lucide-react';
 import Button from '../../components/common/Button';
 import { walletServices } from '../../services/walletServices';
 import { accountWalletHistoriesServices } from '../../services/accountWalletHistoryServices';
-import { accountFestivalWalletsServices } from '../../services/accountFestivalWalletsServices';
 import TransactionList from './TransactionList';
 import TopupModal from './wallet/TopupModal';
 import CreateWalletModal from './wallet/CreateWalletModal';
@@ -69,8 +68,6 @@ const WalletTab = ({ user }) => {
       });
       setTransactions(historyResponse.data || []);
 
-      await fetchFestivalWallets();
-
     } catch (error) {
       console.error('Error fetching wallet data:', error);
     } finally {
@@ -87,202 +84,16 @@ const WalletTab = ({ user }) => {
 
     } catch (error) {
       console.error('Error fetching history data:', error);
+      console.error('Error updating wallet:', error);
+      toast.error('Có lỗi xảy ra khi cập nhật ví. Vui lòng thử lại.');
     } finally {
     }
   }
 
-  const fetchFestivalWallets = async () => {
-    try {
-      const response = await accountFestivalWalletsServices.get({
-        accountId: user.id
-      });
-
-      const walletsWithFestival = await Promise.all(
-        response.data.map(async (wallet) => {
-          const festivalResponse = await festivalServices.get({
-            festivalId: wallet.festivalId
-          });
-          return {
-            ...wallet,
-            festivalName: festivalResponse.data[0].festivalName || 'Unknown Festival'
-          };
-
-        })
-      );
-
-      setFestivalWallets(walletsWithFestival);
-    } catch (error) {
-      console.error('Error fetching festival wallets:', error);
-      setFestivalWallets([]);
-    }
-  };
-
-  const handleCreateWallet = async (festivalId, festivalName, walletName) => {
-    try {
-      setIsProcessing(true);
-
-      const response = await accountFestivalWalletsServices.create({
-        accountId: user.id,
-        festivalId: festivalId,
-        name: walletName
-      });
-
-      await accountWalletHistoriesServices.create({
-        accountId: user.id,
-        description: `Hệ thống đã tạo ví phụ cho lễ hội ${festivalName}`,
-        type: HISTORY_TYPE.CREATE_SUB_WALLET,
-        amount: 0
-      });
-
-      await fetchFestivalWallets();
-      await fetchWalletData();
-
-      toast.success('Tạo ví phụ thành công');
-      setShowCreateWalletModal(false);
-
-    } catch (error) {
-      console.error('Error creating wallet:', error);
-      toast.error('Có lỗi xảy ra khi tạo ví. Vui lòng thử lại.');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleTransfer = async () => {
-    if (!transferAmount || !selectedFestivalWallet || !walletData.walletId) return;
-
-    const amount = parseFloat(transferAmount);
-    if (amount <= 0 || amount > walletData.balance) {
-      toast.error('Số tiền không hợp lệ hoặc không đủ số dư');
-      return;
-    }
-
-    try {
-      setIsProcessing(true);
-
-      await accountFestivalWalletsServices.transferToFestivalWallet({
-        walletId: walletData.walletId,
-        accountFestivalWalletId: selectedFestivalWallet.accountFestivalWalletId,
-        amount: amount
-      });
-
-      await accountWalletHistoriesServices.create({
-        accountId: user.id,
-        description: `Chuyển ${amount} từ ví chính về ví ${selectedFestivalWallet.name}`,
-        amount: amount,
-        type: HISTORY_TYPE.TRANSFER
-      });
-
-      setWalletData(prev => ({
-        ...prev,
-        balance: prev.balance - amount
-      }));
-
-      setFestivalWallets(prev =>
-        prev.map(wallet =>
-          wallet.id === selectedFestivalWallet.id
-            ? { ...wallet, balance: wallet.balance + amount }
-            : wallet
-        )
-      );
-
-      toast.success('Chuyển tiền thành công');
-      setShowTransferModal(false);
-      setTransferAmount('');
-      setSelectedFestivalWallet(null);
-      fetchHistory();
-
-    } catch (error) {
-      console.error('Error during transfer:', error);
-      toast.error('Có lỗi xảy ra khi chuyển tiền. Vui lòng thử lại.');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleReturnTransfer = async () => {
-    if (!returnTransferAmount || !selectedReturnWallet || !walletData.walletId) return;
-
-    const amount = parseFloat(returnTransferAmount);
-    if (amount <= 0 || amount > selectedReturnWallet.balance) {
-      toast.error('Số tiền không hợp lệ hoặc không đủ số dư');
-      return;
-    }
-
-    try {
-      setIsProcessing(true);
-
-      await accountFestivalWalletsServices.transferToWallet({
-        walletId: walletData.walletId,
-        accountFestivalWalletId: selectedReturnWallet.accountFestivalWalletId,
-        amount: amount
-      });
-
-      await accountWalletHistoriesServices.create({
-        accountId: user.id,
-        description: `Chuyển ${amount} từ ${selectedReturnWallet.name} về ví chính`,
-        amount: amount,
-        type: HISTORY_TYPE.RETURN_TRANSFER
-      });
-
-      setWalletData(prev => ({
-        ...prev,
-        balance: prev.balance + amount
-      }));
-
-      setFestivalWallets(prev =>
-        prev.map(wallet =>
-          wallet.id === selectedReturnWallet.id
-            ? { ...wallet, balance: wallet.balance - amount }
-            : wallet
-        )
-      );
-
-      toast.success('Chuyển tiền về ví chính thành công');
-      setShowReturnTransferModal(false);
-      setReturnTransferAmount('');
-      setSelectedReturnWallet(null);
-
-      fetchHistory();
-
-    } catch (error) {
-      console.error('Error during return transfer:', error);
-      toast.error('Có lỗi xảy ra khi chuyển tiền. Vui lòng thử lại.');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleEditWallet = async () => {
-    if (!editName.trim() || !editingWallet) return;
-
-    try {
-      setIsProcessing(true);
-
-      await accountFestivalWalletsServices.update({
-        id: editingWallet.id,
-        newName: editName.trim()
-      });
-
-      setFestivalWallets(prev =>
-        prev.map(wallet =>
-          wallet.id === editingWallet.id
-            ? { ...wallet, name: editName.trim() }
-            : wallet
-        )
-      );
-
-      toast.success('Cập nhật tên ví thành công');
-      setShowEditModal(false);
-      setEditingWallet(null);
-      setEditName('');
-
-    } catch (error) {
-      console.error('Error updating wallet:', error);
-      toast.error('Có lỗi xảy ra khi cập nhật ví. Vui lòng thử lại.');
-    } finally {
-      setIsProcessing(false);
-    }
+  const openEditModal = (wallet) => {
+    setEditingWallet(wallet);
+    setEditName(wallet.name);
+    setShowEditModal(true);
   };
 
   const openEditModal = (wallet) => {
@@ -311,14 +122,7 @@ const WalletTab = ({ user }) => {
             <DollarSign size={16} />
             <span>Nạp tiền</span>
           </Button>
-          <Button
-            onClick={() => setShowCreateWalletModal(true)}
-            variant="outline"
-            className="flex items-center space-x-2"
-          >
-            <Plus size={16} />
-            <span>Tạo ví phụ</span>
-          </Button>
+       
         </div>
       </div>
 
@@ -332,34 +136,10 @@ const WalletTab = ({ user }) => {
           </div>
           <div className="flex items-center space-x-4">
             <Wallet className="w-12 h-12 text-blue-200" />
-            <div className="flex flex-col space-y-2">
-              <Button
-                onClick={() => setShowTransferModal(true)}
-                variant="outline"
-                className="text-red border-red hover:bg-white hover:text-blue-600"
-                disabled={festivalWallets.length === 0}
-              >
-                <ArrowRight size={16} className="mr-2" />
-                Chuyển tiền
-              </Button>
-              <Button
-                onClick={() => setShowReturnTransferModal(true)}
-                variant="outline"
-                className="text-red border-red hover:bg-white hover:text-blue-600"
-                disabled={festivalWallets.length === 0 || festivalWallets.every(w => w.balance === 0)}
-              >
-                <ArrowRight size={16} className="mr-2 rotate-180" />
-                Về ví chính
-              </Button>
-            </div>
+           
           </div>
         </div>
       </div>
-
-      <FestivalWalletGrid
-        festivalWallets={festivalWallets}
-        onEditWallet={openEditModal}
-      />
 
       <TransactionList transactions={transactions} />
 
@@ -377,58 +157,6 @@ const WalletTab = ({ user }) => {
         setIsProcessing={setIsProcessing}
       />
 
-      <CreateWalletModal
-        show={showCreateWalletModal}
-        onClose={() => setShowCreateWalletModal(false)}
-        onCreateWallet={handleCreateWallet}
-        isProcessing={isProcessing}
-      />
-
-      <TransferModal
-        show={showTransferModal}
-        onClose={() => {
-          setShowTransferModal(false);
-          setTransferAmount('');
-          setSelectedFestivalWallet(null);
-        }}
-        festivalWallets={festivalWallets}
-        walletData={walletData}
-        transferAmount={transferAmount}
-        setTransferAmount={setTransferAmount}
-        selectedFestivalWallet={selectedFestivalWallet}
-        setSelectedFestivalWallet={setSelectedFestivalWallet}
-        onTransfer={handleTransfer}
-        isProcessing={isProcessing}
-      />
-
-      <ReturnTransferModal
-        show={showReturnTransferModal}
-        onClose={() => {
-          setShowReturnTransferModal(false);
-          setReturnTransferAmount('');
-          setSelectedReturnWallet(null);
-        }}
-        festivalWallets={festivalWallets}
-        returnTransferAmount={returnTransferAmount}
-        setReturnTransferAmount={setReturnTransferAmount}
-        selectedReturnWallet={selectedReturnWallet}
-        setSelectedReturnWallet={setSelectedReturnWallet}
-        onReturnTransfer={handleReturnTransfer}
-        isProcessing={isProcessing}
-      />
-
-      <EditWalletModal
-        show={showEditModal}
-        onClose={() => {
-          setShowEditModal(false);
-          setEditingWallet(null);
-          setEditName('');
-        }}
-        editName={editName}
-        setEditName={setEditName}
-        onEdit={handleEditWallet}
-        isProcessing={isProcessing}
-      />
     </div>
   );
 };

@@ -4,7 +4,6 @@ import { toast } from 'react-hot-toast';
 import { boothServices } from '../../../services/boothServices';
 import { boothWalletServices } from '../../../services/boothWalletServices';
 import { festivalServices } from '../../../services/festivalServices';
-import { accountFestivalWalletsServices } from '../../../services/accountFestivalWalletsServices';
 import { accountWalletHistoriesServices } from '../../../services/accountWalletHistoryServices';
 import { formatPrice } from '../../../utils/helpers';
 import { HISTORY_TYPE, FESTIVAL_STATUS } from '../../../utils/constants';
@@ -56,30 +55,11 @@ const AdminRevenueTab = ({ festival }) => {
             });
             setBoothRevenues(revenueMap);
 
-            await loadFestivalWallet();
-
         } catch (error) {
             console.error('Error loading revenue data:', error);
             toast.error('Không thể tải dữ liệu doanh thu');
         } finally {
             setLoading(false);
-        }
-    };
-
-    const loadFestivalWallet = async () => {
-        try {
-            const walletResponse = await accountFestivalWalletsServices.get({
-                accountId: user.id,
-                festivalId: festival.festivalId
-            });
-
-            console.log("walletResponse: ", walletResponse)
-
-            if (walletResponse.data && walletResponse.data.length > 0) {
-                setFestivalWallet(walletResponse.data[0]);
-            }
-        } catch (error) {
-            console.error('Error loading festival wallet:', error);
         }
     };
 
@@ -129,9 +109,7 @@ const AdminRevenueTab = ({ festival }) => {
                 commissionRate: commissionRate
             });
 
-            toast.success('Tiền hoa hồng đã trở về ví phụ của lễ hội này');
-
-            await loadFestivalWallet();
+            toast.success('Tiền hoa hồng đã trở về ví');
 
             const commissionAmount = calculateCommissionAmount();
             await accountWalletHistoriesServices.create({
@@ -249,7 +227,7 @@ const AdminRevenueTab = ({ festival }) => {
                             </p>
                             <p className="text-xs text-orange-200">
                                 {hasCommissionWithdrawn ? 
-                                    'Đã chuyển vào ví phụ' : 
+                                    'Đã chuyển vào ví' : 
                                     `(${commissionRate}%)`
                                 }
                             </p>
@@ -325,21 +303,6 @@ const AdminRevenueTab = ({ festival }) => {
                     </div>
 
                     <div className="space-y-4">
-                        {festivalWallet && (
-                            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                <h4 className="font-medium text-blue-900 mb-3">Ví phụ lễ hội</h4>
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between">
-                                        <span className="text-blue-700">Tên ví:</span>
-                                        <span className="font-medium text-blue-900">{festivalWallet.name}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-blue-700">Số dư hiện tại:</span>
-                                        <span className="font-bold text-blue-900">{formatPrice(festivalWallet.balance)}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
 
                         {hasCommissionWithdrawn && (
                             <div className="p-4 bg-green-50 rounded-lg border border-green-200">
@@ -514,7 +477,7 @@ const AdminRevenueTab = ({ festival }) => {
                                 <AlertCircle size={16} className="text-yellow-600 mt-0.5" />
                                 <div className="text-sm text-yellow-800">
                                     <p className="font-medium mb-1">Lưu ý:</p>
-                                    <p>Số tiền hoa hồng sẽ được chuyển vào ví phụ của lễ hội này. Thao tác này không thể hoàn tác.</p>
+                                    <p>Số tiền hoa hồng sẽ được chuyển vào ví. Thao tác này không thể hoàn tác.</p>
                                 </div>
                             </div>
                         </div>

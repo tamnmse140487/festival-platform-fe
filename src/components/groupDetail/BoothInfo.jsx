@@ -31,7 +31,6 @@ const BoothInfo = ({ groupId, group, members }) => {
     try {
       const boothResponse = await boothServices.get({ groupId })
       const boothData = boothResponse.data?.[0] || null
-      console.log("boothResponse: ", boothResponse)
       setBooth(boothData)
 
       if (boothData) {

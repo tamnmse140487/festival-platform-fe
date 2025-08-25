@@ -12,7 +12,6 @@ import MenuItemForm from './MenuItemForm'
 import BillSummary from './BillSummary'
 import PaymentForm from './PaymentForm'
 import { accountWalletHistoriesServices } from '../../../services/accountWalletHistoryServices'
-import { accountFestivalWalletsServices } from '../../../services/accountFestivalWalletsServices'
 import { boothWalletServices } from '../../../services/boothWalletServices'
 import { boothMenuItemServices } from '../../../services/boothMenuItemServices'
 
@@ -38,15 +37,6 @@ const CreatePaymentModal = ({ visible, onCancel, onSuccess, boothId, menuItems, 
             const mainWalletResponse = await walletServices.get({ userId: customer.id })
             const mainWalletData = mainWalletResponse.data?.[0] || null
             setMainWallet(mainWalletData)
-
-            if (festivalId) {
-                const festivalWalletResponse = await accountFestivalWalletsServices.get({
-                    accountId: customer.id,
-                    festivalId: festivalId
-                })
-                const festivalWalletData = festivalWalletResponse.data?.[0] || null
-                setFestivalWallet(festivalWalletData)
-            }
 
             const boothWalletResponse = await boothWalletServices.get({ boothId: boothId })
             const boothWalletData = boothWalletResponse.data?.[0] || null
@@ -203,7 +193,7 @@ const CreatePaymentModal = ({ visible, onCancel, onSuccess, boothId, menuItems, 
                 notes: notes
             }
 
-            if (paymentMethod === 'WALLET_MAIN' || paymentMethod === 'WALLET_FESTIVAL') {
+            if (paymentMethod === 'WALLET_MAIN') {
                 orderData.status = ORDER_STATUS.COMPLETED
             }
 
@@ -279,41 +269,11 @@ const CreatePaymentModal = ({ visible, onCancel, onSuccess, boothId, menuItems, 
                 })
 
                 toast.success('Thanh toán bằng ví chính thành công')
-            } else if (paymentMethod === 'WALLET_FESTIVAL') {
-                if (!festivalWallet) {
-                    throw new Error('Không tìm thấy ví phụ lễ hội của khách hàng')
-                }
-
-                if (festivalWallet.balance < totalAmount) {
-                    throw new Error('Số dư ví phụ lễ hội không đủ để thanh toán')
-                }
-
-                if (!boothWallet) {
-                    throw new Error('Không tìm thấy ví gian hàng')
-                }
-
-                const newCustomerBalance = festivalWallet.balance - totalAmount
-                await accountFestivalWalletsServices.update({
-                    id: festivalWallet.accountFestivalWalletId,
-                    newBalance: newCustomerBalance
-                })
-
-                const newBoothBalance = boothWallet.totalBalance + totalAmount
-                await boothWalletServices.update({ boothWalletId: boothWallet.boothWalletId, totalBalance: newBoothBalance })
-
-                await accountWalletHistoriesServices.create({
-                    accountId: selectedCustomer.id,
-                    description: `Thanh toán cho đơn hàng có mã ${orderId} bằng ví phụ ${festivalWallet.name}`,
-                    amount: totalAmount,
-                    type: HISTORY_TYPE.PAYMENT
-                })
-
-                toast.success('Thanh toán bằng ví phụ lễ hội thành công')
             } else {
                 throw new Error('Phương thức thanh toán không hợp lệ')
             }
 
-            if (paymentMethod === 'WALLET_MAIN' || paymentMethod === 'WALLET_FESTIVAL') {
+            if (paymentMethod === 'WALLET_MAIN' ) {
                 const updateQuantityPromises = billData.map(async (item) => {
                     const menuItem = item.menuItem
                     const newRemainingQuantity = (menuItem.remainingQuantity || 0) + item.quantity
@@ -360,9 +320,6 @@ const CreatePaymentModal = ({ visible, onCancel, onSuccess, boothId, menuItems, 
         if (paymentMethod === PAYMENT_METHOD.BANK) return true
         if (paymentMethod === 'WALLET_MAIN') {
             return mainWallet && mainWallet.balance >= getTotalAmount()
-        }
-        if (paymentMethod === 'WALLET_FESTIVAL') {
-            return festivalWallet && festivalWallet.balance >= getTotalAmount()
         }
 
         return false

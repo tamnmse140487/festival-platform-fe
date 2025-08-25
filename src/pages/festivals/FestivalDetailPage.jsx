@@ -29,8 +29,6 @@ import { mapLocationServices } from "../../services/mapLocationServices";
 import { festivalMenuServices } from "../../services/festivalMenuServices";
 import { menuItemServices } from "../../services/menuItemServices";
 import { imageServices } from "../../services/imageServices";
-import { accountFestivalWalletsServices } from "../../services/accountFestivalWalletsServices";
-import { accountWalletHistoriesServices } from "../../services/accountWalletHistoryServices";
 import Button from "../../components/common/Button";
 import Card from "../../components/common/Card";
 import Modal from "../../components/common/Modal";
@@ -77,26 +75,8 @@ const FestivalDetailPage = () => {
 
   useEffect(() => {
     if (hasRole([ROLE_NAME.USER, ROLE_NAME.STUDENT]) && user?.id) {
-      checkJoinStatus();
     }
   }, [id, user?.id]);
-
-  const checkJoinStatus = async () => {
-    try {
-      setCheckingJoinStatus(true);
-      const response = await accountFestivalWalletsServices.get({
-        accountId: user.id,
-        festivalId: parseInt(id),
-      });
-
-      setHasJoinedFestival(response.data && response.data.length > 0);
-    } catch (error) {
-      console.error("Error checking join status:", error);
-      setHasJoinedFestival(false);
-    } finally {
-      setCheckingJoinStatus(false);
-    }
-  };
 
   const loadFestivalData = async () => {
     try {
@@ -542,11 +522,10 @@ const FestivalDetailPage = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === tab.id
+                  className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
                       ? "border-blue-500 text-blue-600"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
+                    }`}
                 >
                   {tab.icon}
                   <span className="ml-2">{tab.label}</span>
@@ -685,7 +664,7 @@ const FestivalDetailPage = () => {
             </Button>
             <Button
               variant="primary"
-              onClick={handleJoinFestival}
+              onClick={() => {}}
               className="flex-1 bg-blue-600 hover:bg-blue-700"
               disabled={isJoining}
             >

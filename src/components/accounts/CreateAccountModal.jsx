@@ -5,6 +5,7 @@ const CreateAccountModal = ({ onClose, onSubmit, roleIds }) => {
     email: "",
     password: "",
     confirmPassword: "",
+    status: true,
     fullName: "",
     className: "",
     phoneNumber: "",

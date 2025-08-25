@@ -5,20 +5,16 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { festivalServices } from '../../services/festivalServices';
-import { festivalMapServices } from '../../services/festivalMapServices';
-import { mapLocationServices } from '../../services/mapLocationServices';
-import { festivalMenuServices } from '../../services/festivalMenuServices';
-import { menuItemServices } from '../../services/menuItemServices';
-import { imageServices } from '../../services/imageServices';
 import { uploadService } from '../../services/uploadServices';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
-import BasicInfoForm from '../../components/festivals/BasicInfoForm';
-import DateTimeForm from '../../components/festivals/DateTimeForm';
-import BoothConfigForm from '../../components/festivals/BoothConfigForm';
-import FestivalImageUploadForm from '../../components/festivals/FestivalImageUploadForm';
-import MapConfigForm from '../../components/festivals/MapConfigForm';
-import MenuConfigForm from '../../components/festivals/MenuConfigForm';
+import EditBasicInfoForm from '../../components/festivals/edit/EditBasicInfoForm';
+import EditDateTimeForm from '../../components/festivals/edit/EditDateTimeForm';
+import EditBoothConfigForm from '../../components/festivals/edit/EditBoothConfigForm';
+import EditImageForm from '../../components/festivals/edit/EditImageForm';
+import EditMapForm from '../../components/festivals/edit/EditMapForm';
+import EditMenuForm from '../../components/festivals/edit/EditMenuForm';
+import { convertToVietnamTimeWithFormat } from '../../utils/formatters';
 
 const EditFestivalPage = () => {
   const { id } = useParams();
@@ -33,8 +29,6 @@ const EditFestivalPage = () => {
   const [mapLocations, setMapLocations] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
   const [festivalData, setFestivalData] = useState(null);
-  const [festivalMap, setFestivalMap] = useState(null);
-  const [festivalMenu, setFestivalMenu] = useState(null);
 
   const { register, handleSubmit, watch, formState: { errors }, reset } = useForm();
 
@@ -45,110 +39,131 @@ const EditFestivalPage = () => {
   const loadFestivalData = async () => {
     try {
       setDataLoading(true);
-      
-      const [
-        festivalResponse,
-        festivalImagesResponse,
-        mapResponse,
-        menuResponse
-      ] = await Promise.all([
-        festivalServices.get({ id: parseInt(id) }),
-        imageServices.get({ festivalId: parseInt(id) }),
-        festivalMapServices.get({ festivalId: parseInt(id) }),
-        festivalMenuServices.get({ festivalId: parseInt(id) })
-      ]);
+      const response = await festivalServices.getDetailFestival(parseInt(id));
+      const festival = response.data;
 
-      if (festivalResponse.data && festivalResponse.data.length > 0) {
-        const festival = festivalResponse.data[0];
-        setFestivalData(festival);
-        
-        const formatDateForInput = (dateString) => {
-          const date = new Date(dateString);
-          return date.toISOString().slice(0, 16);
-        };
+      setFestivalData(festival);
 
-        reset({
-          festivalName: festival.festivalName,
-          theme: festival.theme,
-          description: festival.description,
-          location: festival.location,
-          startDate: formatDateForInput(festival.startDate),
-          endDate: formatDateForInput(festival.endDate),
-          registrationStartDate: formatDateForInput(festival.registrationStartDate),
-          registrationEndDate: formatDateForInput(festival.registrationEndDate),
-          maxFoodBooths: festival.maxFoodBooths,
-          maxBeverageBooths: festival.maxBeverageBooths
-        });
+      const formData = {
+        festivalName: festival.festivalName,
+        theme: festival.theme,
+        description: festival.description,
+        location: festival.location,
+        startDate: convertToVietnamTimeWithFormat(festival.startDate),
+        endDate: convertToVietnamTimeWithFormat(festival.endDate),
+        registrationStartDate: convertToVietnamTimeWithFormat(festival.registrationStartDate),
+        registrationEndDate: convertToVietnamTimeWithFormat(festival.registrationEndDate),
+        maxFoodBooths: festival.maxFoodBooths,
+        maxBeverageBooths: festival.maxBeverageBooths
+      };
+
+      if (festival.images) {
+        setExistingImages(festival.images);
       }
 
-      if (festivalImagesResponse.data) {
-        setExistingImages(festivalImagesResponse.data);
-      }
-
-      if (mapResponse.data && mapResponse.data.length > 0) {
-        const map = mapResponse.data[0];
-        setFestivalMap(map);
+      if (festival.festivalMaps && festival.festivalMaps.length > 0) {
+        const map = festival.festivalMaps[0];
         setPreviewMapImage(map.mapUrl);
-        
-        reset(prev => ({
-          ...prev,
-          mapName: map.mapName,
-          mapType: map.mapType
-        }));
-        
-        const locationsResponse = await mapLocationServices.get({ mapId: map.id });
-        setMapLocations(locationsResponse.data || []);
+        formData.mapName = map.mapName;
+        formData.mapType = map.mapType;
+
+        if (map.locations) {
+          setMapLocations(map.locations.map(location => ({
+            id: location.locationId,
+            locationName: location.locationName,
+            locationType: location.locationType,
+            coordinates: location.coordinates,
+            isOccupied: location.isOccupied
+          })));
+        } else {
+          setMapLocations([{
+            locationName: '',
+            locationType: 'booth',
+            coordinates: '',
+            isOccupied: false
+          }]);
+        }
+      } else {
+        setMapLocations([{
+          locationName: '',
+          locationType: 'booth',
+          coordinates: '',
+          isOccupied: false
+        }]);
       }
 
-      if (menuResponse.data && menuResponse.data.length > 0) {
-        const menu = menuResponse.data[0];
-        setFestivalMenu(menu);
-        
-        reset(prev => ({
-          ...prev,
-          menuName: menu.menuName,
-          menuDescription: menu.description
-        }));
-        
-        const itemsResponse = await menuItemServices.get({ menuId: menu.id });
-        setMenuItems(itemsResponse.data || []);
+      if (festival.festivalMenus && festival.festivalMenus.length > 0) {
+        const menu = festival.festivalMenus[0];
+        formData.menuName = menu.menuName;
+        formData.menuDescription = menu.description;
+
+        if (menu.menuItems) {
+          setMenuItems(menu.menuItems.map(item => ({
+            id: item.itemId,
+            itemName: item.itemName,
+            description: item.description,
+            itemType: item.itemType,
+            minPrice: item.minPrice,
+            maxPrice: item.maxPrice
+          })));
+        } else {
+          setMenuItems([{
+            itemName: '',
+            description: '',
+            itemType: 'food',
+            minPrice: 0,
+            maxPrice: 0
+          }]);
+        }
+      } else {
+        setMenuItems([{
+          itemName: '',
+          description: '',
+          itemType: 'food',
+          minPrice: 0,
+          maxPrice: 0
+        }]);
       }
+
+      reset(formData);
 
     } catch (error) {
       console.error('Error loading festival data:', error);
-      toast.error('Không thể tải thông tin lễ hội');
-      navigate('/app/festivals');
+      toast.error(error?.response?.data?.detail || 'Không thể tải thông tin lễ hội');
+      // navigate('/app/festivals');
     } finally {
       setDataLoading(false);
     }
   };
 
-  const handleImageChange = (images) => {
-    setSelectedImages(images);
-  };
-
-  const handleMapImageChange = (file, preview) => {
-    setSelectedMapImage(file);
-    setPreviewMapImage(preview);
-  };
-
-  const handleRemoveExistingImage = async (imageId) => {
-    try {
-      await imageServices.delete({ id: imageId });
-      setExistingImages(existingImages.filter(img => img.id !== imageId));
-      toast.success('Xóa ảnh thành công');
-    } catch (error) {
-      console.error('Error deleting image:', error);
-      toast.error('Không thể xóa ảnh');
-    }
-  };
-
   const onSubmit = async (data) => {
     setIsLoading(true);
-    
+
     try {
-      const festivalUpdateData = {
-        id: parseInt(id),
+      let mapImageUrl = previewMapImage;
+      if (selectedMapImage) {
+        mapImageUrl = await uploadService.uploadImage(selectedMapImage, 'maps');
+      }
+
+      const formattedMenuItems = menuItems.map(item => ({
+        ...(item.id && { itemId: item.id }),
+        itemName: item.itemName,
+        description: item.description,
+        itemType: item.itemType,
+        minPrice: parseFloat(item.minPrice) || 0,
+        maxPrice: parseFloat(item.maxPrice) || 0
+      }));
+
+      const formattedMapLocations = mapLocations.map(location => ({
+        ...(location.id && { locationId: location.id }),
+        locationName: location.locationName,
+        locationType: location.locationType,
+        coordinates: location.coordinates,
+        isOccupied: location.isOccupied || false
+      }));
+
+      const updateData = {
+        festivalId: parseInt(id),
         organizerSchoolId: user.schoolId,
         festivalName: data.festivalName,
         theme: data.theme,
@@ -159,92 +174,28 @@ const EditFestivalPage = () => {
         registrationEndDate: new Date(data.registrationEndDate).toISOString(),
         location: data.location,
         maxFoodBooths: parseInt(data.maxFoodBooths) || 0,
-        maxBeverageBooths: parseInt(data.maxBeverageBooths) || 0
-      };
-
-      await festivalServices.update(festivalUpdateData);
-
-      if (selectedImages.length > 0) {
-        for (const imageData of selectedImages) {
-          await uploadService.uploadFestivalImage(imageData.file, parseInt(id));
-        }
-      }
-
-      if (festivalMap) {
-        let mapUrl = previewMapImage;
-        if (selectedMapImage) {
-          mapUrl = await uploadService.uploadImage(selectedMapImage, 'maps');
-        }
-
-        const mapUpdateData = {
-          id: festivalMap.id,
-          festivalId: parseInt(id),
+        maxBeverageBooths: parseInt(data.maxBeverageBooths) || 0,
+        festivalMap: {
           mapName: data.mapName,
           mapType: data.mapType,
-          mapUrl: mapUrl
-        };
-        await festivalMapServices.update(mapUpdateData);
-
-        for (const location of mapLocations) {
-          if (location.id) {
-            await mapLocationServices.update({
-              id: location.id,
-              mapId: festivalMap.id,
-              locationName: location.locationName,
-              locationType: location.locationType,
-              isOccupied: location.isOccupied || false,
-              coordinates: location.coordinates
-            });
-          } else if (location.locationName.trim()) {
-            await mapLocationServices.create({
-              mapId: festivalMap.id,
-              locationName: location.locationName,
-              locationType: location.locationType,
-              isOccupied: false,
-              coordinates: location.coordinates
-            });
-          }
-        }
-      }
-
-      if (festivalMenu) {
-        const menuUpdateData = {
-          id: festivalMenu.id,
-          festivalId: parseInt(id),
+          mapUrl: mapImageUrl,
+          locations: formattedMapLocations
+        },
+        festivalMenu: {
           menuName: data.menuName,
-          description: data.menuDescription
-        };
-        await festivalMenuServices.update(menuUpdateData);
+          description: data.menuDescription,
+          menuItems: formattedMenuItems
+        },
+        newImages: selectedImages.map(img => img.file)
+      };
 
-        for (const item of menuItems) {
-          if (item.id) {
-            await menuItemServices.update({
-              id: item.id,
-              menuId: festivalMenu.id,
-              itemName: item.itemName,
-              description: item.description,
-              itemType: item.itemType,
-              basePrice: parseFloat(item.basePrice) || 0
-            });
-          } else if (item.itemName.trim()) {
-            const menuItemResponse = await menuItemServices.create({
-              menuId: festivalMenu.id,
-              itemName: item.itemName,
-              description: item.description,
-              itemType: item.itemType,
-              basePrice: parseFloat(item.basePrice) || 0
-            });
-
-          
-          }
-        }
-      }
+      await festivalServices.editFestival(updateData);
 
       toast.success('Cập nhật lễ hội thành công!');
-      navigate(`/app/festivals/${id}`);
+      navigate(`/app/festivals`);
     } catch (error) {
       console.error('Error updating festival:', error);
-      toast.error('Có lỗi xảy ra khi cập nhật lễ hội');
+      toast.error(error?.response?.data?.detail || 'Có lỗi xảy ra khi cập nhật lễ hội');
     } finally {
       setIsLoading(false);
     }
@@ -274,7 +225,7 @@ const EditFestivalPage = () => {
       <div className="flex items-center space-x-4">
         <Button
           variant="ghost"
-          onClick={() => navigate(`/app/festivals/${id}`)}
+          onClick={() => navigate('/app/festivals')}
           icon={<ArrowLeft size={20} />}
         >
           Quay lại
@@ -288,36 +239,36 @@ const EditFestivalPage = () => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <BasicInfoForm register={register} errors={errors} />
-            <DateTimeForm register={register} errors={errors} />
-            <BoothConfigForm register={register} errors={errors} watch={watch} />
-            
-            <FestivalImageUploadForm 
-              selectedImages={selectedImages}
+            <EditBasicInfoForm register={register} errors={errors} />
+
+            <EditDateTimeForm register={register} errors={errors} watch={watch} />
+
+            <EditBoothConfigForm register={register} errors={errors} watch={watch} />
+
+            <EditImageForm
               existingImages={existingImages}
-              onImageChange={handleImageChange}
-              onRemoveExistingImage={handleRemoveExistingImage}
+              selectedImages={selectedImages}
+              setSelectedImages={setSelectedImages}
+              setExistingImages={setExistingImages}
             />
 
-            {festivalMap && (
-              <MapConfigForm 
-                register={register} 
-                errors={errors} 
-                mapLocations={mapLocations}
-                setMapLocations={setMapLocations}
-                selectedMapImage={selectedMapImage}
-                previewMapImage={previewMapImage}
-                onMapImageChange={handleMapImageChange}
-              />
-            )}
-            {festivalMenu && (
-              <MenuConfigForm 
-                register={register} 
-                errors={errors} 
-                menuItems={menuItems}
-                setMenuItems={setMenuItems}
-              />
-            )}
+            <EditMapForm
+              register={register}
+              errors={errors}
+              mapLocations={mapLocations}
+              setMapLocations={setMapLocations}
+              previewMapImage={previewMapImage}
+              setPreviewMapImage={setPreviewMapImage}
+              selectedMapImage={selectedMapImage}
+              setSelectedMapImage={setSelectedMapImage}
+            />
+
+            <EditMenuForm
+              register={register}
+              errors={errors}
+              menuItems={menuItems}
+              setMenuItems={setMenuItems}
+            />
           </div>
 
           <div className="space-y-6">
@@ -325,7 +276,7 @@ const EditFestivalPage = () => {
               <Card.Header>
                 <Card.Title>Hành động</Card.Title>
               </Card.Header>
-              
+
               <Card.Content>
                 <div className="space-y-3">
                   <Button
@@ -336,12 +287,12 @@ const EditFestivalPage = () => {
                   >
                     Cập nhật lễ hội
                   </Button>
-                  
+
                   <Button
                     type="button"
                     variant="outline"
                     fullWidth
-                    onClick={() => navigate(`/app/festivals/${id}`)}
+                    onClick={() => navigate(`/app/festivals`)}
                     disabled={isLoading}
                   >
                     Hủy bỏ

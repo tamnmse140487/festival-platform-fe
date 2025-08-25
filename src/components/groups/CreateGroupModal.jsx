@@ -106,11 +106,12 @@ const CreateGroupModal = ({
   };
 
   const handleReset = () => {
-    setFormData({
+    setFormData((prev) => ({
+      ...prev,
       groupName: "",
-      className: "",
       groupBudget: 0,
-    });
+    }))
+
     setDisplayBudget("");
     setErrors({});
   };
