@@ -96,12 +96,6 @@ const WalletTab = ({ user }) => {
     setShowEditModal(true);
   };
 
-  const openEditModal = (wallet) => {
-    setEditingWallet(wallet);
-    setEditName(wallet.name);
-    setShowEditModal(true);
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-32">
