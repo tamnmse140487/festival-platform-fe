@@ -66,6 +66,7 @@ const RegisterPage = () => {
         email: completeData.email,
         password: completeData.password,
         fullName: completeData.fullName,
+        status: true,
         roleId: selectedRoleId,
         phoneNumber: completeData.phoneNumber
       };
