@@ -1,612 +1,664 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  Star, MapPin, Heart, Share2, ShoppingCart, Users, 
-  Clock, Award, TrendingUp, MessageCircle, Camera,
-  ChevronLeft, ChevronRight, Plus, Minus
-} from 'lucide-react';
+import React, { useEffect, useMemo, useState } from "react";
+import { Button, Input, Tabs, Table, Empty, Tag } from "antd";
+import { Store, MapPin, Check, X } from "lucide-react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-hot-toast";
+import { Breadcrumb } from "antd";
 
-const mockBoothDetail = {
-  id: 1,
-  booth_name: "Bánh Mì Truyền Thống",
-  booth_type: "food",
-  description: "Gian hàng bánh mì với hương vị truyền thống Sài Gòn, nguyên liệu tươi ngon. Chúng tôi tự hào mang đến những chiếc bánh mì được làm từ công thức gia truyền, với bánh giòn rụm và nhân đầy đặn.",
-  status: "approved",
-  points_balance: 1250,
-  group: {
-    group_name: "Team Bánh Mì Sài Gòn",
-    class_name: "12A1",
-    school_name: "Trường THPT ABC"
-  },
-  location: {
-    location_name: "Khu A - Vị trí 01",
-  },
-  festival: {
-    festival_name: "Lễ Hội Ẩm Thực Xuân 2025",
-    start_date: "2025-03-15T08:00:00Z",
-    end_date: "2025-03-17T18:00:00Z"
-  },
-  menu_items_count: 8,
-  total_orders: 145,
-  revenue: 3250000,
-  rating: 4.7,
-  reviews_count: 89,
-  images: [
-    "https://sanko.com.vn/wp-content/uploads/cach-lam-banh-mi-thit-nuong-1.jpg",
-    "https://bandoanuong.vn/uploads/blog/2024_05/banh-mi-cha-ca-nha-trang-0_1687277813.jpg",
-    "https://cdn2.fptshop.com.vn/unsafe/1920x0/filters:format(webp):quality(75)/2024_2_19_638439762164888519_cach-lam-banh-mi-pate-trung-7.jpg",
-    "https://img-global.cpcdn.com/recipes/01914f4be6cc4786/400x400cq70/photo.jpg"
-  ],
-  operating_hours: {
-    start: "08:00",
-    end: "18:00"
-  },
-  contact: {
-    phone: "0901234567",
-    facebook: "facebook.com/banhmi.abc"
-  }
-};
+import { useAuth } from "../../contexts/AuthContext";
+import {
+  ROLE_NAME,
+  BOOTH_STATUS,
+  NOTIFICATION_EVENT,
+} from "../../utils/constants";
+import { convertToVietnamTimeWithFormat } from "../../utils/formatters";
 
-const mockMenuItems = [
-  {
-    id: 1,
-    item_name: "Bánh mì thịt nướng",
-    description: "Bánh mì giòn với thịt nướng thơm lừng, kèm rau sống tươi ngon",
-    price: 25000,
-    image_url: "https://sanko.com.vn/wp-content/uploads/cach-lam-banh-mi-thit-nuong-1.jpg",
-    rating: 4.8,
-    sold_count: 45,
-    available: true
-  },
-  {
-    id: 2,
-    item_name: "Bánh mì chả cá",
-    description: "Bánh mì với chả cá tươi ngon, đặc sản miền Trung",
-    price: 30000,
-    image_url: "https://bandoanuong.vn/uploads/blog/2024_05/banh-mi-cha-ca-nha-trang-0_1687277813.jpg",
-    rating: 4.6,
-    sold_count: 32,
-    available: true
-  },
-  {
-    id: 3,
-    item_name: "Bánh mì pate",
-    description: "Bánh mì truyền thống với pate thơm ngon",
-    price: 20000,
-    image_url: "https://cdn2.fptshop.com.vn/unsafe/1920x0/filters:format(webp):quality(75)/2024_2_19_638439762164888519_cach-lam-banh-mi-pate-trung-7.jpg",
-    rating: 4.5,
-    sold_count: 38,
-    available: false
-  },
-  {
-    id: 4,
-    item_name: "Bánh mì trứng ốp la",
-    description: "Bánh mì kẹp trứng ốp la nóng hổi vừa thổi vừa ăn",
-    price: 22000,
-    image_url: "https://img-global.cpcdn.com/recipes/01914f4be6cc4786/400x400cq70/photo.jpg",
-    rating: 4.4,
-    sold_count: 30,
-    available: true
-  }
-];
+import { boothServices } from "../../services/boothServices";
+import { festivalServices } from "../../services/festivalServices";
+import { mapLocationServices } from "../../services/mapLocationServices";
+import { festivalMapServices } from "../../services/festivalMapServices";
+import { imageServices } from "../../services/imageServices";
 
-const mockReviews = [
-  {
-    id: 1,
-    user_name: "Nguyễn Văn A",
-    user_avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b5bc?w=40&h=40&fit=crop&crop=face",
-    rating: 5,
-    comment: "Bánh mì rất ngon, thịt nướng thơm phức. Sẽ quay lại ủng hộ!",
-    date: "2025-03-16T10:30:00Z"
-  },
-  {
-    id: 2,
-    user_name: "Trần Thị B",
-    user_avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face",
-    rating: 4,
-    comment: "Chất lượng ổn, giá cả hợp lý. Bạn bán hàng rất nhiệt tình.",
-    date: "2025-03-16T14:15:00Z"
-  },
-  {
-    id: 3,
-    user_name: "Lê Hoàng C",
-    user_avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
-    rating: 5,
-    comment: "Bánh mì chả cá ngon tuyệt vời! Đúng vị miền Trung.",
-    date: "2025-03-15T16:45:00Z"
-  }
-];
+import useModal from "antd/es/modal/useModal";
+import BoothMenu from "../../components/groupDetail/booth/BoothMenu";
+import OrdersManagement from "../../components/groupDetail/OrdersManagement";
+import { notificationServices } from "../../services/notificationServices";
+import { groupMemberServices } from "../../services/groupMemberServices";
 
-const BoothDetailPage = () => {
-  const { id } = useParams();
+const { TextArea } = Input;
+
+export default function BoothDetailPage() {
   const navigate = useNavigate();
+  const locationPath = useLocation();
+  const { hasRole } = useAuth();
+  const { groupId, boothId } = useParams();
+
   const [booth, setBooth] = useState(null);
-  const [menuItems, setMenuItems] = useState([]);
-  const [reviews, setReviews] = useState([]);
-  const [selectedImage, setSelectedImage] = useState(0);
-  const [activeTab, setActiveTab] = useState('menu');
-  const [cart, setCart] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [festival, setFestival] = useState(null);
+  const [location, setLocation] = useState(null);
+  const [mapUrl, setMapUrl] = useState(null);
+  const [festivalImages, setFestivalImages] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [activeKey, setActiveKey] = useState("info");
+  const [modal, contextHolder] = useModal();
 
   useEffect(() => {
-    setTimeout(() => {
-      setBooth(mockBoothDetail);
-      setMenuItems(mockMenuItems);
-      setReviews(mockReviews);
-      setIsLoading(false);
-    }, 1000);
-  }, [id]);
+    const isOrders = locationPath.pathname.endsWith("/orders");
+    setActiveKey(isOrders ? "orders" : "info");
+  }, [locationPath.pathname]);
 
-  const addToCart = (item) => {
-    const existingItem = cart.find(cartItem => cartItem.id === item.id);
-    if (existingItem) {
-      setCart(cart.map(cartItem => 
-        cartItem.id === item.id 
-          ? { ...cartItem, quantity: cartItem.quantity + 1 }
-          : cartItem
-      ));
-    } else {
-      setCart([...cart, { ...item, quantity: 1 }]);
+  const handleTabChange = (key) => {
+    setActiveKey(key);
+    const base = `/app/groups/${groupId}/booth/${boothId}`;
+    navigate(key === "orders" ? `${base}/orders` : base, { replace: true });
+  };
+
+  const breadcrumbItems = useMemo(
+    () => [
+      { title: <Link to="/app/groups">Danh sách nhóm </Link> },
+      { title: <Link to={`/app/groups/${groupId}`}>Chi tiết nhóm</Link> },
+      {
+        title: (
+          <Link to={`/app/groups/${groupId}/booth`}>Danh sách gian hàng</Link>
+        ),
+      },
+      { title: `Gian hàng ${booth?.boothName}` },
+    ],
+    [groupId, booth]
+  );
+
+  const isHomeroomTeacher = () => hasRole([ROLE_NAME.TEACHER]);
+
+  const getStatusBadge = (status) => {
+    const map = {
+      [BOOTH_STATUS.APPROVED]: { label: "Đã duyệt", color: "green" },
+      [BOOTH_STATUS.PENDING]: { label: "Chờ duyệt", color: "gold" },
+      [BOOTH_STATUS.REJECTED]: { label: "Từ chối", color: "red" },
+      [BOOTH_STATUS.ACTIVE]: { label: "Hoạt động", color: "blue" },
+    };
+    const cfg = map[status] || map[BOOTH_STATUS.PENDING];
+    return <Tag color={cfg.color}>{cfg.label}</Tag>;
+  };
+
+  const fetchBoothDetail = async () => {
+    setLoading(true);
+    try {
+      let boothData = null;
+
+      try {
+        const respById = await boothServices.get({ boothId });
+        boothData = respById?.data?.[0] || null;
+      } catch {
+        const respByGroup = await boothServices.get({ groupId });
+        boothData =
+          (respByGroup?.data || []).find(
+            (b) => String(b.boothId) === String(boothId)
+          ) || null;
+      }
+
+      if (!boothData) {
+        setBooth(null);
+        toast.error("Không tìm thấy gian hàng");
+        return;
+      }
+
+      setBooth(boothData);
+
+      const [festivalResp, locationResp] = await Promise.all([
+        festivalServices.get({ festivalId: boothData.festivalId }),
+        mapLocationServices.get({ locationId: boothData.locationId }),
+      ]);
+
+      const f = festivalResp?.data?.[0] || null;
+      const loc = locationResp?.data?.[0] || null;
+      setFestival(f);
+      setLocation(loc);
+
+      if (f) {
+        const [imagesResp, mapResp] = await Promise.all([
+          imageServices.get({ festivalId: boothData.festivalId }),
+          festivalMapServices.get({ festivalId: boothData.festivalId }),
+        ]);
+        setFestivalImages(imagesResp?.data || []);
+        setMapUrl(mapResp?.data?.[0]?.mapUrl || null);
+      } else {
+        setFestivalImages([]);
+        setMapUrl(null);
+      }
+    } catch (e) {
+      console.error("Error fetching booth detail:", e);
+      toast.error("Không thể tải chi tiết gian hàng");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const removeFromCart = (itemId) => {
-    setCart(cart.filter(item => item.id !== itemId));
-  };
+  useEffect(() => {
+    if (groupId && boothId) fetchBoothDetail();
+  }, [groupId, boothId]);
 
-  const updateQuantity = (itemId, newQuantity) => {
-    if (newQuantity === 0) {
-      removeFromCart(itemId);
-    } else {
-      setCart(cart.map(item => 
-        item.id === itemId ? { ...item, quantity: newQuantity } : item
-      ));
+  const handleStatusChange = (action, newStatus) => {
+    if (!booth) return;
+    if (action === "reject") {
+      handleReject();
+      return;
     }
+    const actionText = { approve: "duyệt", activate: "kích hoạt" };
+    modal.confirm({
+      title: `Xác nhận ${actionText[action]} gian hàng`,
+      content: `Bạn có chắc chắn muốn ${actionText[action]} gian hàng "${booth.boothName}" không?`,
+      okText: "Xác nhận",
+      cancelText: "Hủy",
+      onOk: () => executeStatusChange(action, newStatus),
+    });
   };
 
-  const getTotalPrice = () => {
-    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-  };
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(price);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Đang tải thông tin gian hàng...</p>
+  const handleReject = () => {
+    let rejectionReason = "";
+    modal.confirm({
+      title: "Từ chối gian hàng",
+      content: (
+        <div className="mt-4">
+          <p className="mb-3">Vui lòng nhập lý do từ chối:</p>
+          <TextArea
+            rows={4}
+            placeholder="Nhập lý do từ chối gian hàng..."
+            onChange={(e) => (rejectionReason = e.target.value)}
+          />
         </div>
+      ),
+      okText: "Từ chối",
+      cancelText: "Hủy",
+      okButtonProps: { danger: true },
+      onOk: () => {
+        if (!rejectionReason.trim()) {
+          toast.error("Vui lòng nhập lý do từ chối");
+          return false;
+        }
+        executeStatusChange(
+          "reject",
+          BOOTH_STATUS.REJECTED,
+          rejectionReason.trim()
+        );
+      },
+    });
+  };
+
+  const getRecipientAccountIds = async () => {
+    try {
+      const res = await groupMemberServices.get({ groupId });
+      return Array.isArray(res?.data)
+        ? res.data
+            .filter((m) => String(m.role) !== "homeroom_teacher")
+            .map((m) => m.accountId)
+            .filter(Boolean)
+        : [];
+    } catch (e) {
+      console.warn("Fetch recipients failed:", e?.message || e);
+      return [];
+    }
+  };
+
+  const sendBoothNotification = async (eventType, extraData = {}) => {
+    try {
+      const list_user_id = await getRecipientAccountIds();
+      if (!list_user_id.length) return;
+
+      await notificationServices.createByType(eventType, {
+        data: {
+          groupId,
+          boothId,
+          boothName: booth?.boothName,
+          festivalName: festival?.festivalName,
+          ...extraData,
+        },
+        list_user_id,
+      });
+    } catch (e) {
+      console.warn("Send notification failed:", e?.message || e);
+    }
+  };
+
+  const SUCCESS_TEXT = {
+    approve: "Duyệt gian hàng thành công!",
+    reject: "Từ chối gian hàng thành công!",
+    activate: "Kích hoạt gian hàng thành công!",
+  };
+
+  const ERROR_VERB = {
+    approve: "duyệt",
+    reject: "từ chối",
+    activate: "kích hoạt",
+  };
+
+  const executeStatusChange = async (
+    action,
+    newStatus,
+    rejectionReason = null
+  ) => {
+    try {
+      setActionLoading(true);
+
+      switch (action) {
+        case "approve": {
+          await boothServices.updateApprove(
+            { id: booth.boothId },
+            { approvalDate: new Date().toISOString(), pointsBalance: 0 }
+          );
+
+          const afterApproveTasks = [];
+
+          if (location?.locationId) {
+            afterApproveTasks.push(
+              mapLocationServices
+                .update({ id: location.locationId, isOccupied: true })
+                .catch((e) =>
+                  console.warn("Update location failed:", e?.message || e)
+                )
+            );
+          }
+
+          if (booth?.festivalId && booth?.boothType && festival) {
+            const isFood = String(booth.boothType).toLowerCase() === "food";
+            const updateData = {
+              id: booth.festivalId,
+              ...(isFood
+                ? {
+                    registeredFoodBooths:
+                      (festival?.registeredFoodBooths || 0) + 1,
+                  }
+                : {
+                    registeredBeverageBooths:
+                      (festival?.registeredBeverageBooths || 0) + 1,
+                  }),
+            };
+
+            afterApproveTasks.push(
+              festivalServices
+                .update(updateData)
+                .then(() => setFestival((prev) => ({ ...prev, ...updateData })))
+                .catch((e) =>
+                  console.warn("Update festival failed:", e?.message || e)
+                )
+            );
+          }
+
+          await Promise.allSettled(afterApproveTasks);
+
+          try {
+            await sendBoothNotification(NOTIFICATION_EVENT.BOOTH_APPROVAL);
+          } catch (e) {
+            console.warn("Send notification failed:", e?.message || e);
+          }
+
+          break;
+        }
+
+        case "reject": {
+          await boothServices.updateReject({
+            boothId: booth.boothId,
+            rejectReason: rejectionReason,
+          });
+
+          await sendBoothNotification(NOTIFICATION_EVENT.BOOTH_REJECTED, {
+            reason: rejectionReason,
+          });
+          break;
+        }
+
+        case "activate": {
+          await boothServices.updateActivate({ boothId: booth.boothId });
+          await sendBoothNotification(NOTIFICATION_EVENT.BOOTH_ACTIVATED);
+          break;
+        }
+
+        default:
+          console.warn("Unknown action:", action);
+          break;
+      }
+
+      setBooth((prev) => ({
+        ...prev,
+        status: newStatus,
+        ...(rejectionReason && { rejectionReason }),
+      }));
+
+      toast.success(SUCCESS_TEXT[action] || "Thành công!");
+    } catch (e) {
+      console.error(`Error ${action} booth:`, e);
+      toast.error(`Không thể ${ERROR_VERB[action] || "thực hiện"} gian hàng`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const renderActionButtons = () => {
+    if (!booth) return null;
+
+    if (booth.status === BOOTH_STATUS.PENDING && isHomeroomTeacher()) {
+      return (
+        <>
+          <Button
+            type="primary"
+            icon={<Check size={16} />}
+            loading={actionLoading}
+            onClick={() => handleStatusChange("approve", BOOTH_STATUS.APPROVED)}
+          >
+            Duyệt
+          </Button>
+          <Button
+            danger
+            icon={<X size={16} />}
+            loading={actionLoading}
+            onClick={() => handleStatusChange("reject", BOOTH_STATUS.REJECTED)}
+          >
+            Từ chối
+          </Button>
+        </>
+      );
+    }
+
+    if (
+      booth.status === BOOTH_STATUS.APPROVED &&
+      hasRole([ROLE_NAME.TEACHER, ROLE_NAME.STUDENT])
+    ) {
+      return (
+        <Button
+          type="primary"
+          icon={<Check size={16} />}
+          loading={actionLoading}
+          onClick={() => handleStatusChange("activate", BOOTH_STATUS.ACTIVE)}
+        >
+          Kích hoạt
+        </Button>
+      );
+    }
+
+    return null;
+  };
+
+  const invoiceColumns = useMemo(
+    () => [
+      {
+        title: "Mã hoá đơn",
+        dataIndex: "id",
+        key: "id",
+        render: (v) => <span className="font-medium">{v}</span>,
+      },
+      {
+        title: "Ngày tạo",
+        dataIndex: "createdAt",
+        key: "createdAt",
+        render: (v) => convertToVietnamTimeWithFormat(v),
+      },
+      { title: "Khách hàng", dataIndex: "customer", key: "customer" },
+      { title: "Số món", dataIndex: "items", key: "items", align: "right" },
+      {
+        title: "Tổng tiền",
+        dataIndex: "amount",
+        key: "amount",
+        align: "right",
+        render: (v) => (
+          <span className="font-semibold">{(v || 0).toLocaleString()}đ</span>
+        ),
+      },
+      {
+        title: "Trạng thái",
+        dataIndex: "status",
+        key: "status",
+        render: (s) => {
+          const color =
+            { paid: "green", pending: "gold", canceled: "red" }[s] || "default";
+          const label =
+            { paid: "Đã thanh toán", pending: "Chờ", canceled: "Huỷ" }[s] || s;
+          return <Tag color={color}>{label}</Tag>;
+        },
+      },
+      {
+        title: "",
+        key: "action",
+        align: "right",
+        render: (_, r) => (
+          <Button
+            size="small"
+            onClick={() => toast.success(`Xem hoá đơn ${r.id}`)}
+          >
+            Xem
+          </Button>
+        ),
+      },
+    ],
+    []
+  );
+
+  const infoTab = (
+    <>
+      <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="rounded-lg border border-gray-100 p-4">
+            <p className="text-sm font-medium text-gray-500">Loại gian hàng</p>
+            <p className="text-gray-900 mt-1">{booth?.boothType}</p>
+          </div>
+          <div className="rounded-lg border border-gray-100 p-4">
+            <p className="text-sm font-medium text-gray-500">Ngày đăng ký</p>
+            <p className="text-gray-900 mt-1">
+              {convertToVietnamTimeWithFormat(booth?.registrationDate)}
+            </p>
+          </div>
+          {booth?.approvalDate && (
+            <div className="rounded-lg border border-gray-100 p-4">
+              <p className="text-sm font-medium text-gray-500">Ngày duyệt</p>
+              <p className="text-gray-900 mt-1">
+                {convertToVietnamTimeWithFormat(booth?.approvalDate)}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {booth?.description && (
+          <div className="mt-5">
+            <p className="text-sm font-medium text-gray-500">Mô tả</p>
+            <p className="text-gray-900 mt-1">{booth.description}</p>
+          </div>
+        )}
+        {booth?.note && (
+          <div className="mt-4">
+            <p className="text-sm font-medium text-gray-500">Ghi chú</p>
+            <p className="text-gray-900 mt-1">{booth.note}</p>
+          </div>
+        )}
+        {booth?.rejectionReason && booth?.status === BOOTH_STATUS.REJECTED && (
+          <div className="mt-5 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm font-medium text-red-700">Lý do từ chối</p>
+            <p className="text-red-800 mt-1">{booth.rejectionReason}</p>
+          </div>
+        )}
+      </div>
+
+      <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+        <h5 className="text-lg font-semibold text-gray-900 mb-4">
+          Menu gian hàng
+        </h5>
+        <BoothMenu boothId={boothId} />
+      </div>
+
+      {location && (
+        <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-6 mb-6">
+          <h5 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <MapPin size={20} className="mr-2 text-green-600" />
+            Vị trí gian hàng
+          </h5>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm font-medium text-gray-500">Vị trí</p>
+              <p className="text-gray-900 mt-1">
+                {location.locationName}-{location.coordinates}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Loại vị trí</p>
+              <p className="text-gray-900 mt-1">{location.locationType}</p>
+            </div>
+          </div>
+          {mapUrl && (
+            <div className="mt-4">
+              <p className="text-sm font-medium text-gray-500 mb-3">
+                Bản đồ lễ hội
+              </p>
+              <img
+                src={mapUrl}
+                alt="Festival Map"
+                className="w-full max-w-lg h-full object-cover rounded-lg border mx-auto"
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {festival && (
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-6">
+          <h5 className="text-lg font-semibold text-gray-900 mb-4">
+            Thông tin lễ hội
+          </h5>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm font-medium text-gray-500">Tên lễ hội</p>
+              <p className="text-gray-900 mt-1">{festival.festivalName}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Chủ đề</p>
+              <p className="text-gray-900 mt-1">{festival.theme}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Địa điểm</p>
+              <p className="text-gray-900 mt-1">{festival.location}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Thời gian</p>
+              <p className="text-gray-900 mt-1">
+                {convertToVietnamTimeWithFormat(festival.startDate)} -{" "}
+                {convertToVietnamTimeWithFormat(festival.endDate)}
+              </p>
+            </div>
+          </div>
+
+          {festivalImages.length > 0 && (
+            <div className="mt-4">
+              <p className="text-sm font-medium text-gray-500 mb-3">
+                Hình ảnh lễ hội
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {festivalImages.map((image, index) => (
+                  <img
+                    key={index}
+                    src={image.imageUrl}
+                    alt={`Festival ${index + 1}`}
+                    className="w-full h-32 object-cover rounded-lg border"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-6 flex justify-end">
+            <Button
+              type="primary"
+              onClick={() => navigate(`/app/festivals/${festival.festivalId}`)}
+            >
+              Xem thông tin chi tiết
+            </Button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  const tabItems = useMemo(() => {
+    const items = [
+      { key: "info", label: "Thông tin gian hàng", children: infoTab },
+    ];
+    if (booth?.status === BOOTH_STATUS.ACTIVE) {
+      items.push({
+        key: "orders",
+        label: "Hoá đơn",
+        children: <OrdersManagement boothId={booth?.boothId} />,
+      });
+    }
+    return items;
+  }, [booth?.status, booth?.boothId, infoTab]);
+
+  useEffect(() => {
+    if (
+      activeKey === "orders" &&
+      booth &&
+      booth.status !== BOOTH_STATUS.ACTIVE
+    ) {
+      setActiveKey("info");
+      const base = `/app/groups/${groupId}/booth/${boothId}`;
+      navigate(base, { replace: true });
+    }
+  }, [activeKey, booth?.status, groupId, boothId, navigate]);
+
+  if (loading) {
+    return (
+      <div className="text-center py-10">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="text-gray-600 mt-2">Đang tải chi tiết gian hàng...</p>
       </div>
     );
   }
 
   if (!booth) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Không tìm thấy gian hàng</h2>
-          <button 
-            onClick={() => navigate(-1)}
-            className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-          >
-            Quay lại
-          </button>
-        </div>
+      <div className="text-center py-12">
+        <Store className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 mb-2">
+          Không tìm thấy gian hàng
+        </h3>
+        <Button onClick={() => navigate(-1)}>← Quay lại</Button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5" />
-              Quay lại
-            </button>
-            
-            <div className="flex items-center gap-4">
-              <button className="p-2 text-gray-600 hover:text-red-500 transition-colors">
-                <Heart className="w-6 h-6" />
-              </button>
-              <button className="p-2 text-gray-600 hover:text-blue-500 transition-colors">
-                <Share2 className="w-6 h-6" />
-              </button>
-              <button className="p-2 text-gray-600 hover:text-green-500 transition-colors">
-                <Camera className="w-6 h-6" />
-              </button>
+    <>
+      {contextHolder}
+
+      <Breadcrumb items={breadcrumbItems} className="mb-2 text-sm" />
+      <div className="bg-white border border-gray-200 rounded-xl p-5 mb-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-lg">
+              {booth.boothName?.[0]?.toUpperCase() || "B"}
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-xl font-semibold text-gray-900 truncate">
+                  {booth.boothName}
+                </h2>
+                {getStatusBadge(booth.status)}
+              </div>
+              <p className="text-xs text-gray-500 truncate">
+                Thuộc lễ hội:{" "}
+                <span className="font-medium text-gray-700">
+                  {festival?.festivalName || "—"}
+                </span>
+              </p>
             </div>
           </div>
+
+          <div className="flex items-center gap-2">{renderActionButtons()}</div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-              <div className="relative">
-                <img
-                  src={booth.images[selectedImage]}
-                  alt={booth.booth_name}
-                  className="w-full h-96 object-cover"
-                />
-                
-                <button
-                  onClick={() => setSelectedImage(selectedImage > 0 ? selectedImage - 1 : booth.images.length - 1)}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 p-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white transition-colors"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => setSelectedImage(selectedImage < booth.images.length - 1 ? selectedImage + 1 : 0)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 p-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white transition-colors"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-                
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-                  {booth.images.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImage(index)}
-                      className={`w-3 h-3 rounded-full transition-colors ${
-                        index === selectedImage ? 'bg-white' : 'bg-white/50'
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
-              
-              <div className="p-4">
-                <div className="grid grid-cols-4 gap-3">
-                  {booth.images.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImage(index)}
-                      className={`relative overflow-hidden rounded-lg ${
-                        index === selectedImage ? 'ring-2 ring-indigo-500' : ''
-                      }`}
-                    >
-                      <img
-                        src={image}
-                        alt=""
-                        className="w-full h-20 object-cover hover:opacity-80 transition-opacity"
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-3xl font-bold text-gray-900">{booth.booth_name}</h1>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium text-white ${
-                      booth.booth_type === 'food' ? 'bg-orange-500' :
-                      booth.booth_type === 'beverage' ? 'bg-blue-500' :
-                      'bg-purple-500'
-                    }`}>
-                      {booth.booth_type === 'food' ? '🍜 Đồ ăn' :
-                       booth.booth_type === 'beverage' ? '☕ Đồ uống' :
-                       '🍰 Tráng miệng'}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="flex items-center gap-1">
-                      <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium text-lg">{booth.rating}</span>
-                      <span className="text-gray-600">({booth.reviews_count} đánh giá)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-600">{booth.location.location_name}</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-green-600">
-                    {booth.points_balance} điểm
-                  </div>
-                  <div className="text-sm text-gray-500">Điểm hiện tại</div>
-                </div>
-              </div>
-
-              <p className="text-gray-700 leading-relaxed mb-6">{booth.description}</p>
-
-              <div className="grid grid-cols-4 gap-4 mb-6">
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-indigo-600">{booth.menu_items_count}</div>
-                  <div className="text-sm text-gray-600">Món ăn</div>
-                </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{booth.total_orders}</div>
-                  <div className="text-sm text-gray-600">Đơn hàng</div>
-                </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">{(booth.revenue / 1000000).toFixed(1)}M</div>
-                  <div className="text-sm text-gray-600">Doanh thu</div>
-                </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-orange-600">
-                    {booth.operating_hours.start} - {booth.operating_hours.end}
-                  </div>
-                  <div className="text-sm text-gray-600">Giờ mở cửa</div>
-                </div>
-              </div>
-
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold mb-4">Thông tin nhóm</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <span className="text-gray-600">Tên nhóm:</span>
-                    <div className="font-medium">{booth.group.group_name}</div>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Lớp:</span>
-                    <div className="font-medium">{booth.group.class_name}</div>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Trường:</span>
-                    <div className="font-medium">{booth.group.school_name}</div>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Liên hệ:</span>
-                    <div className="font-medium">{booth.contact.phone}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-lg">
-              <div className="border-b">
-                <nav className="flex">
-                  {[
-                    { id: 'menu', label: 'Thực đơn', count: menuItems.length },
-                    { id: 'reviews', label: 'Đánh giá', count: reviews.length },
-                    { id: 'info', label: 'Thông tin', count: null }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`px-6 py-4 font-medium text-sm border-b-2 transition-colors ${
-                        activeTab === tab.id
-                          ? 'border-indigo-500 text-indigo-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700'
-                      }`}
-                    >
-                      {tab.label}
-                      {tab.count && (
-                        <span className="ml-2 px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
-                          {tab.count}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </nav>
-              </div>
-
-              <div className="p-6">
-                {activeTab === 'menu' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {menuItems.map((item) => (
-                      <div key={item.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex gap-4">
-                          <img
-                            src={item.image_url}
-                            alt={item.item_name}
-                            className="w-20 h-20 object-cover rounded-lg"
-                          />
-                          <div className="flex-1">
-                            <div className="flex items-start justify-between mb-2">
-                              <h4 className="font-semibold text-gray-900">{item.item_name}</h4>
-                              <div className="flex items-center gap-1">
-                                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                <span className="text-sm">{item.rating}</span>
-                              </div>
-                            </div>
-                            <p className="text-sm text-gray-600 mb-3">{item.description}</p>
-                            <div className="flex items-center justify-between">
-                              <span className="text-lg font-bold text-indigo-600">
-                                {formatPrice(item.price)}
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500">Đã bán: {item.sold_count}</span>
-                                {item.available ? (
-                                  <button
-                                    onClick={() => addToCart(item)}
-                                    className="px-3 py-1 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700 transition-colors"
-                                  >
-                                    Thêm
-                                  </button>
-                                ) : (
-                                  <span className="px-3 py-1 bg-gray-300 text-gray-500 rounded text-sm">
-                                    Hết hàng
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {activeTab === 'reviews' && (
-                  <div className="space-y-6">
-                    {reviews.map((review) => (
-                      <div key={review.id} className="border-b border-gray-200 pb-6 last:border-b-0">
-                        <div className="flex items-start gap-4">
-                          <img
-                            src={review.user_avatar}
-                            alt={review.user_name}
-                            className="w-12 h-12 rounded-full object-cover"
-                          />
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h5 className="font-medium text-gray-900">{review.user_name}</h5>
-                              <div className="flex items-center gap-1">
-                                {[...Array(review.rating)].map((_, i) => (
-                                  <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                ))}
-                              </div>
-                              <span className="text-sm text-gray-500">
-                                {new Date(review.date).toLocaleDateString('vi-VN')}
-                              </span>
-                            </div>
-                            <p className="text-gray-700">{review.comment}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {activeTab === 'info' && (
-                  <div className="space-y-6">
-                    <div>
-                      <h4 className="font-semibold text-gray-900 mb-3">Thông tin lễ hội</h4>
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <span className="text-gray-600">Tên lễ hội:</span>
-                            <div className="font-medium">{booth.festival.festival_name}</div>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Thời gian:</span>
-                            <div className="font-medium">
-                              {new Date(booth.festival.start_date).toLocaleDateString('vi-VN')} - 
-                              {new Date(booth.festival.end_date).toLocaleDateString('vi-VN')}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-semibold text-gray-900 mb-3">Liên hệ</h4>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-600">Điện thoại:</span>
-                          <span className="font-medium">{booth.contact.phone}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-600">Facebook:</span>
-                          <a href={`https://${booth.contact.facebook}`} className="font-medium text-blue-600 hover:text-blue-700">
-                            {booth.contact.facebook}
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-6">
-                       <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Thao tác nhanh</h3>
-              <div className="space-y-3">
-                <button className="w-full flex items-center gap-3 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <MessageCircle className="w-5 h-5 text-gray-500" />
-                  <span>Nhắn tin cho gian hàng</span>
-                </button>
-                <button className="w-full flex items-center gap-3 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Star className="w-5 h-5 text-gray-500" />
-                  <span>Đánh giá gian hàng</span>
-                </button>
-                <button className="w-full flex items-center gap-3 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Share2 className="w-5 h-5 text-gray-500" />
-                  <span>Chia sẻ</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Thống kê gian hàng</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-green-500" />
-                    <span className="text-sm text-gray-600">Doanh thu hôm nay</span>
-                  </div>
-                  <span className="font-semibold text-green-600">
-                    {formatPrice(450000)}
-                  </span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-blue-500" />
-                    <span className="text-sm text-gray-600">Khách hàng hôm nay</span>
-                  </div>
-                  <span className="font-semibold text-blue-600">28</span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Award className="w-4 h-4 text-yellow-500" />
-                    <span className="text-sm text-gray-600">Xếp hạng</span>
-                  </div>
-                  <span className="font-semibold text-yellow-600">#3</span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-purple-500" />
-                    <span className="text-sm text-gray-600">Thời gian phục vụ</span>
-                  </div>
-                  <span className="font-semibold text-purple-600">~8 phút</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Gian hàng tương tự</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer">
-                <img
-                  src={`https://images.unsplash.com/photo-${1555939594 + i}-58d7cb561ad1?w=300&h=200&fit=crop`}
-                  alt={`Gian hàng ${i}`}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="p-4">
-                  <h4 className="font-semibold text-gray-900 mb-2">Gian hàng {i}</h4>
-                  <div className="flex items-center gap-1 mb-2">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm font-medium">4.{5 + i}</span>
-                    <span className="text-xs text-gray-500">(120 đánh giá)</span>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-3">Mô tả ngắn về gian hàng...</p>
-                  <button className="w-full bg-indigo-600 text-white py-2 rounded-lg text-sm hover:bg-indigo-700 transition-colors">
-                    Xem chi tiết
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
+      <Tabs
+        activeKey={activeKey}
+        onChange={handleTabChange}
+        items={tabItems}
+        destroyInactiveTabPane
+      />
+    </>
   );
-};
-
-export default BoothDetailPage;
+}

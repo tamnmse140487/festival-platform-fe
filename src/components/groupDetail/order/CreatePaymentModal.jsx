@@ -263,12 +263,12 @@ const CreatePaymentModal = ({ visible, onCancel, onSuccess, boothId, menuItems, 
 
                 await accountWalletHistoriesServices.create({
                     accountId: selectedCustomer.id,
-                    description: `Thanh toán cho đơn hàng có mã ${orderId} bằng ví chính`,
+                    description: `Thanh toán cho đơn hàng có mã ${orderId} bằng ví`,
                     amount: totalAmount,
                     type: HISTORY_TYPE.PAYMENT
                 })
 
-                toast.success('Thanh toán bằng ví chính thành công')
+                toast.success('Thanh toán bằng ví thành công')
             } else {
                 throw new Error('Phương thức thanh toán không hợp lệ')
             }

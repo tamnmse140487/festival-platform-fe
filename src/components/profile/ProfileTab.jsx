@@ -8,6 +8,7 @@ import { ROLE_NAME } from "../../utils/constants";
 import { accountServices } from "../../services/accountServices";
 import { schoolServices } from "../../services/schoolServices";
 import { uploadService } from "../../services/uploadServices";
+import { useAuth } from "../../contexts/AuthContext";
 
 const ProfileTab = ({
   profileData,
@@ -20,22 +21,26 @@ const ProfileTab = ({
   user,
   isOwnProfile = true,
   selectedAvatar,
-  onDataUpdate
+  onDataUpdate,
 }) => {
   const [saving, setSaving] = useState(false);
+  const { updateLocalUser } = useAuth();
 
   const hasAccountChanges = () => {
     const changes = {};
-    
+
     if (profileData.fullName !== originalData.fullName) {
       changes.fullName = profileData.fullName;
     }
-    
+
     if (profileData.phone_number !== originalData.phone_number) {
       changes.phoneNumber = profileData.phone_number;
     }
-    
-    if (user.role === ROLE_NAME.STUDENT && profileData.className !== originalData.className) {
+
+    if (
+      user.role === ROLE_NAME.STUDENT &&
+      profileData.className !== originalData.className
+    ) {
       changes.className = profileData.className;
     }
 
@@ -48,12 +53,18 @@ const ProfileTab = ({
     }
 
     const changes = {};
-    
-    if (profileData.schoolInfo.contactInfo !== profileData.schoolInfo.originalContactInfo) {
+
+    if (
+      profileData.schoolInfo.contactInfo !==
+      profileData.schoolInfo.originalContactInfo
+    ) {
       changes.contactInfo = profileData.schoolInfo.contactInfo;
     }
-    
-    if (profileData.schoolInfo.description !== profileData.schoolInfo.originalDescription) {
+
+    if (
+      profileData.schoolInfo.description !==
+      profileData.schoolInfo.originalDescription
+    ) {
       changes.description = profileData.schoolInfo.description;
     }
 
@@ -74,42 +85,52 @@ const ProfileTab = ({
 
       if (accountChanges || hasAvatarChange) {
         const updateData = { ...accountChanges };
-        
+
         if (hasAvatarChange) {
           updateData.avatarUrl = avatarUrl;
         }
-        
+
         updateData.status = true;
         updateData.updatedAt = new Date().toISOString();
-        
+
         await accountServices.update({ id: user.id }, updateData);
       }
 
       const schoolChanges = hasSchoolChanges();
-      if (schoolChanges || (user.role === ROLE_NAME.SCHOOL_MANAGER && hasAvatarChange)) {
+      if (
+        schoolChanges ||
+        (user.role === ROLE_NAME.SCHOOL_MANAGER && hasAvatarChange)
+      ) {
         const updateParams = { id: user.schoolId };
-        
+
         if (schoolChanges) {
           Object.assign(updateParams, schoolChanges);
         }
-        
+
         if (hasAvatarChange) {
           updateParams.logoUrl = avatarUrl;
         }
-        
+
         await schoolServices.update(updateParams);
       }
 
-      toast.success('Cập nhật thông tin thành công!');
-      
+      const patch = {};
+      if (accountChanges?.fullName) patch.fullName = accountChanges.fullName;
+
+      if (Object.keys(patch).length) {
+        updateLocalUser(patch);
+      }
+
+      toast.success("Cập nhật thông tin thành công!");
+
       if (onDataUpdate) {
         onDataUpdate();
       }
-      
+
       onSave();
     } catch (error) {
-      console.error('Error updating profile:', error);
-      toast.error('Có lỗi xảy ra khi cập nhật thông tin');
+      console.error("Error updating profile:", error);
+      toast.error("Có lỗi xảy ra khi cập nhật thông tin");
     } finally {
       setSaving(false);
     }
@@ -127,10 +148,20 @@ const ProfileTab = ({
           </Button>
         ) : isOwnProfile && isEditing ? (
           <div className="flex space-x-2">
-            <Button variant="outline" size="sm" onClick={onCancel} disabled={saving}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onCancel}
+              disabled={saving}
+            >
               Hủy
             </Button>
-            <Button size="sm" onClick={handleSave} loading={saving} icon={<Save size={16} />}>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              loading={saving}
+              icon={<Save size={16} />}
+            >
               Lưu
             </Button>
           </div>
@@ -191,43 +222,59 @@ const ProfileTab = ({
           </h4>
           <div className="space-y-4">
             <div>
-              <span className="text-blue-700 font-medium block">Tên trường:</span>
-              <p className="text-blue-600">{profileData.schoolInfo.schoolName}</p>
+              <span className="text-blue-700 font-medium block">
+                Tên trường:
+              </span>
+              <p className="text-blue-600">
+                {profileData.schoolInfo.schoolName}
+              </p>
             </div>
             <div>
               <span className="text-blue-700 font-medium block">Địa chỉ:</span>
               <p className="text-blue-600">{profileData.schoolInfo.address}</p>
             </div>
             <div>
-              <label className="text-blue-700 font-medium block mb-1">Liên hệ:</label>
+              <label className="text-blue-700 font-medium block mb-1">
+                Liên hệ:
+              </label>
               {isEditing ? (
                 <input
                   type="text"
-                  value={profileData.schoolInfo.contactInfo || ''}
-                  onChange={(e) => onChange("schoolInfo", { 
-                    ...profileData.schoolInfo, 
-                    contactInfo: e.target.value 
-                  })}
+                  value={profileData.schoolInfo.contactInfo || ""}
+                  onChange={(e) =>
+                    onChange("schoolInfo", {
+                      ...profileData.schoolInfo,
+                      contactInfo: e.target.value,
+                    })
+                  }
                   className="w-full px-3 py-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                 />
               ) : (
-                <p className="text-blue-600">{profileData.schoolInfo.contactInfo}</p>
+                <p className="text-blue-600">
+                  {profileData.schoolInfo.contactInfo}
+                </p>
               )}
             </div>
             <div>
-              <label className="text-blue-700 font-medium block mb-1">Mô tả:</label>
+              <label className="text-blue-700 font-medium block mb-1">
+                Mô tả:
+              </label>
               {isEditing ? (
                 <textarea
                   rows={3}
-                  value={profileData.schoolInfo.description || ''}
-                  onChange={(e) => onChange("schoolInfo", { 
-                    ...profileData.schoolInfo, 
-                    description: e.target.value 
-                  })}
+                  value={profileData.schoolInfo.description || ""}
+                  onChange={(e) =>
+                    onChange("schoolInfo", {
+                      ...profileData.schoolInfo,
+                      description: e.target.value,
+                    })
+                  }
                   className="w-full px-3 py-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                 />
               ) : (
-                <p className="text-blue-600">{profileData.schoolInfo.description}</p>
+                <p className="text-blue-600">
+                  {profileData.schoolInfo.description}
+                </p>
               )}
             </div>
           </div>
