@@ -67,14 +67,14 @@ export const AuthProvider = ({ children }) => {
             Array.isArray(roleResponse.data) &&
             roleResponse.data.length > 0
           ) {
-
-            const matchedAccount = roleResponse.data.find((item) => item.accountId === userData.id)
+            const matchedAccount = roleResponse.data.find(
+              (item) => item.accountId === userData.id
+            );
 
             if (matchedAccount) {
               userData[field] = matchedAccount[field];
               userData[fieldName] = matchedAccount[fieldName];
             }
-
           }
         } catch (roleError) {
           console.error(`Error fetching ${userData.role} data:`, roleError);
@@ -121,6 +121,16 @@ export const AuthProvider = ({ children }) => {
     return requiredRoles.includes(user.role);
   };
 
+  const updateLocalUser = (patch) => {
+    setUser((prev) => {
+      const next = { ...(prev || {}), ...(patch || {}) };
+      try {
+        localStorage.setItem("user", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
+
   const value = {
     user,
     token,
@@ -129,6 +139,7 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     hasRole,
+    updateLocalUser,
     isAuthenticated: !!user && !!token,
   };
 

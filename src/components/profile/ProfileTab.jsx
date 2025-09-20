@@ -1,12 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 import { User, Mail, Phone, Shield, Edit, Save } from "lucide-react";
+import { toast } from "react-hot-toast";
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import { getRoleDisplayName } from "../../utils/helpers";
 import { ROLE_NAME } from "../../utils/constants";
+import { accountServices } from "../../services/accountServices";
+import { schoolServices } from "../../services/schoolServices";
+import { uploadService } from "../../services/uploadServices";
+import { useAuth } from "../../contexts/AuthContext";
 
 const ProfileTab = ({
   profileData,
+  originalData,
   isEditing,
   onEdit,
   onSave,
@@ -14,7 +20,122 @@ const ProfileTab = ({
   onChange,
   user,
   isOwnProfile = true,
+  selectedAvatar,
+  onDataUpdate,
 }) => {
+  const [saving, setSaving] = useState(false);
+  const { updateLocalUser } = useAuth();
+
+  const hasAccountChanges = () => {
+    const changes = {};
+
+    if (profileData.fullName !== originalData.fullName) {
+      changes.fullName = profileData.fullName;
+    }
+
+    if (profileData.phone_number !== originalData.phone_number) {
+      changes.phoneNumber = profileData.phone_number;
+    }
+
+    if (
+      user.role === ROLE_NAME.STUDENT &&
+      profileData.className !== originalData.className
+    ) {
+      changes.className = profileData.className;
+    }
+
+    return Object.keys(changes).length > 0 ? changes : null;
+  };
+
+  const hasSchoolChanges = () => {
+    if (user.role !== ROLE_NAME.SCHOOL_MANAGER || !profileData.schoolInfo) {
+      return null;
+    }
+
+    const changes = {};
+
+    if (
+      profileData.schoolInfo.contactInfo !==
+      profileData.schoolInfo.originalContactInfo
+    ) {
+      changes.contactInfo = profileData.schoolInfo.contactInfo;
+    }
+
+    if (
+      profileData.schoolInfo.description !==
+      profileData.schoolInfo.originalDescription
+    ) {
+      changes.description = profileData.schoolInfo.description;
+    }
+
+    return Object.keys(changes).length > 0 ? changes : null;
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      let avatarUrl = profileData.avatarUrl;
+
+      if (selectedAvatar) {
+        avatarUrl = await uploadService.uploadAvatarImage(selectedAvatar);
+      }
+
+      const accountChanges = hasAccountChanges();
+      const hasAvatarChange = avatarUrl !== originalData.avatarUrl;
+
+      if (accountChanges || hasAvatarChange) {
+        const updateData = { ...accountChanges };
+
+        if (hasAvatarChange) {
+          updateData.avatarUrl = avatarUrl;
+        }
+
+        updateData.status = true;
+        updateData.updatedAt = new Date().toISOString();
+
+        await accountServices.update({ id: user.id }, updateData);
+      }
+
+      const schoolChanges = hasSchoolChanges();
+      if (
+        schoolChanges ||
+        (user.role === ROLE_NAME.SCHOOL_MANAGER && hasAvatarChange)
+      ) {
+        const updateParams = { id: user.schoolId };
+
+        if (schoolChanges) {
+          Object.assign(updateParams, schoolChanges);
+        }
+
+        if (hasAvatarChange) {
+          updateParams.logoUrl = avatarUrl;
+        }
+
+        await schoolServices.update(updateParams);
+      }
+
+      const patch = {};
+      if (accountChanges?.fullName) patch.fullName = accountChanges.fullName;
+
+      if (Object.keys(patch).length) {
+        updateLocalUser(patch);
+      }
+
+      toast.success("Cập nhật thông tin thành công!");
+
+      if (onDataUpdate) {
+        onDataUpdate();
+      }
+
+      onSave();
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error("Có lỗi xảy ra khi cập nhật thông tin");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -27,10 +148,20 @@ const ProfileTab = ({
           </Button>
         ) : isOwnProfile && isEditing ? (
           <div className="flex space-x-2">
-            <Button variant="outline" size="sm" onClick={onCancel}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onCancel}
+              disabled={saving}
+            >
               Hủy
             </Button>
-            <Button size="sm" onClick={onSave} icon={<Save size={16} />}>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              loading={saving}
+              icon={<Save size={16} />}
+            >
               Lưu
             </Button>
           </div>
@@ -51,8 +182,7 @@ const ProfileTab = ({
           type="email"
           leftIcon={<Mail size={20} />}
           value={profileData.email}
-          onChange={(e) => onChange("email", e.target.value)}
-          disabled={!isEditing || !isOwnProfile}
+          disabled={true}
         />
 
         <Input
@@ -85,33 +215,67 @@ const ProfileTab = ({
         </div>
       </div>
 
-      {profileData.schoolInfo && (
+      {user?.role === ROLE_NAME.SCHOOL_MANAGER && profileData.schoolInfo && (
         <div className="mt-6 p-4 bg-blue-50 rounded-lg">
           <h4 className="font-medium text-blue-900 mb-3">
             Thông tin trường học
           </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div className="space-y-4">
             <div>
-              <span className="text-blue-700 font-medium">Tên trường:</span>
+              <span className="text-blue-700 font-medium block">
+                Tên trường:
+              </span>
               <p className="text-blue-600">
                 {profileData.schoolInfo.schoolName}
               </p>
             </div>
             <div>
-              <span className="text-blue-700 font-medium">Địa chỉ:</span>
+              <span className="text-blue-700 font-medium block">Địa chỉ:</span>
               <p className="text-blue-600">{profileData.schoolInfo.address}</p>
             </div>
             <div>
-              <span className="text-blue-700 font-medium">Liên hệ:</span>
-              <p className="text-blue-600">
-                {profileData.schoolInfo.contactInfo}
-              </p>
+              <label className="text-blue-700 font-medium block mb-1">
+                Liên hệ:
+              </label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={profileData.schoolInfo.contactInfo || ""}
+                  onChange={(e) =>
+                    onChange("schoolInfo", {
+                      ...profileData.schoolInfo,
+                      contactInfo: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                />
+              ) : (
+                <p className="text-blue-600">
+                  {profileData.schoolInfo.contactInfo}
+                </p>
+              )}
             </div>
             <div>
-              <span className="text-blue-700 font-medium">Mô tả:</span>
-              <p className="text-blue-600">
-                {profileData.schoolInfo.description}
-              </p>
+              <label className="text-blue-700 font-medium block mb-1">
+                Mô tả:
+              </label>
+              {isEditing ? (
+                <textarea
+                  rows={3}
+                  value={profileData.schoolInfo.description || ""}
+                  onChange={(e) =>
+                    onChange("schoolInfo", {
+                      ...profileData.schoolInfo,
+                      description: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                />
+              ) : (
+                <p className="text-blue-600">
+                  {profileData.schoolInfo.description}
+                </p>
+              )}
             </div>
           </div>
         </div>

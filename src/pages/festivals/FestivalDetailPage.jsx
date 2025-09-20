@@ -29,8 +29,6 @@ import { mapLocationServices } from "../../services/mapLocationServices";
 import { festivalMenuServices } from "../../services/festivalMenuServices";
 import { menuItemServices } from "../../services/menuItemServices";
 import { imageServices } from "../../services/imageServices";
-import { accountFestivalWalletsServices } from "../../services/accountFestivalWalletsServices";
-import { accountWalletHistoriesServices } from "../../services/accountWalletHistoryServices";
 import Button from "../../components/common/Button";
 import Card from "../../components/common/Card";
 import Modal from "../../components/common/Modal";
@@ -45,9 +43,14 @@ import {
   FESTIVAL_APPROVAL_STATUS,
   FESTIVAL_APPROVAL_STATUS_LABELS,
   HISTORY_TYPE,
+  NOTIFICATION_EVENT,
 } from "../../utils/constants";
 import { convertToVietnamTimeWithFormat } from "../../utils/formatters";
 import dayjs from "dayjs";
+import { festivalParticipantsServices } from "../../services/festivalParticipantsServices";
+import { notificationServices } from "../../services/notificationServices";
+import { schoolServices } from "../../services/schoolServices";
+import { getStatusFestivalBadge } from "../../utils/helpers";
 
 const FestivalDetailPage = () => {
   const { id } = useParams();
@@ -62,41 +65,38 @@ const FestivalDetailPage = () => {
   const [approvalData, setApprovalData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showIngredientModal, setShowIngredientModal] = useState(false);
-  const [showJoinConfirmModal, setShowJoinConfirmModal] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [hasJoinedFestival, setHasJoinedFestival] = useState(false);
-  const [checkingJoinStatus, setCheckingJoinStatus] = useState(true);
 
   useEffect(() => {
     loadFestivalData();
   }, [id]);
 
   useEffect(() => {
-    if (hasRole([ROLE_NAME.USER, ROLE_NAME.STUDENT]) && user?.id) {
-      checkJoinStatus();
-    }
-  }, [id, user?.id]);
+    const checkParticipation = async () => {
+      if (!user?.id || !festival?.festivalId) return;
 
-  const checkJoinStatus = async () => {
-    try {
-      setCheckingJoinStatus(true);
-      const response = await accountFestivalWalletsServices.get({
-        accountId: user.id,
-        festivalId: parseInt(id),
-      });
+      try {
+        const response = await festivalParticipantsServices.get({
+          accountId: user.id,
+          festivalId: festival.festivalId,
+        });
 
-      setHasJoinedFestival(response.data && response.data.length > 0);
-    } catch (error) {
-      console.error("Error checking join status:", error);
-      setHasJoinedFestival(false);
-    } finally {
-      setCheckingJoinStatus(false);
-    }
-  };
+        if (response.data && response.data.length > 0) {
+          setHasJoinedFestival(true);
+        } else {
+          setHasJoinedFestival(false);
+        }
+      } catch (error) {
+        console.error("Error checking participation:", error);
+        setHasJoinedFestival(false);
+      }
+    };
+
+    checkParticipation();
+  }, [user?.id, festival?.festivalId]);
 
   const loadFestivalData = async () => {
     try {
@@ -171,77 +171,38 @@ const FestivalDetailPage = () => {
       setIsUpdatingStatus(true);
       await festivalServices.update({ id: parseInt(id), status: newStatus });
       setFestival((prev) => ({ ...prev, status: newStatus }));
+
+      if (newStatus === FESTIVAL_STATUS.ONGOING) {
+        try {
+          const response = await festivalParticipantsServices.get({
+            festivalId: festival.festivalId,
+          });
+
+          const accountIdList = Array.isArray(response?.data)
+            ? response.data.map((item) => item.accountId)
+            : [];
+
+          await notificationServices.createByType(
+            NOTIFICATION_EVENT.FESTIVAL_ONGOING,
+            {
+              data: {
+                festivalId: festival.festivalId,
+                festivalName: festival.festivalName,
+              },
+              list_user_id: accountIdList,
+            }
+          );
+        } catch (e) {
+          console.warn("Send notification failed:", e?.message || e);
+        }
+      }
+
       toast.success("Cập nhật trạng thái lễ hội thành công!");
     } catch (error) {
       console.error("Error updating festival status:", error);
       toast.error("Không thể cập nhật trạng thái lễ hội");
     } finally {
       setIsUpdatingStatus(false);
-    }
-  };
-
-  const handleJoinFestival = async () => {
-    try {
-      setIsJoining(true);
-
-      const now = dayjs().tz("Asia/Ho_Chi_Minh");
-      const start = dayjs
-        .utc(festival.registrationStartDate)
-        .tz("Asia/Ho_Chi_Minh");
-      const end = dayjs
-        .utc(festival.registrationEndDate)
-        .tz("Asia/Ho_Chi_Minh");
-
-      if (!start.isValid() || !end.isValid()) {
-        toast.error(
-          "Khoảng thời gian đăng ký không hợp lệ. Vui lòng liên hệ ban tổ chức."
-        );
-        setIsJoining(false);
-        return;
-      }
-
-      if (now.isBefore(start)) {
-        toast.error(
-          `Hiện tại CHƯA tới ngày được đăng ký tham gia. Vui lòng quay lại từ ${convertToVietnamTimeWithFormat(
-            festival.registrationStartDate
-          )}.`
-        );
-        setIsJoining(false);
-        return;
-      }
-
-      if (now.isAfter(end)) {
-        toast.error(
-          `Thời gian đăng ký đã KẾT THÚC vào ${convertToVietnamTimeWithFormat(
-            festival.registrationEndDate
-          )}.`
-        );
-        setIsJoining(false);
-        return;
-      }
-
-      await accountFestivalWalletsServices.create({
-        accountId: user.id,
-        festivalId: parseInt(id),
-        name: `Ví phụ của ${festival.festivalName}`,
-        balance: 0,
-      });
-
-      await accountWalletHistoriesServices.create({
-        accountId: user.id,
-        description: `Hệ thống đã tạo ví phụ cho lễ hội ${festival.festivalName}`,
-        type: HISTORY_TYPE.CREATE_SUB_WALLET,
-        amount: 0,
-      });
-
-      toast.success("Tham gia lễ hội thành công!");
-      setShowJoinConfirmModal(false);
-      setHasJoinedFestival(true);
-    } catch (error) {
-      console.error("Error joining festival:", error);
-      toast.error("Không thể tham gia lễ hội");
-    } finally {
-      setIsJoining(false);
     }
   };
 
@@ -279,6 +240,61 @@ const FestivalDetailPage = () => {
     );
   };
 
+  const handleJoinFestival = async () => {
+    try {
+      setIsJoining(true);
+      await festivalParticipantsServices.create({
+        festivalId: festival.festivalId,
+        accountId: user.id,
+      });
+
+      const accountId = await schoolServices.getAccountIdBySchoolId(
+        festival.schoolId
+      );
+
+      try {
+        await notificationServices.createByType(
+          NOTIFICATION_EVENT.FESTIVAL_PARTICIPANT,
+          {
+            data: {
+              festivalId: festival.festivalId,
+              festivalName: festival.festivalName,
+              userName: user.fullName,
+            },
+            list_user_id: [accountId],
+          }
+        );
+      } catch (e) {
+        console.warn("Send notification failed:", e?.message || e);
+      }
+
+      toast.success("Quan tâm lễ hội thành công!");
+      setHasJoinedFestival(true);
+    } catch (error) {
+      console.error("Error joining festival:", error);
+      toast.error("Không thể quan tâm lễ hội");
+    } finally {
+      setIsJoining(false);
+    }
+  };
+
+  const handleCancelParticipation = async () => {
+    try {
+      setIsJoining(true);
+      await festivalParticipantsServices.delete({
+        festivalId: festival.festivalId,
+        accountId: user.id,
+      });
+      toast.success("Hủy quan tâm lễ hội thành công!");
+      setHasJoinedFestival(false);
+    } catch (error) {
+      console.error("Error cancelling participation:", error);
+      toast.error("Không thể hủy quan tâm lễ hội");
+    } finally {
+      setIsJoining(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -305,52 +321,12 @@ const FestivalDetailPage = () => {
         <h2 className="text-2xl font-bold text-gray-900">
           Không tìm thấy lễ hội
         </h2>
-        <Button onClick={() => navigate("/app/festivals")} className="mt-4">
+        <Button onClick={() => navigate(-1)} className="mt-4">
           Quay lại danh sách
         </Button>
       </div>
     );
   }
-
-  const getStatusBadge = (status) => {
-    const badges = {
-      [FESTIVAL_STATUS.DRAFT]: {
-        label: "Bản nháp",
-        class: "bg-gray-100 text-gray-800",
-        icon: <Edit size={16} />,
-      },
-      [FESTIVAL_STATUS.PUBLISHED]: {
-        label: "Đã công bố",
-        class: "bg-green-100 text-green-800",
-        icon: <CheckCircle size={16} />,
-      },
-      [FESTIVAL_STATUS.ONGOING]: {
-        label: "Đang diễn ra",
-        class: "bg-blue-100 text-blue-800",
-        icon: <Clock size={16} />,
-      },
-      [FESTIVAL_STATUS.COMPLETED]: {
-        label: "Đã kết thúc",
-        class: "bg-purple-100 text-purple-800",
-        icon: <Trophy size={16} />,
-      },
-      [FESTIVAL_STATUS.CANCELLED]: {
-        label: "Đã hủy",
-        class: "bg-red-100 text-red-800",
-        icon: <X size={16} />,
-      },
-    };
-
-    const badge = badges[status] || badges[FESTIVAL_STATUS.DRAFT];
-    return (
-      <span
-        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${badge.class}`}
-      >
-        {badge.icon}
-        <span className="ml-1">{badge.label}</span>
-      </span>
-    );
-  };
 
   const getStatusActions = () => {
     if (
@@ -443,7 +419,7 @@ const FestivalDetailPage = () => {
         <div className="flex items-center space-x-4">
           <Button
             variant="ghost"
-            onClick={() => navigate("/app/festivals")}
+            onClick={() => navigate(-1)}
             icon={<ArrowLeft size={20} />}
           >
             Quay lại
@@ -464,23 +440,30 @@ const FestivalDetailPage = () => {
 
           {getStatusActions()}
 
-          {hasRole([ROLE_NAME.USER, ROLE_NAME.STUDENT]) &&
-            !checkingJoinStatus &&
-            !hasJoinedFestival && (
-              <Button
-                variant="primary"
-                icon={<UserPlus size={16} />}
-                onClick={() => setShowJoinConfirmModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Đăng ký tham gia lễ hội
-              </Button>
-            )}
-
-          <Button variant="outline" icon={<Share2 size={16} />}>
-            Chia sẻ
-          </Button>
-
+          {hasRole([ROLE_NAME.USER, ROLE_NAME.STUDENT, ROLE_NAME.TEACHER]) && (
+            <>
+              {!hasJoinedFestival ? (
+                <Button
+                  variant="primary"
+                  icon={<UserPlus size={16} />}
+                  onClick={handleJoinFestival}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Quan tâm lễ hội
+                </Button>
+              ) : (
+                <Button
+                  variant="danger"
+                  icon={<X size={16} />}
+                  onClick={handleCancelParticipation}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  Hủy quan tâm lễ hội
+                </Button>
+              )}
+            </>
+          )}
+       
           {hasRole([ROLE_NAME.SCHOOL_MANAGER]) &&
             festival.organizerSchoolId === user.schoolId && (
               <Button
@@ -507,7 +490,7 @@ const FestivalDetailPage = () => {
           <div className="absolute inset-0 bg-black bg-opacity-40" />
           <div className="absolute bottom-6 left-6 right-6 text-white">
             <div className="flex items-center justify-between mb-4">
-              {getStatusBadge(festival.status)}
+              {getStatusFestivalBadge(festival.status)}
               <div className="flex items-center space-x-4 text-sm">
                 <span className="flex items-center">
                   <ShoppingCart size={16} className="mr-1" />
@@ -556,6 +539,7 @@ const FestivalDetailPage = () => {
           </div>
 
           {activeTab === "overview" && <OverviewTab festival={festival} />}
+          
           {activeTab === "images" && (
             <ImagesTab festivalImages={festivalImages} loading={loading} />
           )}
@@ -658,45 +642,6 @@ const FestivalDetailPage = () => {
         festivalId={parseInt(id)}
         supplierId={user?.supplierId}
       />
-
-      <Modal
-        isOpen={showJoinConfirmModal}
-        onClose={() => setShowJoinConfirmModal(false)}
-      >
-        <div className="p-6">
-          <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-blue-100 rounded-full">
-            <UserPlus className="w-6 h-6 text-blue-600" />
-          </div>
-          <h3 className="text-lg font-semibold text-center text-gray-900 mb-2">
-            Xác nhận tham gia lễ hội
-          </h3>
-          <p className="text-center text-gray-600 mb-6">
-            Bạn có chắc chắn muốn tham gia lễ hội{" "}
-            <span className="font-semibold">{festival?.festivalName}</span>?
-          </p>
-          <div className="flex space-x-3">
-            <Button
-              variant="outline"
-              onClick={() => setShowJoinConfirmModal(false)}
-              className="flex-1"
-              disabled={isJoining}
-            >
-              Hủy bỏ
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleJoinFestival}
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
-              disabled={isJoining}
-            >
-              {isJoining ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              ) : null}
-              Xác nhận tham gia
-            </Button>
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 };

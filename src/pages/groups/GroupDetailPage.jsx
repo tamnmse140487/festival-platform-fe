@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import React, { useState, useEffect, useMemo } from "react";
+import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import {
   ArrowLeft,
   Users,
@@ -13,6 +13,7 @@ import {
   Receipt,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { Breadcrumb } from "antd";
 import { useAuth } from "../../contexts/AuthContext";
 import { groupMemberServices } from "../../services/groupMemberServices";
 import { accountServices } from "../../services/accountServices";
@@ -23,6 +24,8 @@ import {
   GROUP_ROLE_LABELS,
   getRoleColor,
   BOOTH_STATUS,
+  ROLE_NAME,
+  NOTIFICATION_EVENT,
 } from "../../utils/constants";
 import Button from "../../components/common/Button";
 import MemberList from "../../components/groups/MemberList";
@@ -31,10 +34,10 @@ import InviteTeacherModal from "../../components/groups/InviteTeacherModal";
 import GroupInfo from "../../components/groupDetail/GroupInfo";
 import GroupBudget from "../../components/groupDetail/GroupBudget";
 import BoothInfo from "../../components/groupDetail/BoothInfo";
-import BoothMenu from "../../components/groupDetail/BoothMenu";
 import OrdersManagement from "../../components/groupDetail/OrdersManagement";
 import ChatTab from "../../components/groupDetail/ChatTab";
 import DocumentsTab from "../../components/groupDetail/DocumentsTab";
+import { notificationServices } from "../../services/notificationServices";
 
 const GroupDetailPage = () => {
   const { groupId } = useParams();
@@ -52,11 +55,18 @@ const GroupDetailPage = () => {
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [showInviteTeacherModal, setShowInviteTeacherModal] = useState(false);
 
+  const breadcrumbItems = useMemo(
+    () => [
+      { title: <Link to="/app/groups">Danh sách nhóm </Link> },
+      { title: `Chi tiết nhóm` },
+    ],
+    [groupId]
+  );
+
   const getCurrentTab = () => {
     const pathname = location.pathname;
     if (pathname.endsWith("/members")) return "members";
     if (pathname.endsWith("/booth")) return "booth";
-    if (pathname.endsWith("/menu")) return "menu";
     if (pathname.endsWith("/orders")) return "orders";
     if (pathname.endsWith("/chat")) return "chat";
     if (pathname.endsWith("/documents")) return "documents";
@@ -85,37 +95,33 @@ const GroupDetailPage = () => {
         icon: <Store size={16} />,
         path: "/booth",
       },
-      {
-        id: "menu",
-        label: "Menu",
-        icon: <UtensilsCrossed size={16} />,
-        path: "/menu",
-      },
     ];
 
     if (booth?.status === BOOTH_STATUS.ACTIVE) {
       baseTabs.push({
         id: "orders",
-        label: "Hóa đơn",
+        label: "Đơn hàng",
         icon: <Receipt size={16} />,
         path: "/orders",
       });
     }
 
-    baseTabs.push(
-      {
-        id: "chat",
-        label: "Chat",
-        icon: <MessageCircle size={16} />,
-        path: "/chat",
-      },
-      {
-        id: "documents",
-        label: "Tài liệu",
-        icon: <File size={16} />,
-        path: "/documents",
-      }
-    );
+    if (hasRole([ROLE_NAME.STUDENT, ROLE_NAME.TEACHER])) {
+      baseTabs.push(
+        {
+          id: "chat",
+          label: "Chat",
+          icon: <MessageCircle size={16} />,
+          path: "/chat",
+        },
+        {
+          id: "documents",
+          label: "Tài liệu",
+          icon: <File size={16} />,
+          path: "/documents",
+        }
+      );
+    }
 
     return baseTabs;
   };
@@ -206,6 +212,22 @@ const GroupDetailPage = () => {
         role: memberData.role,
       });
       toast.success("Thêm thành viên thành công");
+
+      try {
+        await notificationServices.createByType(
+          NOTIFICATION_EVENT.GROUP_ADD_MEMBER,
+          {
+            data: {
+              groupId: group.groupId,
+              groupName: group.groupName,
+            },
+            list_user_id: [memberData.accountId],
+          }
+        );
+      } catch (e) {
+        console.warn("Send notification failed:", e?.message || e);
+      }
+
       setShowAddMemberModal(false);
       fetchMembers();
     } catch (error) {
@@ -221,6 +243,22 @@ const GroupDetailPage = () => {
         accountId: teacherData.accountId,
         role: GROUP_ROLE.HOMEROOM_TEACHER,
       });
+
+      try {
+        await notificationServices.createByType(
+          NOTIFICATION_EVENT.GROUP_ADD_MEMBER,
+          {
+            data: {
+              groupId: group.groupId,
+              groupName: group.groupName,
+            },
+            list_user_id: [teacherData.accountId],
+          }
+        );
+      } catch (e) {
+        console.warn("Send notification failed:", e?.message || e);
+      }
+
       toast.success("Mời giáo viên thành công");
       setShowInviteTeacherModal(false);
       fetchMembers();
@@ -233,6 +271,35 @@ const GroupDetailPage = () => {
   const handleUpdateRole = async (dataInfo) => {
     try {
       await groupMemberServices.update(dataInfo);
+
+      try {
+        if (!dataInfo.role === "member") {
+          await notificationServices.createByType(
+            NOTIFICATION_EVENT.GROUP_UP_ROLE,
+            {
+              data: {
+                groupId: group.groupId,
+                groupName: group.groupName,
+              },
+              list_user_id: [dataInfo.memberId],
+            }
+          );
+        } else {
+          await notificationServices.createByType(
+            NOTIFICATION_EVENT.GROUP_DOWN_ROLE,
+            {
+              data: {
+                groupId: group.groupId,
+                groupName: group.groupName,
+              },
+              list_user_id: [dataInfo.memberId],
+            }
+          );
+        }
+      } catch (e) {
+        console.warn("Send notification failed:", e?.message || e);
+      }
+
       toast.success("Cập nhật vai trò thành công");
       fetchMembers();
     } catch (error) {
@@ -243,7 +310,29 @@ const GroupDetailPage = () => {
 
   const handleRemoveMember = async (memberId) => {
     try {
+      const response = await groupMemberServices.get({ memberId });
+
+      const accountId =
+        Array.isArray(response?.data) && response.data.length > 0
+          ? response.data[0].accountId
+          : null;
+
       await groupMemberServices.delete({ memberId });
+
+      try {
+        await notificationServices.createByType(
+          NOTIFICATION_EVENT.GROUP_REMOVE_MEMBER,
+          {
+            data: {
+              groupName: group.groupName,
+            },
+            list_user_id: [accountId],
+          }
+        );
+      } catch (e) {
+        console.warn("Send notification failed:", e?.message || e);
+      }
+
       fetchMembers();
     } catch (error) {
       toast.error("Xóa thành viên thất bại");
@@ -294,6 +383,7 @@ const GroupDetailPage = () => {
             </div>
 
             <MemberList
+              group={group}
               members={members}
               loading={membersLoading}
               isLeader={isLeader}
@@ -306,9 +396,6 @@ const GroupDetailPage = () => {
 
       case "booth":
         return <BoothInfo groupId={groupId} group={group} members={members} />;
-
-      case "menu":
-        return <BoothMenu groupId={groupId} />;
 
       case "orders":
         return booth ? (
@@ -377,16 +464,10 @@ const GroupDetailPage = () => {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={breadcrumbItems} className="mb-2 text-sm" />
+
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button
-            variant="outline"
-            size="sm"
-            icon={<ArrowLeft size={16} />}
-            onClick={() => navigate("/app/groups")}
-          >
-            Quay lại
-          </Button>
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
               <Users className="w-6 h-6 text-purple-600" />
@@ -417,7 +498,14 @@ const GroupDetailPage = () => {
             </div>
           </div>
         </div>
-        <Button icon={<MessageCircle size={16} />}>Nhắn tin nhóm</Button>
+        {hasRole([ROLE_NAME.STUDENT, ROLE_NAME.TEACHER]) && (
+          <Button
+            onClick={() => navigate(`/app/groups/${groupId}/chat`)}
+            icon={<MessageCircle size={16} />}
+          >
+            Nhắn tin nhóm
+          </Button>
+        )}
       </div>
 
       <div className="border-b border-gray-200">

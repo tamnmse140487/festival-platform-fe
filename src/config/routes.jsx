@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import FestivalListPage from "../pages/festivals/FestivalListPage";
 import CreateFestivalPage from "../pages/festivals/CreateFestivalPage";
@@ -15,170 +15,191 @@ import ProfilePage from "../pages/profile/ProfilePage";
 import SchoolListPage from "../pages/schools/SchoolListPage";
 import SystemSettingsPage from "../pages/system/SystemSettingsPage";
 import IngredientPage from "../pages/ingredient/IngredientPage";
-import { ROLE_NAME } from '../utils/constants';
-import AccountManagementPage from '../pages/accounts/AccountManagementPage';
-import SupplyManagementPage from '../pages/suppliers/SupplyManagementPage';
-import AdminFestivalDetail from '../pages/festivals/admin/AdminFestivalDetail';
-import GroupDetailPage from '../pages/groups/GroupDetailPage';
+import { ROLE_NAME } from "../utils/constants";
+import AccountManagementPage from "../pages/accounts/AccountManagementPage";
+import SupplyManagementPage from "../pages/suppliers/SupplyManagementPage";
+import AdminFestivalDetail from "../pages/festivals/admin/AdminFestivalDetail";
+import GroupDetailPage from "../pages/groups/GroupDetailPage";
+import FestivalsFollowedPage from "../pages/festivals/FestivalsFollowedPage";
+import BoothDetailPage from "../pages/booths/BoothDetailPage";
 
 export const protectedRoutes = [
   // Dashboard
   {
     path: "/app/dashboard",
     element: <DashboardPage />,
-    roles: []
+    roles: [],
   },
 
   // Festivals
   {
     path: "/app/festivals",
     element: <FestivalListPage />,
-    roles: []
+    roles: [],
   },
   {
     path: "/app/festivals/create",
     element: <CreateFestivalPage />,
-    roles: [ROLE_NAME.SCHOOL_MANAGER]
+    roles: [ROLE_NAME.SCHOOL_MANAGER],
   },
   {
     path: "/app/festivals/:id/edit",
     element: <EditFestivalPage />,
-    roles: [ROLE_NAME.SCHOOL_MANAGER]
+    roles: [ROLE_NAME.SCHOOL_MANAGER],
   },
   {
     path: "/app/festivals/:id",
     element: <FestivalDetailPage />,
-    roles: []
+    roles: [],
   },
   {
     path: "/app/festivals/admin/:id",
     element: <AdminFestivalDetail />,
-    roles: [ROLE_NAME.ADMIN]
+    roles: [ROLE_NAME.ADMIN],
+  },
+  {
+    path: "/app/festivals-followed",
+    element: <FestivalsFollowedPage />,
+    roles: [ROLE_NAME.USER],
+  },
+  {
+    path: "/app/festivals-followed/:id",
+    element: <FestivalDetailPage />,
+    roles: [ROLE_NAME.USER],
   },
 
   // Supplier
   {
     path: "/app/suppliers",
     element: <SupplierListPage />,
-    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.SUPPLIER]
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.SUPPLIER],
   },
   {
     path: "/app/supplies",
     element: <SupplyManagementPage />,
-    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPPLIER, ROLE_NAME.SCHOOL_MANAGER]
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPPLIER, ROLE_NAME.SCHOOL_MANAGER],
   },
 
   // Groups and internal groups
   {
     path: "/app/groups",
     element: <StudentGroupPage />,
-    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
+    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT],
   },
   {
     path: "/app/groups/:groupId",
     element: <GroupDetailPage />,
-    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
+    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT],
   },
   {
     path: "/app/groups/:groupId/info",
     element: <GroupDetailPage />,
-    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
+    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT],
   },
   {
     path: "/app/groups/:groupId/members",
     element: <GroupDetailPage />,
-    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
+    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT],
   },
   {
     path: "/app/groups/:groupId/booth",
     element: <GroupDetailPage />,
-    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
+    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT],
   },
   {
     path: "/app/groups/:groupId/menu",
     element: <GroupDetailPage />,
-    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
+    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT],
   },
   {
     path: "/app/groups/:groupId/chat",
     element: <GroupDetailPage />,
-    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
+    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT],
   },
   {
     path: "/app/groups/:groupId/orders",
     element: <GroupDetailPage />,
-    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
+    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT],
   },
   {
     path: "/app/groups/:groupId/documents",
     element: <GroupDetailPage />,
-    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
+    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT],
+  },
+  {
+    path: "/app/groups/:groupId/booth/:boothId",
+    element: <BoothDetailPage />,
+    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT],
+  },
+  {
+    path: "/app/groups/:groupId/booth/:boothId/orders",
+    element: <BoothDetailPage />,
+    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT],
   },
 
   // Booths
   {
     path: "/app/booths",
     element: <BoothListPage />,
-    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER]
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER],
   },
   {
     path: "/app/booths/create/:festivalId",
     element: <CreateBoothPage />,
-    roles: [ROLE_NAME.STUDENT]
+    roles: [ROLE_NAME.STUDENT],
   },
 
   // Games
   {
     path: "/app/games",
     element: <GameListPage />,
-    roles: [ROLE_NAME.TEACHER, ROLE_NAME.STUDENT, ROLE_NAME.USER]
+    roles: [ROLE_NAME.TEACHER, ROLE_NAME.STUDENT, ROLE_NAME.USER],
   },
   {
     path: "/app/games/create/:boothId",
     element: <CreateGamePage />,
-    roles: [ROLE_NAME.STUDENT]
+    roles: [ROLE_NAME.STUDENT],
   },
 
   // Points
   {
     path: "/app/points",
     element: <PointsPage />,
-    roles: [ROLE_NAME.STUDENT, ROLE_NAME.USER]
+    roles: [ROLE_NAME.STUDENT, ROLE_NAME.USER],
   },
 
   // Schools
   {
     path: "/app/schools",
     element: <SchoolListPage />,
-    roles: [ROLE_NAME.ADMIN]
+    roles: [ROLE_NAME.ADMIN],
   },
 
   // System
   {
     path: "/app/system",
     element: <SystemSettingsPage />,
-    roles: [ROLE_NAME.ADMIN]
+    roles: [ROLE_NAME.ADMIN],
   },
 
   // Profile
   {
     path: "/app/profile/:userId?/:tab?",
     element: <ProfilePage />,
-    roles: []
+    roles: [],
   },
 
   // Ingredient
   {
     path: "/app/ingredients",
     element: <IngredientPage />,
-    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPPLIER]
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPPLIER],
   },
 
   //Accounts
   {
     path: "/app/accounts",
     element: <AccountManagementPage />,
-    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER]
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER],
   },
-
 ];

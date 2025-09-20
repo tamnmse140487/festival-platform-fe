@@ -20,6 +20,8 @@ import BoothConfigForm from "../../components/festivals/BoothConfigForm";
 import FestivalImageUploadForm from "../../components/festivals/FestivalImageUploadForm";
 import MapConfigForm from "../../components/festivals/MapConfigForm";
 import MenuConfigForm from "../../components/festivals/MenuConfigForm";
+import { notificationServices } from "../../services/notificationServices";
+import { NOTIFICATION_EVENT } from "../../utils/constants";
 
 const CreateFestivalPage = () => {
   const navigate = useNavigate();
@@ -154,6 +156,20 @@ const CreateFestivalPage = () => {
             maxPrice: parseFloat(item.maxPrice) || 0,
           });
         }
+      }
+
+      try {
+        await notificationServices.createByType(NOTIFICATION_EVENT.FESTIVAL_REQUESTED, {
+          data: {
+            festivalId,
+            festivalName: festivalData.festivalName,
+            schoolId: user.schoolId,
+            schoolName: user.schoolName,
+          },
+          list_user_id: [1],
+        });
+      } catch (e) {
+        console.warn("Send notification failed:", e?.message || e);
       }
 
       toast.success("Tạo lễ hội thành công!");

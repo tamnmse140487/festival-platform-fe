@@ -1,7 +1,7 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
-import { SocketProvider } from "./contexts/SocketContext"; 
+import { SocketProvider } from "./contexts/SocketContext";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import PublicRoute from "./components/common/PublicRoute";
 import Layout from "./components/layout/Layout";
@@ -13,11 +13,12 @@ import RegisterPage from "./pages/auth/RegisterPage";
 import NotFoundPage from "./pages/error/NotFoundPage";
 import BoothDetailPage from "./pages/booths/BoothDetailPage";
 import VerifyPage from "./pages/auth/VerifyPage";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 
 function App() {
   return (
     <AuthProvider>
-      <SocketProvider> 
+      <SocketProvider>
         <Routes>
           <Route
             path="/"
@@ -41,6 +42,15 @@ function App() {
             element={
               <PublicRoute>
                 <LoginPage />
+              </PublicRoute>
+            }
+          />
+
+          <Route
+            path="/auth/forgot-password"
+            element={
+              <PublicRoute>
+                <ForgotPasswordPage />
               </PublicRoute>
             }
           />
@@ -71,7 +81,6 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="/app/dashboard" replace />} />
 
             {protectedRoutes.map((route, index) => (
               <Route

@@ -118,3 +118,39 @@ export const TOPUP_PACKAGES = [
   { value: 500000, label: "500.000 VND" },
   { value: 1000000, label: "1.000.000 VND" },
 ];
+
+export const TIME_RANGES = {
+  "7d": { label: "7 ngày qua", days: 7 },
+  "1m": { label: "1 tháng qua", days: 30 },
+  "3m": { label: "3 tháng qua", days: 90 },
+  "1y": { label: "1 năm qua", days: 365 },
+};
+
+export const COLORS = [
+  "#6366f1",
+  "#22c55e",
+  "#f59e0b",
+  "#ef4444",
+  "#06b6d4",
+  "#a855f7",
+]; 
+
+export const NOTIFICATION_EVENT = {
+  FESTIVAL_REQUESTED: "festival_requested",
+  FESTIVAL_APPROVAL: "festival_approval",
+  FESTIVAL_REJECT: "festival_reject",
+  FESTIVAL_ONGOING: "festival_ongoing",
+  FESTIVAL_COMPLETED: "festival_completed",
+  FESTIVAL_PARTICIPANT: "festival_participant",
+  FESTIVAL_COMMENT: "festival_comment",
+  FESTIVAL_COMMISSION: "festival_commission",
+  GROUP_ADD_MEMBER: "group_add_member",
+  GROUP_UP_ROLE: "group_up_role",
+  GROUP_REMOVE_MEMBER: "group_remove_member",
+  GROUP_DOWN_ROLE: "group_down_role",
+  BOOTH_PENDING: "booth_pending",
+  BOOTH_APPROVAL: "booth_approval",
+  BOOTH_REJECTED: "booth_rejected",
+  BOOTH_ACTIVATED: "booth_active",
+  BOOTH_UPDATED: "booth_updated",
+};
