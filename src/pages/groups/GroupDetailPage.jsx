@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import React, { useState, useEffect, useMemo } from "react";
+import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import {
   ArrowLeft,
   Users,
@@ -13,6 +13,7 @@ import {
   Receipt,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { Breadcrumb } from "antd";
 import { useAuth } from "../../contexts/AuthContext";
 import { groupMemberServices } from "../../services/groupMemberServices";
 import { accountServices } from "../../services/accountServices";
@@ -24,6 +25,7 @@ import {
   getRoleColor,
   BOOTH_STATUS,
   ROLE_NAME,
+  NOTIFICATION_EVENT,
 } from "../../utils/constants";
 import Button from "../../components/common/Button";
 import MemberList from "../../components/groups/MemberList";
@@ -32,10 +34,10 @@ import InviteTeacherModal from "../../components/groups/InviteTeacherModal";
 import GroupInfo from "../../components/groupDetail/GroupInfo";
 import GroupBudget from "../../components/groupDetail/GroupBudget";
 import BoothInfo from "../../components/groupDetail/BoothInfo";
-import BoothMenu from "../../components/groupDetail/BoothMenu";
 import OrdersManagement from "../../components/groupDetail/OrdersManagement";
 import ChatTab from "../../components/groupDetail/ChatTab";
 import DocumentsTab from "../../components/groupDetail/DocumentsTab";
+import { notificationServices } from "../../services/notificationServices";
 
 const GroupDetailPage = () => {
   const { groupId } = useParams();
@@ -53,11 +55,18 @@ const GroupDetailPage = () => {
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [showInviteTeacherModal, setShowInviteTeacherModal] = useState(false);
 
+  const breadcrumbItems = useMemo(
+    () => [
+      { title: <Link to="/app/groups">Danh sách nhóm </Link> },
+      { title: `Chi tiết nhóm` },
+    ],
+    [groupId]
+  );
+
   const getCurrentTab = () => {
     const pathname = location.pathname;
     if (pathname.endsWith("/members")) return "members";
     if (pathname.endsWith("/booth")) return "booth";
-    if (pathname.endsWith("/menu")) return "menu";
     if (pathname.endsWith("/orders")) return "orders";
     if (pathname.endsWith("/chat")) return "chat";
     if (pathname.endsWith("/documents")) return "documents";
@@ -86,18 +95,12 @@ const GroupDetailPage = () => {
         icon: <Store size={16} />,
         path: "/booth",
       },
-      {
-        id: "menu",
-        label: "Menu",
-        icon: <UtensilsCrossed size={16} />,
-        path: "/menu",
-      },
     ];
 
     if (booth?.status === BOOTH_STATUS.ACTIVE) {
       baseTabs.push({
         id: "orders",
-        label: "Hóa đơn",
+        label: "Đơn hàng",
         icon: <Receipt size={16} />,
         path: "/orders",
       });
@@ -118,9 +121,7 @@ const GroupDetailPage = () => {
           path: "/documents",
         }
       );
-
     }
-
 
     return baseTabs;
   };
@@ -211,6 +212,22 @@ const GroupDetailPage = () => {
         role: memberData.role,
       });
       toast.success("Thêm thành viên thành công");
+
+      try {
+        await notificationServices.createByType(
+          NOTIFICATION_EVENT.GROUP_ADD_MEMBER,
+          {
+            data: {
+              groupId: group.groupId,
+              groupName: group.groupName,
+            },
+            list_user_id: [memberData.accountId],
+          }
+        );
+      } catch (e) {
+        console.warn("Send notification failed:", e?.message || e);
+      }
+
       setShowAddMemberModal(false);
       fetchMembers();
     } catch (error) {
@@ -226,6 +243,22 @@ const GroupDetailPage = () => {
         accountId: teacherData.accountId,
         role: GROUP_ROLE.HOMEROOM_TEACHER,
       });
+
+      try {
+        await notificationServices.createByType(
+          NOTIFICATION_EVENT.GROUP_ADD_MEMBER,
+          {
+            data: {
+              groupId: group.groupId,
+              groupName: group.groupName,
+            },
+            list_user_id: [teacherData.accountId],
+          }
+        );
+      } catch (e) {
+        console.warn("Send notification failed:", e?.message || e);
+      }
+
       toast.success("Mời giáo viên thành công");
       setShowInviteTeacherModal(false);
       fetchMembers();
@@ -238,6 +271,35 @@ const GroupDetailPage = () => {
   const handleUpdateRole = async (dataInfo) => {
     try {
       await groupMemberServices.update(dataInfo);
+
+      try {
+        if (!dataInfo.role === "member") {
+          await notificationServices.createByType(
+            NOTIFICATION_EVENT.GROUP_UP_ROLE,
+            {
+              data: {
+                groupId: group.groupId,
+                groupName: group.groupName,
+              },
+              list_user_id: [dataInfo.memberId],
+            }
+          );
+        } else {
+          await notificationServices.createByType(
+            NOTIFICATION_EVENT.GROUP_DOWN_ROLE,
+            {
+              data: {
+                groupId: group.groupId,
+                groupName: group.groupName,
+              },
+              list_user_id: [dataInfo.memberId],
+            }
+          );
+        }
+      } catch (e) {
+        console.warn("Send notification failed:", e?.message || e);
+      }
+
       toast.success("Cập nhật vai trò thành công");
       fetchMembers();
     } catch (error) {
@@ -248,7 +310,29 @@ const GroupDetailPage = () => {
 
   const handleRemoveMember = async (memberId) => {
     try {
+      const response = await groupMemberServices.get({ memberId });
+
+      const accountId =
+        Array.isArray(response?.data) && response.data.length > 0
+          ? response.data[0].accountId
+          : null;
+
       await groupMemberServices.delete({ memberId });
+
+      try {
+        await notificationServices.createByType(
+          NOTIFICATION_EVENT.GROUP_REMOVE_MEMBER,
+          {
+            data: {
+              groupName: group.groupName,
+            },
+            list_user_id: [accountId],
+          }
+        );
+      } catch (e) {
+        console.warn("Send notification failed:", e?.message || e);
+      }
+
       fetchMembers();
     } catch (error) {
       toast.error("Xóa thành viên thất bại");
@@ -299,6 +383,7 @@ const GroupDetailPage = () => {
             </div>
 
             <MemberList
+              group={group}
               members={members}
               loading={membersLoading}
               isLeader={isLeader}
@@ -311,9 +396,6 @@ const GroupDetailPage = () => {
 
       case "booth":
         return <BoothInfo groupId={groupId} group={group} members={members} />;
-
-      case "menu":
-        return <BoothMenu groupId={groupId} />;
 
       case "orders":
         return booth ? (
@@ -382,16 +464,10 @@ const GroupDetailPage = () => {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={breadcrumbItems} className="mb-2 text-sm" />
+
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button
-            variant="outline"
-            size="sm"
-            icon={<ArrowLeft size={16} />}
-            onClick={() => navigate("/app/groups")}
-          >
-            Quay lại
-          </Button>
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
               <Users className="w-6 h-6 text-purple-600" />
@@ -423,7 +499,12 @@ const GroupDetailPage = () => {
           </div>
         </div>
         {hasRole([ROLE_NAME.STUDENT, ROLE_NAME.TEACHER]) && (
-          <Button onClick={() => navigate(`/app/groups/${groupId}/chat`)} icon={<MessageCircle size={16} />}>Nhắn tin nhóm</Button>
+          <Button
+            onClick={() => navigate(`/app/groups/${groupId}/chat`)}
+            icon={<MessageCircle size={16} />}
+          >
+            Nhắn tin nhóm
+          </Button>
         )}
       </div>
 
@@ -433,10 +514,11 @@ const GroupDetailPage = () => {
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
-              className={`flex items-center py-3 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${activeTab === tab.id
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
+              className={`flex items-center py-3 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
+                activeTab === tab.id
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
             >
               {tab.icon}
               <span className="ml-2">{tab.label}</span>
@@ -449,48 +531,44 @@ const GroupDetailPage = () => {
         {renderTabContent()}
       </div>
 
-      {
-        showAddMemberModal && (
-          <div className="mt-0-important fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg w-full max-w-md">
-              <div className="p-6 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Thêm thành viên
-                </h3>
-              </div>
-              <div className="p-6">
-                <AddMemberModal
-                  onClose={() => setShowAddMemberModal(false)}
-                  onSubmit={handleAddMember}
-                  currentUserId={user?.id}
-                />
-              </div>
+      {showAddMemberModal && (
+        <div className="mt-0-important fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-md">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Thêm thành viên
+              </h3>
+            </div>
+            <div className="p-6">
+              <AddMemberModal
+                onClose={() => setShowAddMemberModal(false)}
+                onSubmit={handleAddMember}
+                currentUserId={user?.id}
+              />
             </div>
           </div>
-        )
-      }
+        </div>
+      )}
 
-      {
-        showInviteTeacherModal && (
-          <div className="mt-0-important fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg w-full max-w-md">
-              <div className="p-6 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Mời giáo viên chủ nhiệm
-                </h3>
-              </div>
-              <div className="p-6">
-                <InviteTeacherModal
-                  onClose={() => setShowInviteTeacherModal(false)}
-                  onSubmit={handleInviteTeacher}
-                  currentUserId={user?.id}
-                />
-              </div>
+      {showInviteTeacherModal && (
+        <div className="mt-0-important fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-md">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Mời giáo viên chủ nhiệm
+              </h3>
+            </div>
+            <div className="p-6">
+              <InviteTeacherModal
+                onClose={() => setShowInviteTeacherModal(false)}
+                onSubmit={handleInviteTeacher}
+                currentUserId={user?.id}
+              />
             </div>
           </div>
-        )
-      }
-    </div >
+        </div>
+      )}
+    </div>
   );
 };
 

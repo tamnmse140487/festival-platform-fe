@@ -34,13 +34,6 @@ const TopupModal = ({
 
       const paymentResponse = await paymentServices.create(paymentData);
 
-      await accountWalletHistoriesServices.create({
-        accountId: user.id,
-        description: `Bạn đã nạp ${selectedAmount.toLocaleString('vi-VN')} VNĐ vào ví cá nhân`,
-        type: HISTORY_TYPE.TOPUP,
-        amount: selectedAmount
-      });
-
       const checkoutUrl = paymentResponse.data?.checkoutUrl;
 
       if (checkoutUrl) {

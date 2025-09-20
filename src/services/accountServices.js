@@ -15,4 +15,6 @@ export const accountServices = {
   sendEmail: (data) => api.post("/accounts/send-email", data),
   updatePassword: (params) =>
     api.put(`/accounts/update-password`, {}, { params }),
+  sendOTP: (data) => api.post("/accounts/send-otp", data),
+  confirmOTP: (data) => api.post("/accounts/confirm-otp", data),
 };

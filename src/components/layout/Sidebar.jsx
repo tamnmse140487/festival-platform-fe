@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import React from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   Calendar,
   Users,
@@ -15,10 +15,11 @@ import {
   ChefHat,
   UserPen,
   Handshake,
-  SquareUser
-} from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import { ROLE_NAME } from '../../utils/constants';
+  SquareUser,
+  TicketCheck,
+} from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import { ROLE_NAME } from "../../utils/constants";
 
 const Sidebar = ({ isOpen, onClose }) => {
   const { user, logout, hasRole } = useAuth();
@@ -26,18 +27,34 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   const navigationItems = [
     {
-      id: 'dashboard',
-      label: 'Tổng quan',
+      id: "dashboard",
+      label: "Tổng quan",
       icon: Calendar,
-      path: '/app/dashboard',
-      roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.STUDENT, ROLE_NAME.SUPPLIER, ROLE_NAME.TEACHER, ROLE_NAME.USER]
+      path: "/app/dashboard",
+      roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER],
     },
     {
-      id: 'festivals',
-      label: 'Lễ hội',
+      id: "festivals",
+      label: "Lễ hội",
       icon: Calendar,
-      path: '/app/festivals',
-      roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.STUDENT, ROLE_NAME.SUPPLIER, ROLE_NAME.TEACHER, ROLE_NAME.USER]
+      path: "/app/festivals",
+      roles: [
+        ROLE_NAME.ADMIN,
+        ROLE_NAME.SCHOOL_MANAGER,
+        ROLE_NAME.STUDENT,
+        ROLE_NAME.SUPPLIER,
+        ROLE_NAME.TEACHER,
+        ROLE_NAME.USER,
+      ],
+    },
+    {
+      id: "festivals_followed",
+      label: "Lễ hội quan tâm",
+      icon: TicketCheck,
+      path: "/app/festivals-followed",
+      roles: [
+        ROLE_NAME.USER,
+      ],
     },
     // {
     //   id: 'suppliers',
@@ -61,32 +78,41 @@ const Sidebar = ({ isOpen, onClose }) => {
     //   roles: [ROLE_NAME.SUPPLIER, ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER]
     // },
     {
-      id: 'schools',
-      label: 'Quản lý trường',
+      id: "schools",
+      label: "Quản lý trường",
       icon: School,
-      path: '/app/schools',
-      roles: [ROLE_NAME.ADMIN]
+      path: "/app/schools",
+      roles: [ROLE_NAME.ADMIN],
     },
     {
-      id: 'accounts',
-      label: 'Quản lý tài khoản',
+      id: "accounts",
+      label: "Quản lý tài khoản",
       icon: UserPen,
-      path: '/app/accounts',
-      roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.ADMIN]
+      path: "/app/accounts",
+      roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.ADMIN],
     },
     {
-      id: 'groups',
-      label: user?.role === ROLE_NAME.SCHOOL_MANAGER ? 'Nhóm học sinh' : 'Nhóm của tôi',
+      id: "groups",
+      label:
+        user?.role === ROLE_NAME.SCHOOL_MANAGER
+          ? "Nhóm học sinh"
+          : "Nhóm của tôi",
       icon: Users,
-      path: '/app/groups',
-      roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT]
+      path: "/app/groups",
+      roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT],
     },
     {
-      id: 'profile',
-      label: 'Quản lý cá nhân',
+      id: "profile",
+      label: "Quản lý cá nhân",
       icon: SquareUser,
-      path: '/app/profile',
-      roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.ADMIN, ROLE_NAME.TEACHER, ROLE_NAME.STUDENT, ROLE_NAME.SUPPLIER]
+      path: "/app/profile",
+      roles: [
+        ROLE_NAME.SCHOOL_MANAGER,
+        ROLE_NAME.ADMIN,
+        ROLE_NAME.TEACHER,
+        ROLE_NAME.STUDENT,
+        ROLE_NAME.SUPPLIER,
+      ],
     },
     // {
     //   id: 'booths',
@@ -118,18 +144,19 @@ const Sidebar = ({ isOpen, onClose }) => {
     // }
   ];
 
-  const visibleNavItems = navigationItems.filter(item =>
-    hasRole(item.roles)
-  );
+  const visibleNavItems = navigationItems.filter((item) => hasRole(item.roles));
 
   const handleLogout = () => {
     logout();
-    navigate('/auth/login');
+    navigate("/auth/login");
   };
 
   return (
-    <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
-      } lg:translate-x-0`}>
+    <div
+      className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      } lg:translate-x-0`}
+    >
       <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
         <div className="flex items-center space-x-2">
           <School className="w-8 h-8 text-blue-600" />
@@ -152,9 +179,10 @@ const Sidebar = ({ isOpen, onClose }) => {
               to={item.path}
               onClick={onClose}
               className={({ isActive }) =>
-                `w-full flex items-center px-4 py-3 mb-2 text-left rounded-lg transition-colors ${isActive
-                  ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                  : 'text-gray-700 hover:bg-gray-100'
+                `w-full flex items-center px-4 py-3 mb-2 text-left rounded-lg transition-colors ${
+                  isActive
+                    ? "bg-blue-50 text-blue-700 border-r-2 border-blue-700"
+                    : "text-gray-700 hover:bg-gray-100"
                 }`
               }
             >
@@ -175,7 +203,7 @@ const Sidebar = ({ isOpen, onClose }) => {
               {user?.fullName}
             </p>
             <p className="text-xs text-gray-500 truncate">
-              {user?.schoolName || user?.companyName || 'Festival Hub'}
+              {user?.schoolName || user?.companyName || "Festival Hub"}
             </p>
           </div>
         </div>
