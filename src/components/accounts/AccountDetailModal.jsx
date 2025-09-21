@@ -112,11 +112,11 @@ const AccountDetailModal = ({ account, roles, visible, onClose }) => {
             {account.className && (
               <Descriptions.Item label="Lớp học" span={1}>{account.className}</Descriptions.Item>
             )}
-            {/* <Descriptions.Item label="Trạng thái" span={1}>
+            <Descriptions.Item label="Trạng thái" span={1}>
               <Tag color={account.status ? 'green' : 'red'}>
                 {account.status ? 'Hoạt động' : 'Không hoạt động'}
               </Tag>
-            </Descriptions.Item> */}
+            </Descriptions.Item>
             <Descriptions.Item label="Ngày tạo" span={2}>
               {convertToVietnamTimeWithFormat(account.createdAt)}
             </Descriptions.Item>

@@ -267,7 +267,7 @@ const AccountEditModal = ({ account, roles, visible, onClose, onSuccess }) => {
             <Input value={getRoleDisplayName(account?.roleId)} disabled />
           </Form.Item>
 
-          {/* <Form.Item
+          <Form.Item
             label="Trạng thái"
             name="status"
             valuePropName="checked"
@@ -276,7 +276,7 @@ const AccountEditModal = ({ account, roles, visible, onClose, onSuccess }) => {
               checkedChildren="Hoạt động" 
               unCheckedChildren="Không hoạt động" 
             />
-          </Form.Item> */}
+          </Form.Item>
         </div>
 
         {roleName === 'schoolmanager' && (

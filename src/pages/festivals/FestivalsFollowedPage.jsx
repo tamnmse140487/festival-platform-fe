@@ -1,4 +1,3 @@
-// src/pages/FestivalsFollowedPage.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -43,7 +42,7 @@ export default function FestivalsFollowedPage() {
       try {
         setLoading(true);
 
-        const res = await festivalParticipantsServices.get();
+        const res = await festivalParticipantsServices.get({ accountId: user.id });
         const list = Array.isArray(res?.data) ? res.data : [];
 
         const enriched = await Promise.all(
@@ -99,7 +98,7 @@ export default function FestivalsFollowedPage() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [user?.id]);
 
   const handleRemove = async (festivalId, accountId) => {
     setRows((prev) => prev.filter((r) => r.festival.festivalId !== festivalId));
