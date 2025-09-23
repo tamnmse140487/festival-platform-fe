@@ -28,7 +28,7 @@ const LoginPage = () => {
       if (result.success) {
         toast.success("Đăng nhập thành công!");
 
-        switch (user) {
+        switch (user?.role) {
           case ROLE_NAME.STUDENT:
           case ROLE_NAME.TEACHER:
           case ROLE_NAME.USER:

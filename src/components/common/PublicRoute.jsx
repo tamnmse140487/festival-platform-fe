@@ -16,7 +16,7 @@ const PublicRoute = ({ children }) => {
     isAuthenticated &&
     (location.pathname.startsWith("/auth") || location.pathname === "/")
   ) {
-    switch (user) {
+    switch (user?.role) {
       case ROLE_NAME.STUDENT:
       case ROLE_NAME.TEACHER:
       case ROLE_NAME.USER:

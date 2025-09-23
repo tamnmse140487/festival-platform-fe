@@ -112,6 +112,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         ROLE_NAME.TEACHER,
         ROLE_NAME.STUDENT,
         ROLE_NAME.SUPPLIER,
+        ROLE_NAME.USER,
       ],
     },
     // {

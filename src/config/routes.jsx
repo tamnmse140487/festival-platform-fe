@@ -28,7 +28,7 @@ export const protectedRoutes = [
   {
     path: "/app/dashboard",
     element: <DashboardPage />,
-    roles: [],
+    roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.ADMIN],
   },
 
   // Festivals
