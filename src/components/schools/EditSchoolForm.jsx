@@ -22,8 +22,8 @@ const EditSchoolForm = ({ school, accountInfo, onClose, onEditSuccess }) => {
 
     try {
       const accountUpdateData = {
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
+        // email: formData.email,
+        // phoneNumber: formData.phoneNumber,
         updatedAt: new Date().toISOString()
       };
 
@@ -34,16 +34,15 @@ const EditSchoolForm = ({ school, accountInfo, onClose, onEditSuccess }) => {
       await accountServices.update({ id: school.accountId }, accountUpdateData);
 
       const schoolUpdateParams = {
-        id: school.schoolId,
+        id: school?.schoolId,
         contactInfo: formData.contactInfo,
         logoUrl: formData.logoUrl,
         description: formData.description
       };
 
-      await schoolServices.update(schoolUpdateParams);
-
+      const response = await schoolServices.update(schoolUpdateParams);
       toast.success('Cập nhật thông tin thành công');
-      onEditSuccess();
+      onEditSuccess(response?.data);
     } catch (error) {
       console.error('Error updating school:', error);
       toast.error(error?.response?.data?.message || 'Có lỗi xảy ra khi cập nhật thông tin');
@@ -68,15 +67,19 @@ const EditSchoolForm = ({ school, accountInfo, onClose, onEditSuccess }) => {
             required
             placeholder="contact@school.edu.vn"
             value={formData.email}
+            disabled
             onChange={(e) => handleChange('email', e.target.value)}
+            className="bg-gray-300"
           />
-          
+
           <Input
             label="Số điện thoại"
             required
             placeholder="0901234567"
             value={formData.phoneNumber}
             onChange={(e) => handleChange('phoneNumber', e.target.value)}
+            className="bg-gray-300"
+            disabled
           />
         </div>
 
@@ -91,7 +94,7 @@ const EditSchoolForm = ({ school, accountInfo, onClose, onEditSuccess }) => {
 
       <div className="space-y-4">
         <h4 className="font-medium text-gray-900">Thông tin trường học</h4>
-        
+
         <Input
           label="Thông tin liên hệ"
           required
@@ -99,14 +102,14 @@ const EditSchoolForm = ({ school, accountInfo, onClose, onEditSuccess }) => {
           value={formData.contactInfo}
           onChange={(e) => handleChange('contactInfo', e.target.value)}
         />
-        
+
         <Input
           label="URL Logo"
           placeholder="https://..."
           value={formData.logoUrl}
           onChange={(e) => handleChange('logoUrl', e.target.value)}
         />
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Mô tả
@@ -122,16 +125,16 @@ const EditSchoolForm = ({ school, accountInfo, onClose, onEditSuccess }) => {
       </div>
 
       <div className="flex justify-end space-x-3 pt-4 border-t">
-        <Button 
-          type="button" 
-          variant="outline" 
+        <Button
+          type="button"
+          variant="outline"
           onClick={onClose}
           disabled={isLoading}
         >
           Hủy
         </Button>
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           loading={isLoading}
         >
           Cập nhật

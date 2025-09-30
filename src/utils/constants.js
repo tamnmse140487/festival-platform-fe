@@ -41,7 +41,16 @@ export const BOOTH_STATUS = {
   APPROVED: "approved",
   REJECTED: "rejected",
   ACTIVE: "active",
+  CLOSED: "closed"
 };
+
+export const BOOTH_STATUS_LABELS =[
+  {value: BOOTH_STATUS.PENDING, label: "Chờ duyệt"},
+  {value: BOOTH_STATUS.APPROVED, label: "Đã được duyệt"},
+  {value: BOOTH_STATUS.REJECTED, label: "Đã bị từ chối"},
+  {value: BOOTH_STATUS.ACTIVE, label: "Đang hoạt động"},
+  {value: BOOTH_STATUS.CLOSED, label: "Đã đóng"},
+]
 
 export const ORDER_STATUS = {
   COMPLETED: "Completed",

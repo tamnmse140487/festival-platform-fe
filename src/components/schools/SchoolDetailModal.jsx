@@ -36,9 +36,9 @@ const SchoolDetailModal = ({ school, onClose, onSchoolUpdated }) => {
     fetchAccountInfo();
   }, [school.accountId]);
 
-  const handleEditSuccess = () => {
+  const handleEditSuccess = (updatedSchool) => {
     setShowEditForm(false);
-    onSchoolUpdated();
+    onSchoolUpdated(updatedSchool);
   };
 
   if (showEditForm) {
@@ -130,19 +130,13 @@ const SchoolDetailModal = ({ school, onClose, onSchoolUpdated }) => {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="text-center p-6 bg-blue-50 rounded-lg">
+        {/* <div className="text-center p-6 bg-blue-50 rounded-lg">
           <div className="text-3xl font-bold text-blue-600 mb-2">
             {school.festivals?.length || 0}
           </div>
           <div className="text-blue-800 font-medium">Lễ hội đã tổ chức</div>
-        </div>
+        </div> */}
         
-        <div className="text-center p-6 bg-green-50 rounded-lg">
-          <div className="text-3xl font-bold text-green-600 mb-2">
-            {school.festivalSchools?.length || 0}
-          </div>
-          <div className="text-green-800 font-medium">Lượt tham gia</div>
-        </div>
       </div>
 
       <div className="flex justify-end space-x-3 pt-4 border-t">

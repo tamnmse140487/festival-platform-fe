@@ -1,5 +1,5 @@
 import { CheckCircle, Clock, Edit, Trophy, X } from "lucide-react";
-import { FESTIVAL_STATUS, NOTIFICATION_EVENT, ORDER_STATUS } from "./constants";
+import { BOOTH_STATUS_LABELS, FESTIVAL_STATUS, NOTIFICATION_EVENT, ORDER_STATUS } from "./constants";
 
 export const getRoleDisplayName = (role) => {
   const roleNames = {
@@ -22,6 +22,11 @@ export const formatPrice = (price) => {
 
 export const formatNumber = (num) => {
   return new Intl.NumberFormat("vi-VN").format(num);
+};
+
+export const getBoothStatusLabel = (status) => {
+  const found = BOOTH_STATUS_LABELS.find((item) => item.value === status);
+  return found ? found.label : status;
 };
 
 export const getStatusBadge = (status, type = "default") => {
@@ -245,7 +250,7 @@ export const navTargetByType = (n) => {
     case NOTIFICATION_EVENT.FESTIVAL_COMMENT:
     case NOTIFICATION_EVENT.FESTIVAL_COMMISSION:
       return d.festivalId ? `/app/festivals/${d.festivalId}` : `/app/festivals`;
-      
+
     case NOTIFICATION_EVENT.FESTIVAL_COMPLETED:
       return d.festivalId
         ? `/app/festivals/admin/${d.festivalId}`

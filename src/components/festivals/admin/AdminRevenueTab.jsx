@@ -16,7 +16,7 @@ import { boothServices } from "../../../services/boothServices";
 import { boothWalletServices } from "../../../services/boothWalletServices";
 import { festivalServices } from "../../../services/festivalServices";
 import { accountWalletHistoriesServices } from "../../../services/accountWalletHistoryServices";
-import { formatPrice } from "../../../utils/helpers";
+import { formatPrice, getBoothStatusLabel } from "../../../utils/helpers";
 import {
   HISTORY_TYPE,
   FESTIVAL_STATUS,
@@ -493,13 +493,12 @@ const AdminRevenueTab = ({ festival }) => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            booth.status === "active"
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${booth.status === "active"
                               ? "bg-green-100 text-green-800"
                               : "bg-gray-100 text-gray-800"
-                          }`}
+                            }`}
                         >
-                          {booth.status}
+                          {getBoothStatusLabel(booth.status)}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
@@ -570,8 +569,8 @@ const AdminRevenueTab = ({ festival }) => {
                   <span className="font-medium">
                     {formatPrice(
                       stats.totalBoothRevenue +
-                        (festival?.totalRevenue || 0) -
-                        stats.totalBoothRevenue
+                      (festival?.totalRevenue || 0) -
+                      stats.totalBoothRevenue
                     )}
                   </span>
                 </div>

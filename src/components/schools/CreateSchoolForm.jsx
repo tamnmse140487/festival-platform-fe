@@ -186,7 +186,7 @@ const CreateSchoolForm = ({ onClose, onSchoolCreated }) => {
                     <Input
                         label="Số điện thoại"
                         required
-                        placeholder="0901234567"
+                        placeholder="0xxxxxxxxx"
                         value={formData.phoneNumber}
                         onChange={(e) => handleChange('phoneNumber', e.target.value)}
                         error={errors.phoneNumber}

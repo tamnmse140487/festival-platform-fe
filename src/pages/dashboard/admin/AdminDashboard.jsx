@@ -220,7 +220,7 @@ export default function AdminDashboard() {
         />
 
         <FilterSelect
-          label="Festival"
+          label="Lễ hội"
           items={filteredFestivalItems}
           value={festivalId}
           onChange={(v) => setFestivalId(v || null)}
@@ -235,7 +235,7 @@ export default function AdminDashboard() {
           value={totals.schools}
         />
         <Card
-          title="Festival đang hoạt động"
+          title="Lễ hội đang diễn ra"
           icon={<SchoolIcon className="w-4 h-4" />}
           value={totals.festivalsOngoing}
         />
@@ -322,7 +322,7 @@ export default function AdminDashboard() {
             </ResponsiveContainer>
           </div>
         </Card>
-        <Card title="Điểm thưởng: Earned vs Spent">
+        {/* <Card title="Điểm thưởng: Earned vs Spent">
           <div className="h-72">
             <ResponsiveContainer>
               <LineChart data={points}>
@@ -336,7 +336,7 @@ export default function AdminDashboard() {
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </Card>
+        </Card> */}
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
@@ -392,7 +392,7 @@ export default function AdminDashboard() {
               <thead className="text-zinc-500">
                 <tr>
                   <th className="text-left py-2">ID</th>
-                  <th className="text-left py-2">Trường / Festival / Booth</th>
+                  <th className="text-left py-2">Trường / Lễ hội / Gian hàng</th>
                   <th className="text-right py-2">Tổng</th>
                   <th className="text-right py-2">TT</th>
                 </tr>
