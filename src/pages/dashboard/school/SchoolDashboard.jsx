@@ -39,6 +39,11 @@ import { useAuth } from "../../../contexts/AuthContext";
 import FilterSelect from "../../../components/statistics/FilterSelect";
 import toast from "react-hot-toast";
 
+const MENU_TYPE_VI = {
+  beverage: "Đồ uống",
+  food: "Đồ ăn",
+};
+
 export default function SchoolDashboard() {
   const { user } = useAuth();
   const schoolId = user?.schoolId;
@@ -65,7 +70,7 @@ export default function SchoolDashboard() {
           avatarUrl: f.avatarUrl,
         }));
         setFestivals(items);
-      } catch {}
+      } catch { }
     })();
   }, [schoolId]);
 
@@ -99,7 +104,8 @@ export default function SchoolDashboard() {
           festivalId,
         });
         const mmRes = await statisticServices.getSchoolMenuMix(mmParams);
-        setMenuMix(mmRes?.data?.data || mmRes?.data || []);
+        const mmRaw = mmRes?.data?.data || mmRes?.data || [];
+        setMenuMix(mmRaw.map(x => ({ ...x, label: MENU_TYPE_VI[x.type] ?? x.type })));
 
         const fpParams = buildSchoolParams({ range: timeRange, schoolId });
         const fpRes = await statisticServices.getSchoolFestivalPerformance(
@@ -217,14 +223,14 @@ export default function SchoolDashboard() {
           <GranularRevenueChart raw={revenueRaw} variant="line" />
         </Card>
 
-        <Card title="Cơ cấu món bán" sub="Food vs Beverage">
+        <Card title="Cơ cấu món bán" sub="Đồ ăn và đồ uống">
           <div className="h-72">
             <ResponsiveContainer>
               <PieChart>
                 <Pie
                   data={menuMix}
                   dataKey="value"
-                  nameKey="type"
+                  nameKey="label"
                   outerRadius={90}
                   label
                 >
@@ -241,7 +247,7 @@ export default function SchoolDashboard() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <Card title="Hiệu suất theo festival của trường">
+        <Card title="Hiệu suất theo lễ hội của trường">
           <div className="h-72">
             <ResponsiveContainer>
               <BarChart data={festivalPerf}>
@@ -258,7 +264,7 @@ export default function SchoolDashboard() {
             </ResponsiveContainer>
           </div>
         </Card>
-        <Card title="Phễu Booth (pending/approved/rejected/active)">
+        <Card title="Gian hàng theo trạng thái">
           <div className="h-72">
             <ResponsiveContainer>
               <BarChart data={boothFunnel}>
@@ -274,12 +280,12 @@ export default function SchoolDashboard() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <Card title="Top booth của trường">
+        <Card title="Top gian hàng của trường">
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead className="text-zinc-500">
                 <tr>
-                  <th className="text-left py-2">Booth</th>
+                  <th className="text-left py-2">Gian hàng</th>
                   <th className="text-right py-2">Đơn</th>
                   <th className="text-right py-2">Doanh thu</th>
                 </tr>
@@ -303,7 +309,7 @@ export default function SchoolDashboard() {
               <thead className="text-zinc-500">
                 <tr>
                   <th className="text-left py-2">ID</th>
-                  <th className="text-left py-2">Festival / Booth</th>
+                  <th className="text-left py-2">Lễ hội / Gian hàng</th>
                   <th className="text-right py-2">Tổng</th>
                   <th className="text-right py-2">TT</th>
                 </tr>
