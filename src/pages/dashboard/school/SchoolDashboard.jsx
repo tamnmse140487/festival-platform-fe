@@ -170,11 +170,11 @@ export default function SchoolDashboard() {
         </div>
 
         <FilterSelect
-          label="Festival"
+          label="Lễ hội"
           items={festivals}
           value={festivalId}
           onChange={(v) => setFestivalId(v || null)}
-          placeholder="Tất cả festival của trường"
+          placeholder="Tất cả lễ hội của trường"
         />
       </div>
 

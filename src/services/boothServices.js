@@ -7,4 +7,5 @@ export const boothServices = {
   updateActivate: (params) => api.put(`/booths/activate`, {}, { params }),
   updateReject: (params) => api.put(`/booths/reject`, {}, { params }),
   delete: (params) => api.delete(`/booths/delete`, { params }),
+  updateBooth: (params, data) => api.put(`/booths/update`, data, { params }),
 };
