@@ -60,12 +60,12 @@ export const protectedRoutes = [
   {
     path: "/app/festivals-followed",
     element: <FestivalsFollowedPage />,
-    roles: [ROLE_NAME.USER],
+    roles: [ROLE_NAME.USER, ROLE_NAME.STUDENT, ROLE_NAME.TEACHER],
   },
   {
     path: "/app/festivals-followed/:id",
     element: <FestivalDetailPage />,
-    roles: [ROLE_NAME.USER],
+    roles: [ROLE_NAME.USER, ROLE_NAME.STUDENT, ROLE_NAME.TEACHER],
   },
 
   // Supplier

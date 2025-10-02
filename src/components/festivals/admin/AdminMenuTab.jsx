@@ -227,10 +227,7 @@ const AdminMenuTab = ({ festival }) => {
                 <option value="type">Loại món</option>
               </select>
 
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2">
-                <Plus size={20} />
-                Thêm món
-              </button>
+             
             </div>
           </div>
 
@@ -249,9 +246,7 @@ const AdminMenuTab = ({ festival }) => {
                   ? 'Thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm'
                   : 'Thực đơn này chưa có món ăn nào'}
               </p>
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium">
-                Thêm món đầu tiên
-              </button>
+             
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">

@@ -210,9 +210,9 @@ const AdminOverviewTab = ({ festival, festivalSchool }) => {
             <div className="text-sm text-gray-600">Gian hàng đồ uống (tối đa)</div>
             <div className="text-xs text-blue-600 mt-1">
               Đã đăng ký: {festival.registeredBeverageBooths || 0}
-            </div>
+            </div>  
           </div>
-          
+            
           <div className="text-center p-4 bg-white rounded-lg border">
             <div className="text-2xl font-bold text-purple-600 mb-2">{stats.totalBooths}</div>
             <div className="text-sm text-gray-600">Tổng gian hàng</div>

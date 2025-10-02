@@ -347,7 +347,7 @@ const GroupCard = ({ group, onViewDetails }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 mb-4">
+        {/* <div className="grid grid-cols-1 gap-3 mb-4">
           <div className="p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
@@ -365,7 +365,7 @@ const GroupCard = ({ group, onViewDetails }) => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         <Button
           variant="outline"

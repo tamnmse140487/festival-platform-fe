@@ -9,6 +9,7 @@ import { supplierServices } from '../../services/supplierServices';
 import { toast } from 'react-hot-toast';
 import { ROLE_NAME } from '../../utils/constants';
 import { walletServices } from '../../services/walletServices';
+import { getGoogleIdTokenWithPopup } from "../../config/configFirebase";
 
 const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,12 +20,26 @@ const RegisterPage = () => {
   const [availableRoles, setAvailableRoles] = useState([]);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({});
+  const [submittingGoogle, setSubmittingGoogle] = useState(false);
 
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const { register, handleSubmit, watch, formState: { errors }, reset, trigger } = useForm();
   const watchPassword = watch('password');
+
+  const routeByRole = (role) => {
+    switch (role) {
+      case ROLE_NAME.STUDENT:
+      case ROLE_NAME.TEACHER:
+      case ROLE_NAME.USER:
+        navigate("/app/festivals");
+        break;
+      default:
+        navigate("/app/dashboard");
+        break;
+    }
+  };
 
   useEffect(() => {
     const fetchRoles = async () => {
@@ -124,6 +139,29 @@ const RegisterPage = () => {
     }
   };
 
+  const onGoogleSignIn = async () => {
+    setSubmittingGoogle(true);
+    try {
+      const idToken = await getGoogleIdTokenWithPopup();
+
+      const result = await loginWithGoogle({ token: idToken });
+      if (result.success) {
+        toast.success("Đăng nhập Google thành công!");
+        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        routeByRole(storedUser?.role);
+      } else {
+        toast.error(result.error || "Đăng nhập Google thất bại");
+      }
+    } catch (err) {
+      if (err?.code !== "auth/popup-closed-by-user") {
+        console.error(err);
+        toast.error("Không thể đăng nhập bằng Google.");
+      }
+    } finally {
+      setSubmittingGoogle(false);
+    }
+  };
+
   const renderStepOne = () => (
     <div className="space-y-6">
       <div className="text-center">
@@ -162,6 +200,28 @@ const RegisterPage = () => {
             </div>
           </button>
         ))}
+      </div>
+
+      <div className="flex items-center my-4">
+        <div className="flex-grow h-px bg-gray-300"></div>
+        <span className="px-3 text-gray-500 text-sm">Hoặc</span>
+        <div className="flex-grow h-px bg-gray-300"></div>
+      </div>
+
+      <div className="mt-4">
+        <button
+          type="button"
+          onClick={onGoogleSignIn}
+          disabled={submittingGoogle}
+          className="w-full bg-white hover:bg-gray-100 text-gray-900 font-medium py-2 rounded-lg transition-colors flex items-center justify-center cursor-pointer border border-gray-200"
+        >
+          <img
+            src="https://developers.google.com/identity/images/g-logo.png"
+            alt="Google"
+            className="w-4 h-4 mr-3"
+          />
+          {submittingGoogle ? "Đang xử lý..." : "Đăng ký với Google"}
+        </button>
       </div>
     </div>
   );

@@ -11,6 +11,10 @@ const Input = forwardRef(({
   size = 'md',
   fullWidth = true,
   className = '',
+  noNegative = false,
+  onChange,
+  onKeyDown,
+  onPaste,
   ...props
 }, ref) => {
   const sizeClasses = {
@@ -22,6 +26,39 @@ const Input = forwardRef(({
   const widthClass = fullWidth ? 'w-full' : '';
   const errorClass = error ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500';
 
+  const shouldBlock = noNegative && (props.type === 'number' || props.inputMode === 'numeric');
+
+  const handleKeyDown = (e) => {
+    if (shouldBlock) {
+      if (e.key === '-' || e.key === 'Minus' || e.key === '+' || e.key === 'e' || e.key === 'E') {
+        e.preventDefault();
+        return;
+      }
+    }
+    onKeyDown?.(e);
+  };
+
+  const handlePaste = (e) => {
+    if (shouldBlock) {
+      const text = e.clipboardData.getData('text');
+      if (text?.trim().startsWith('-')) {
+        e.preventDefault();
+        return;
+      }
+    }
+    onPaste?.(e);
+  };
+
+  const handleChange = (e) => {
+    if (shouldBlock) {
+      const v = e.target.value;
+      if (v !== '' && Number(v) < 0) {
+        e.target.value = Math.max(0, Number(v));
+      }
+    }
+    onChange?.(e);
+  };
+
   return (
     <div className={fullWidth ? 'w-full' : ''}>
       {label && (
@@ -30,16 +67,20 @@ const Input = forwardRef(({
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
-      
+
       <div className="relative">
         {leftIcon && (
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <span className="text-gray-400">{leftIcon}</span>
           </div>
         )}
-        
+
         <input
           ref={ref}
+          {...props}
+          min={shouldBlock ? 0 : props.min}
+          step={props.step ?? '1'}
+          inputMode={props.inputMode ?? (props.type === 'number' ? 'numeric' : undefined)}
           className={`
             ${widthClass}
             ${sizeClasses[size]}
@@ -49,29 +90,31 @@ const Input = forwardRef(({
             block border rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors
             ${className}
           `}
-          {...props}
+          onKeyDown={handleKeyDown}
+          onPaste={handlePaste}
+          onChange={handleChange}
         />
-        
+
         {rightIcon && (
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
             <span className="text-gray-400">{rightIcon}</span>
           </div>
         )}
-        
-        {error && (
+
+        {/* {error && (
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
             <AlertCircle className="w-5 h-5 text-red-500" />
           </div>
-        )}
+        )} */}
       </div>
-      
+
       {error && (
         <p className="mt-1 text-sm text-red-600 flex items-center">
           <AlertCircle size={16} className="mr-1" />
           {error}
         </p>
       )}
-      
+
       {hint && !error && (
         <p className="mt-1 text-sm text-gray-500">{hint}</p>
       )}

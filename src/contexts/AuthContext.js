@@ -96,6 +96,63 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithGoogle = async (token) => {
+    try {
+      const response = await authServices.loginGoogle(token);
+      const { accessToken: newToken, ...userData } = response.data;
+
+      const roleFetchMap = {
+        [ROLE_NAME.SUPPLIER]: {
+          service: supplierServices,
+          field: "supplierId",
+          fieldName: "companyName",
+        },
+        [ROLE_NAME.SCHOOL_MANAGER]: {
+          service: schoolServices,
+          field: "schoolId",
+          fieldName: "schoolName",
+        },
+      };
+
+      const roleConfig = roleFetchMap[userData.role];
+      if (roleConfig) {
+        try {
+          const { service, field, fieldName } = roleConfig;
+          const roleResponse = await service.get({ accountId: userData.id });
+
+          if (
+            Array.isArray(roleResponse.data) &&
+            roleResponse.data.length > 0
+          ) {
+            const matchedAccount = roleResponse.data.find(
+              (item) => item.accountId === userData.id
+            );
+
+            if (matchedAccount) {
+              userData[field] = matchedAccount[field];
+              userData[fieldName] = matchedAccount[fieldName];
+            }
+          }
+        } catch (roleError) {
+          console.error(`Error fetching ${userData.role} data:`, roleError);
+        }
+      }
+
+      localStorage.setItem("token", newToken);
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      setToken(newToken);
+      setUser(userData);
+
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error?.response?.data?.message || "Đăng nhập thất bại",
+      };
+    }
+  };
+
   const register = async (userData) => {
     try {
       const response = await authServices.register(userData);
@@ -136,6 +193,7 @@ export const AuthProvider = ({ children }) => {
     token,
     loading,
     login,
+    loginWithGoogle,
     register,
     logout,
     hasRole,

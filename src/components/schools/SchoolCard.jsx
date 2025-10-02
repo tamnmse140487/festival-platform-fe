@@ -48,10 +48,10 @@ const SchoolCard = ({ school, onViewDetails, onDelete }) => {
                     <Calendar size={14} className="mr-1" />
                     Tạo {formatDate(school.createdAt)}
                   </span>
-                  <span className="flex items-center">
+                  {/* <span className="flex items-center">
                     <Users size={14} className="mr-1" />
                     {school.festivals?.length || 0} lễ hội
-                  </span>
+                  </span> */}
                 </div>
 
                 {school.description && (

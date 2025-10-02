@@ -5,11 +5,13 @@ import { Eye, EyeOff, School, Mail, Lock } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { toast } from "react-hot-toast";
 import { ROLE_NAME } from "../../utils/constants";
+import { getGoogleIdTokenWithPopup } from "../../config/configFirebase";
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { login, user } = useAuth();
+  const [submittingGoogle, setSubmittingGoogle] = useState(false);
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const {
@@ -17,6 +19,19 @@ const LoginPage = () => {
     handleSubmit,
     formState: { errors },
   } = useForm();
+
+  const routeByRole = (role) => {
+    switch (role) {
+      case ROLE_NAME.STUDENT:
+      case ROLE_NAME.TEACHER:
+      case ROLE_NAME.USER:
+        navigate("/app/festivals");
+        break;
+      default:
+        navigate("/app/dashboard");
+        break;
+    }
+  };
 
   const onSubmit = async (data, event) => {
     event?.preventDefault();
@@ -27,26 +42,39 @@ const LoginPage = () => {
 
       if (result.success) {
         toast.success("Đăng nhập thành công!");
-        console.log("user: ", user)
 
-        switch (user?.role) {
-          case ROLE_NAME.STUDENT:
-          case ROLE_NAME.TEACHER:
-          case ROLE_NAME.USER:
-            navigate("/app/festivals");
-            break;
-
-          default:
-            navigate("/app/dashboard");
-            break;
-        }
+        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        routeByRole(storedUser?.role);
       } else {
-        toast.error(result.error);
+        toast.error(result.error || "Đăng nhập thất bại");
       }
     } catch (error) {
       toast.error("Có lỗi xảy ra. Vui lòng thử lại.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const onGoogleSignIn = async () => {
+    setSubmittingGoogle(true);
+    try {
+      const idToken = await getGoogleIdTokenWithPopup();
+
+      const result = await loginWithGoogle({ token: idToken });
+      if (result.success) {
+        toast.success("Đăng nhập Google thành công!");
+        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        routeByRole(storedUser?.role);
+      } else {
+        toast.error(result.error || "Đăng nhập Google thất bại");
+      }
+    } catch (err) {
+      if (err?.code !== "auth/popup-closed-by-user") {
+        console.error(err);
+        toast.error("Không thể đăng nhập bằng Google.");
+      }
+    } finally {
+      setSubmittingGoogle(false);
     }
   };
 
@@ -195,6 +223,28 @@ const LoginPage = () => {
                 </button>
               </div>
             </form>
+
+            <div className="flex items-center my-4">
+              <div className="flex-grow h-px bg-gray-300"></div>
+              <span className="px-3 text-gray-500 text-sm">Hoặc</span>
+              <div className="flex-grow h-px bg-gray-300"></div>
+            </div>
+
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={onGoogleSignIn}
+                disabled={submittingGoogle}
+                className="w-full bg-white hover:bg-gray-100 text-gray-900 font-medium py-2 rounded-lg transition-colors flex items-center justify-center cursor-pointer border border-gray-200"
+              >
+                <img
+                  src="https://developers.google.com/identity/images/g-logo.png"
+                  alt="Google"
+                  className="w-4 h-4 mr-3"
+                />
+                {submittingGoogle ? "Đang xử lý..." : "Đăng nhập với Google"}
+              </button>
+            </div>
           </div>
         </div>
       </div>

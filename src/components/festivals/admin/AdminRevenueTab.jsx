@@ -488,14 +488,14 @@ const AdminRevenueTab = ({ festival }) => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {booth.boothType}
+                          {booth.boothType === "food" ? "Đồ ăn" : "Đồ uống"}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${booth.status === "active"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-800"
                             }`}
                         >
                           {getBoothStatusLabel(booth.status)}

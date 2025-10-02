@@ -147,7 +147,7 @@ const AdminMapTab = ({ festival }) => {
             <div>
               <h3 className="text-lg font-semibold text-gray-900">{selectedMap.mapName}</h3>
               <p className="text-sm text-gray-600">
-                Loại: {selectedMap.mapType}
+                Loại: {selectedMap.mapType === 'layout' ? "Sơ đồ bố trí": "Tổng quan"}
 
               </p>
             </div>
@@ -196,7 +196,7 @@ const AdminMapTab = ({ festival }) => {
                     {location.coordinates}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {location.locationType}
+                    {location.locationType === 'booth' ? 'Gian hàng' : 'Khác'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {getStatusBadge(location.isOccupied, 'location')}

@@ -114,7 +114,7 @@ const AccountDetailModal = ({ account, roles, visible, onClose }) => {
             )}
             <Descriptions.Item label="Trạng thái" span={1}>
               <Tag color={account.status ? 'green' : 'red'}>
-                {account.status ? 'Hoạt động' : 'Không hoạt động'}
+                {account.status ? 'Đã xác thực' : 'Chưa xác thực'}
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Ngày tạo" span={2}>

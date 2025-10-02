@@ -98,10 +98,22 @@ const ProfilePage = () => {
         user.role === ROLE_NAME.SCHOOL_MANAGER &&
         user.schoolId
       ) {
+        //mới thêm
         const schoolResponse = await schoolServices.get({
           accountId: accountData.id,
         });
-        const schoolData = schoolResponse.data[0];
+
+        const userIdInt = parseInt(userId, 10);
+
+        let matchedSchoolAccount = null;
+        if (Array.isArray(schoolResponse.data)) {
+          matchedSchoolAccount = schoolResponse.data.find(
+            (item) => Number(item.accountId) === userIdInt
+          );
+        }
+
+        const schoolData = matchedSchoolAccount
+
         additionalData.schoolInfo = {
           ...schoolData,
           originalContactInfo: schoolData?.contactInfo,
@@ -223,9 +235,9 @@ const ProfilePage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-1">
-          <ProfileSidebar 
-            profileData={profileData} 
-            user={user} 
+          <ProfileSidebar
+            profileData={profileData}
+            user={user}
             isEditing={isEditing}
             onAvatarChange={handleAvatarChange}
             previewAvatar={previewAvatar}

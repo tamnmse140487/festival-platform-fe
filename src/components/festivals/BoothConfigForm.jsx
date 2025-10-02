@@ -13,7 +13,7 @@ const BoothConfigForm = ({ register, errors, watch }) => {
         <Card.Title>Cấu hình gian hàng</Card.Title>
         <Card.Description>Thiết lập số lượng gian hàng theo loại</Card.Description>
       </Card.Header>
-      
+
       <Card.Content>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Input
@@ -23,15 +23,15 @@ const BoothConfigForm = ({ register, errors, watch }) => {
             placeholder="Nhập số lượng"
             leftIcon={<Users size={20} />}
             error={errors.maxFoodBooths?.message}
+            noNegative
+            min={0}
+            step="1"
             {...register('maxFoodBooths', {
               required: 'Số gian hàng đồ ăn là bắt buộc',
-              min: {
-                value: 0,
-                message: 'Số lượng không thể âm'
-              }
+              min: { value: 0, message: 'Số lượng không thể âm' }
             })}
           />
-          
+
           <Input
             label="Số gian hàng đồ uống"
             type="number"
@@ -39,15 +39,15 @@ const BoothConfigForm = ({ register, errors, watch }) => {
             placeholder="Nhập số lượng"
             leftIcon={<Users size={20} />}
             error={errors.maxBeverageBooths?.message}
+            noNegative
+            min={0}
+            step="1"
             {...register('maxBeverageBooths', {
               required: 'Số gian hàng đồ uống là bắt buộc',
-              min: {
-                value: 0,
-                message: 'Số lượng không thể âm'
-              }
+              min: { value: 0, message: 'Số lượng không thể âm' }
             })}
           />
-          
+
           {(watchMaxFoodBooths || watchMaxBeverageBooths) && (
             <div className="md:col-span-2 p-4 bg-blue-50 rounded-lg">
               <h4 className="font-medium text-blue-900 mb-2">Tóm tắt cấu hình:</h4>

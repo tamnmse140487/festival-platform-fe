@@ -25,8 +25,8 @@ import {
   buildRevenueParams,
 } from "../../../utils/helpers";
 import { statisticServices } from "../../../services/statisticsServices";
-import { schoolServices } from "../../../services/schoolServices";  
-import { festivalServices } from "../../../services/festivalServices"; 
+import { schoolServices } from "../../../services/schoolServices";
+import { festivalServices } from "../../../services/festivalServices";
 import {
   ResponsiveContainer,
   PieChart,
@@ -53,7 +53,7 @@ export default function AdminDashboard() {
   const [festivalId, setFestivalId] = useState(null);
 
   const [summary, setSummary] = useState(null);
-  const [revenueRaw, setRevenueRaw] = useState([]); 
+  const [revenueRaw, setRevenueRaw] = useState([]);
   const [paymentMix, setPaymentMix] = useState([]);
   const [topFestivals, setTopFestivals] = useState([]);
   const [topBooths, setTopBooths] = useState([]);
@@ -93,11 +93,11 @@ export default function AdminDashboard() {
           value: f.festivalId,
           label: f.festivalName,
           avatarUrl: f.avatarUrl,
-          schoolId: f.schoolId, 
+          schoolId: f.schoolId,
         }));
         setSchools(schoolItems);
         setFestivals(festivalItems);
-      } catch (e) {}
+      } catch (e) { }
     })();
   }, []);
 
@@ -110,7 +110,7 @@ export default function AdminDashboard() {
           festivalId,
         });
         const sRes = await statisticServices.getAdminSummary(sumParams);
-        setSummary(sRes?.data?.data || sRes?.data); 
+        setSummary(sRes?.data?.data || sRes?.data);
 
         const revParams = buildRevenueParams({
           range: timeRange,
@@ -251,7 +251,7 @@ export default function AdminDashboard() {
           value={totals.paidOrders}
         />
         <Card
-          title="Booth active"
+          title="Gian hàng đang hoạt động"
           icon={<Store className="w-4 h-4" />}
           value={totals.boothsActive}
         />
@@ -261,7 +261,7 @@ export default function AdminDashboard() {
           value={totals.usersActive}
         />
         <Card
-          title="Top-up ví"
+          title="Số tiền đã nạp vào ví"
           icon={<Wallet className="w-4 h-4" />}
           value={currency(totals.walletTopup)}
         />
@@ -305,7 +305,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <Card title="Top festival theo doanh thu">
+        <Card title="Top lễ hội theo doanh thu">
           <div className="h-72">
             <ResponsiveContainer>
               <BarChart data={topFestivals}>
@@ -320,6 +320,43 @@ export default function AdminDashboard() {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+          </div>
+        </Card>
+
+        <Card title="Đơn hàng gần đây" className="xl:col-span-1">
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="text-zinc-500">
+                <tr>
+                  <th className="text-left py-2">ID</th>
+                  <th className="text-left py-2">Trường / Lễ hội / Gian hàng</th>
+                  <th className="text-right py-2">Tổng</th>
+                  <th className="text-right py-2">TT</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentOrders.map((o) => (
+                  <tr key={o.orderId} className="border-t">
+                    <td className="py-2">#{o.orderId}</td>
+                    <td className="py-2">
+                      <div className="flex flex-col">
+                        <span className="font-medium">{o.nameName}</span>
+                        <span className="text-xs text-zinc-500">
+                          {o.festivalName} • {o.boothName}
+                        </span>
+                        <span className="text-xs text-zinc-500">
+                          {o.userFullName}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-2 text-right">{currency(o.amount)}</td>
+                    <td className="py-2 text-right">
+                      <StatusBadge status={o.status} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </Card>
         {/* <Card title="Điểm thưởng: Earned vs Spent">
@@ -339,7 +376,7 @@ export default function AdminDashboard() {
         </Card> */}
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+      {/* <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         <Card title="Cảnh báo & tác vụ nhanh" className="xl:col-span-1">
           <ul className="space-y-2">
             {alerts.map((a, idx) => (
@@ -422,7 +459,7 @@ export default function AdminDashboard() {
             </table>
           </div>
         </Card>
-      </div>
+      </div> */}
     </div>
   );
 }

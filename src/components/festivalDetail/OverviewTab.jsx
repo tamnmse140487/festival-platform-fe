@@ -20,6 +20,7 @@ import { toast } from "react-hot-toast";
 import { FESTIVAL_STATUS, NOTIFICATION_EVENT } from "../../utils/constants";
 import { notificationServices } from "../../services/notificationServices";
 import { schoolServices } from "../../services/schoolServices";
+import ReviewComments from "../review/ReviewComments";
 
 const OverviewTab = ({ festival }) => {
   console.log("festival: ", festival);
@@ -563,6 +564,8 @@ const OverviewTab = ({ festival }) => {
                           {r.comment}
                         </p>
                       )}
+
+                      <ReviewComments reviewId={r.reviewId} className="mt-3" />
                     </div>
                   );
                 })

@@ -164,7 +164,7 @@ const ImportListAccountsModal = ({ onClose, onSubmit, schoolId }) => {
                                 </h3>
                                 <div className="mt-2 text-sm text-blue-700">
                                     <ul className="list-disc list-inside space-y-1">
-                                        <li>File Excel phải có các cột: Fullname, PhoneNumber, Email, Password, Role</li>
+                                        <li>File Excel phải có các cột: Fullname, PhoneNumber, ClassName, Email, Password, Role</li>
                                         <li>Vai trò chỉ được phép là "Teacher" hoặc "Student"</li>
                                         <li>Email phải là duy nhất trong hệ thống</li>
                                     </ul>

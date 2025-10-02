@@ -13,6 +13,7 @@ import AdminMenuTab from '../../../components/festivals/admin/AdminMenuTab';
 import AdminBoothsTab from '../../../components/festivals/admin/AdminBoothsTab';
 import AdminApprovalTab from '../../../components/festivals/admin/AdminApprovalTab';
 import AdminRevenueTab from '../../../components/festivals/admin/AdminRevenueTab';
+import { getStatusBadge } from '../../../utils/helpers';
 
 const AdminFestivalDetail = ({ user }) => {
     const { id } = useParams();
@@ -116,7 +117,7 @@ const AdminFestivalDetail = ({ user }) => {
 
         const badge = badges[status] || badges.pending;
         return (
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${badge.class}`}>
+            <span className={`px-3 py-1 rounded-full text-xs font-medium ${badge.class}`}>
                 {badge.label}
             </span>
         );
@@ -169,11 +170,8 @@ const AdminFestivalDetail = ({ user }) => {
                     <div className="flex items-center space-x-3 mb-2">
                         <h1 className="text-3xl font-bold text-gray-900">{festival.festivalName}</h1>
                         {festivalSchool && getApprovalStatusBadge(festivalSchool.status)}
-                        {festival.status === FESTIVAL_STATUS.COMPLETED && (
-                            <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                Đã hoàn thành
-                            </span>
-                        )}
+                        {getStatusBadge(festival.status, 'festival')}
+
                     </div>
                     <p className="text-gray-600">{festival.theme}</p>
                 </div>
@@ -201,7 +199,7 @@ const AdminFestivalDetail = ({ user }) => {
                         </div>
                     </div>
                 </div>
-                
+
                 {images.length > 1 && (
                     <div className="p-4 bg-gray-50">
                         <div className="grid grid-cols-4 gap-3">

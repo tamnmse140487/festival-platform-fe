@@ -54,6 +54,8 @@ const Sidebar = ({ isOpen, onClose }) => {
       path: "/app/festivals-followed",
       roles: [
         ROLE_NAME.USER,
+        ROLE_NAME.STUDENT,
+        ROLE_NAME.TEACHER,
       ],
     },
     // {
