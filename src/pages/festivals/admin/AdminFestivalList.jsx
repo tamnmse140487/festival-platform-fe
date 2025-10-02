@@ -296,7 +296,7 @@ const AdminFestivalList = () => {
                             {festival.school.schoolName}
                           </div>
                           <div className="text-sm text-gray-500">
-                            ID: {festival.festivalSchool?.schoolId}
+                            Email: {festival.school?.account?.email}
                           </div>
                         </div>
                       </div>
