@@ -2,14 +2,17 @@ import React from 'react';
 import { Menu, Plus, Trash2 } from 'lucide-react';
 import Input from '../common/Input';
 import Button from '../common/Button';
-import Card from '../common/Card'; 
+import Card from '../common/Card';
 
-const MenuConfigForm = ({ register, errors, menuItems, setMenuItems }) => {
+const MenuConfigForm = ({ register, errors, menuItems, setMenuItems, invalidMinPriceIndices = [] }) => {
+
+  const isMinInvalid = (idx) => invalidMinPriceIndices.includes(idx);
+
   const addMenuItem = () => {
-    setMenuItems([...menuItems, { 
-      itemName: '', 
-      description: '', 
-      itemType: 'food', 
+    setMenuItems([...menuItems, {
+      itemName: '',
+      description: '',
+      itemType: 'food',
       minPrice: 0,
       maxPrice: 0
     }]);
@@ -32,24 +35,24 @@ const MenuConfigForm = ({ register, errors, menuItems, setMenuItems }) => {
 
   const updateMenuItem = (index, field, value) => {
     let processedValue = value;
-    
+
     if (field === 'minPrice' || field === 'maxPrice') {
       processedValue = parsePrice(value);
-      
+
       const currentItem = menuItems[index];
       const minPrice = field === 'minPrice' ? parseInt(processedValue) || 0 : parseInt(currentItem.minPrice) || 0;
       const maxPrice = field === 'maxPrice' ? parseInt(processedValue) || 0 : parseInt(currentItem.maxPrice) || 0;
-      
+
       if (field === 'minPrice' && processedValue && maxPrice > 0 && parseInt(processedValue) > maxPrice) {
-        const updated = menuItems.map((item, i) => 
+        const updated = menuItems.map((item, i) =>
           i === index ? { ...item, [field]: processedValue, maxPrice: processedValue } : item
         );
         setMenuItems(updated);
         return;
       }
     }
-    
-    const updated = menuItems.map((item, i) => 
+
+    const updated = menuItems.map((item, i) =>
       i === index ? { ...item, [field]: processedValue } : item
     );
     setMenuItems(updated);
@@ -61,7 +64,7 @@ const MenuConfigForm = ({ register, errors, menuItems, setMenuItems }) => {
         <Card.Title>Cấu hình thực đơn</Card.Title>
         <Card.Description>Thiết lập thực đơn và món ăn cho lễ hội</Card.Description>
       </Card.Header>
-      
+
       <Card.Content>
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -75,7 +78,7 @@ const MenuConfigForm = ({ register, errors, menuItems, setMenuItems }) => {
                 required: 'Tên thực đơn là bắt buộc'
               })}
             />
-            
+
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Mô tả thực đơn
@@ -102,7 +105,11 @@ const MenuConfigForm = ({ register, errors, menuItems, setMenuItems }) => {
                 Thêm món
               </Button>
             </div>
-            
+
+            <p className="text-xs text-gray-600 mb-2">
+              Yêu cầu: Ít nhất 3 món, và <span className="font-medium">giá tối thiểu &gt; 5.000</span> cho mỗi món.
+            </p>
+
             <div className="space-y-4">
               {menuItems.map((item, index) => (
                 <div key={index} className="p-4 border border-gray-200 rounded-lg">
@@ -116,7 +123,7 @@ const MenuConfigForm = ({ register, errors, menuItems, setMenuItems }) => {
                         onChange={(e) => updateMenuItem(index, 'itemName', e.target.value)}
                       />
                     </div>
-                    
+
                     <div>
                       <input
                         type="text"
@@ -126,7 +133,7 @@ const MenuConfigForm = ({ register, errors, menuItems, setMenuItems }) => {
                         onChange={(e) => updateMenuItem(index, 'description', e.target.value)}
                       />
                     </div>
-                    
+
                     <div>
                       <select
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -137,15 +144,20 @@ const MenuConfigForm = ({ register, errors, menuItems, setMenuItems }) => {
                         <option value="beverage">Đồ uống</option>
                       </select>
                     </div>
-                    
+
                     <div>
                       <input
                         type="text"
-                        placeholder="Giá tối thiểu"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Giá tối thiểu (> 5.000)"
+                        className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                        ${isMinInvalid(index) ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}
+                      `}
                         value={formatPrice(item.minPrice)}
                         onChange={(e) => updateMenuItem(index, 'minPrice', e.target.value)}
                       />
+                      {isMinInvalid(index) && (
+                        <p className="mt-1 text-sm text-red-600">Giá tối thiểu phải &gt; 5.000</p>
+                      )}
                     </div>
 
                     <div>
@@ -157,7 +169,7 @@ const MenuConfigForm = ({ register, errors, menuItems, setMenuItems }) => {
                         onChange={(e) => updateMenuItem(index, 'maxPrice', e.target.value)}
                       />
                     </div>
-                    
+
                     <div className="flex justify-end">
                       <Button
                         type="button"

@@ -23,7 +23,6 @@ import { schoolServices } from "../../services/schoolServices";
 import ReviewComments from "../review/ReviewComments";
 
 const OverviewTab = ({ festival }) => {
-  console.log("festival: ", festival);
   const { user } = useAuth();
 
   const [loadingReviews, setLoadingReviews] = useState(false);

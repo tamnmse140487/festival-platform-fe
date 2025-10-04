@@ -334,8 +334,11 @@ const GroupDetailPage = () => {
       }
 
       fetchMembers();
+      toast.success('Xóa thành viên thành công')
+
     } catch (error) {
       toast.error("Xóa thành viên thất bại");
+      toast.error(error?.response?.data?.message || error?.response?.data?.detail)
       console.error("Error removing member:", error);
     }
   };
@@ -514,11 +517,10 @@ const GroupDetailPage = () => {
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
-              className={`flex items-center py-3 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
-                activeTab === tab.id
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
+              className={`flex items-center py-3 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${activeTab === tab.id
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
             >
               {tab.icon}
               <span className="ml-2">{tab.label}</span>

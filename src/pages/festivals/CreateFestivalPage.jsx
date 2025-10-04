@@ -48,6 +48,8 @@ const CreateFestivalPage = () => {
     handleSubmit,
     watch,
     formState: { errors },
+    clearErrors,
+    setError,
   } = useForm({
     defaultValues: {
       festivalName: "",
@@ -66,6 +68,9 @@ const CreateFestivalPage = () => {
       menuDescription: "",
     },
   });
+
+  const [formErrors, setFormErrors] = useState([]);
+  const [invalidMinPriceIndices, setInvalidMinPriceIndices] = useState([]);
 
   const totalBooths =
     (parseInt(watch("maxFoodBooths")) || 0) +
@@ -176,13 +181,63 @@ const CreateFestivalPage = () => {
       navigate("/app/festivals");
     } catch (error) {
       console.error("Error creating festival:", error);
+      toast.error(error?.response?.data?.detail || error?.response?.data?.message);
       toast.error("Có lỗi xảy ra khi tạo lễ hội");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const validateBusinessRules = (formData) => {
+    toast.error("Có thông tin nhập chưa đúng. Vui lòng kiểm tra lại!")
+    const list = [];
+    const newInvalidMin = [];
+
+    const food = parseInt(formData.maxFoodBooths) || 0;
+    const bev = parseInt(formData.maxBeverageBooths) || 0;
+    const total = food + bev;
+
+    if (total < 3) {
+      list.push("Tổng số gian hàng (đồ ăn + đồ uống) phải từ 3 trở lên.");
+      setError("maxFoodBooths", { type: "manual", message: "Tổng gian hàng (đồ ăn + đồ uống) phải ≥ 3" });
+    }
+
+    const namedItems = menuItems
+      .map((i, idx) => ({ ...i, _idx: idx }))
+      .filter(i => (i.itemName || "").trim() !== "");
+
+    if (namedItems.length < 3) {
+      list.push("Thực đơn phải có ít nhất 3 món.");
+    }
+
+    namedItems.forEach((i) => {
+      const min = parseInt(i.minPrice) || 0;
+      if (min <= 5000) newInvalidMin.push(i._idx);
+    });
+    if (newInvalidMin.length > 0) {
+      list.push(
+        `Giá tối thiểu của mỗi món phải > 5.000. Sai tại món: ${newInvalidMin
+          .map(i => i + 1)
+          .join(", ")}.`
+      );
+    }
+
+    setInvalidMinPriceIndices(newInvalidMin);
+    return list;
+  };
+
   const onSubmit = (data) => {
+
+    clearErrors();
+    setFormErrors([]);
+    setInvalidMinPriceIndices([]);
+
+    const list = validateBusinessRules(data);
+    if (list.length > 0) {
+      setFormErrors(list);
+      return;
+    }
+
     modal.confirm({
       title: "Xác nhận tạo lễ hội",
       content: "Bạn có chắc chắn muốn tạo lễ hội này không?",
@@ -196,6 +251,7 @@ const CreateFestivalPage = () => {
     <>
       {contextHolder}
       <div className="space-y-6">
+
         <div className="flex items-center space-x-4">
           <Button
             variant="ghost"
@@ -211,6 +267,17 @@ const CreateFestivalPage = () => {
             </p>
           </div>
         </div>
+
+        {formErrors.length > 0 && (
+          <div className="border border-red-300 bg-red-50 text-red-800 rounded-lg p-4">
+            <h3 className="font-semibold mb-2">Vui lòng sửa các trường sau:</h3>
+            <ul className="list-disc pl-5 space-y-1">
+              {formErrors.map((msg, i) => (
+                <li key={i}>{msg}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -242,6 +309,7 @@ const CreateFestivalPage = () => {
                 errors={errors}
                 menuItems={menuItems}
                 setMenuItems={setMenuItems}
+                invalidMinPriceIndices={invalidMinPriceIndices}
               />
             </div>
 

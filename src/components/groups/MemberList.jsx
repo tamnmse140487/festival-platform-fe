@@ -41,7 +41,6 @@ const MemberList = ({
         setRemovingMembers(prev => new Set([...prev, memberId]))
         try {
           await onRemoveMember(memberId)
-          toast.success('Xóa thành viên thành công')
         } catch (error) {
           toast.error('Xóa thành viên thất bại')
         } finally {

@@ -57,6 +57,18 @@ const DocumentsTab = ({ groupId, user }) => {
     return fileType === 'image' ? <Image size={20} /> : <File size={20} />;
   };
 
+  const handleDownloadNewTab = (url, fileName) => {
+    const newTab = window.open(url, "_blank");
+    if (newTab) {
+      const link = newTab.document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", fileName || "file");
+      newTab.document.body.appendChild(link);
+      link.click();
+      newTab.document.body.removeChild(link);
+    }
+  };
+
   const renderFileCard = (file) => (
     <div key={file.attachmentId} className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-3 gap-2">
@@ -88,15 +100,14 @@ const DocumentsTab = ({ groupId, user }) => {
             <Eye size={16} />
           </button>
 
-          <a
-            href={file.fileUrl}
-            download={file.fileName}
+          <button
+            onClick={() => handleDownloadNewTab(file.fileUrl, file.fileName)}
             className="p-1 text-gray-400 hover:text-green-600 transition-colors"
             title="Tải xuống"
-            target="_blank"
           >
             <Download size={16} />
-          </a>
+          </button>
+
         </div>
       </div>
 
@@ -178,8 +189,8 @@ const DocumentsTab = ({ groupId, user }) => {
         <button
           onClick={() => setActiveTab('all')}
           className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'all'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
+            ? 'bg-white text-gray-900 shadow-sm'
+            : 'text-gray-600 hover:text-gray-900'
             }`}
         >
           Tất cả ({files.length})
@@ -187,8 +198,8 @@ const DocumentsTab = ({ groupId, user }) => {
         <button
           onClick={() => setActiveTab('image')}
           className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'image'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
+            ? 'bg-white text-gray-900 shadow-sm'
+            : 'text-gray-600 hover:text-gray-900'
             }`}
         >
           Hình ảnh ({statistics.totalImages || 0})
@@ -196,8 +207,8 @@ const DocumentsTab = ({ groupId, user }) => {
         <button
           onClick={() => setActiveTab('document')}
           className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'document'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
+            ? 'bg-white text-gray-900 shadow-sm'
+            : 'text-gray-600 hover:text-gray-900'
             }`}
         >
           Tài liệu ({statistics.totalDocuments || 0})

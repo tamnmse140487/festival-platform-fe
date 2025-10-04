@@ -44,6 +44,7 @@ export const SocketProvider = ({ children }) => {
         setNotifications(items);
         setUnreadCount(items.filter((n) => !n.isRead).length);
       } catch (e) {
+        console.log("e: ", e);
         console.warn("Failed to load notifications:", e?.message || e);
       }
     };

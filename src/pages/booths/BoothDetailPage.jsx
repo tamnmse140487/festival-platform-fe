@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Button, Input, Tabs, Table, Empty, Tag } from "antd";
-import { Store, MapPin, Check, X } from "lucide-react";
+import { Store, MapPin, Check, X, Edit } from "lucide-react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { Breadcrumb } from "antd";
@@ -21,6 +21,7 @@ import { imageServices } from "../../services/imageServices";
 
 import useModal from "antd/es/modal/useModal";
 import BoothMenu from "../../components/groupDetail/booth/BoothMenu";
+import BoothEditModal from "../../components/groupDetail/booth/BoothEditModal";
 import OrdersManagement from "../../components/groupDetail/OrdersManagement";
 import { notificationServices } from "../../services/notificationServices";
 import { groupMemberServices } from "../../services/groupMemberServices";
@@ -43,6 +44,8 @@ export default function BoothDetailPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [activeKey, setActiveKey] = useState("info");
   const [modal, contextHolder] = useModal();
+
+  const [editOpen, setEditOpen] = useState(false);
 
   useEffect(() => {
     const isOrders = locationPath.pathname.endsWith("/orders");
@@ -103,7 +106,6 @@ export default function BoothDetailPage() {
         toast.error("Không tìm thấy gian hàng");
         return;
       }
-
       setBooth(boothData);
 
       const [festivalResp, locationResp] = await Promise.all([
@@ -191,9 +193,9 @@ export default function BoothDetailPage() {
       const res = await groupMemberServices.get({ groupId });
       return Array.isArray(res?.data)
         ? res.data
-            .filter((m) => String(m.role) !== "homeroom_teacher")
-            .map((m) => m.accountId)
-            .filter(Boolean)
+          .filter((m) => String(m.role) !== "homeroom_teacher")
+          .map((m) => m.accountId)
+          .filter(Boolean)
         : [];
     } catch (e) {
       console.warn("Fetch recipients failed:", e?.message || e);
@@ -266,13 +268,13 @@ export default function BoothDetailPage() {
               id: booth.festivalId,
               ...(isFood
                 ? {
-                    registeredFoodBooths:
-                      (festival?.registeredFoodBooths || 0) + 1,
-                  }
+                  registeredFoodBooths:
+                    (festival?.registeredFoodBooths || 0) + 1,
+                }
                 : {
-                    registeredBeverageBooths:
-                      (festival?.registeredBeverageBooths || 0) + 1,
-                  }),
+                  registeredBeverageBooths:
+                    (festival?.registeredBeverageBooths || 0) + 1,
+                }),
             };
 
             afterApproveTasks.push(
@@ -329,10 +331,36 @@ export default function BoothDetailPage() {
     } catch (e) {
       console.error(`Error ${action} booth:`, e);
       toast.error(`Không thể ${ERROR_VERB[action] || "thực hiện"} gian hàng`);
+      toast.error(e?.response?.data?.message || e?.response?.data?.detail);
     } finally {
       setActionLoading(false);
     }
   };
+
+  const renderEditButtons = () => {
+    if (!booth) return null;
+
+    if (
+      (booth.status === BOOTH_STATUS.REJECTED ||
+        booth.status === BOOTH_STATUS.PENDING) &&
+      hasRole([ROLE_NAME.STUDENT])
+    ) {
+      return (
+        <>
+          <Button
+            type="primary"
+            onClick={() => setEditOpen(true)}
+            icon={<Edit className="w-4 h-4" />}
+            className="flex items-center gap-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white shadow-sm px-4 py-2"
+          >
+            Chỉnh sửa gian hàng
+          </Button>
+        </>
+      );
+    }
+
+    return null;
+  }
 
   const renderActionButtons = () => {
     if (!booth) return null;
@@ -439,7 +467,7 @@ export default function BoothDetailPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="rounded-lg border border-gray-100 p-4">
             <p className="text-sm font-medium text-gray-500">Loại gian hàng</p>
-            <p className="text-gray-900 mt-1">{booth?.boothType}</p>
+            <p className="text-gray-900 mt-1">{booth?.boothType === "food" ? "Đồ ăn" : "Đồ uống"}</p>
           </div>
           <div className="rounded-lg border border-gray-100 p-4">
             <p className="text-sm font-medium text-gray-500">Ngày đăng ký</p>
@@ -499,7 +527,7 @@ export default function BoothDetailPage() {
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Loại vị trí</p>
-              <p className="text-gray-900 mt-1">{location.locationType}</p>
+              <p className="text-gray-900 mt-1">{location.locationType === "booth" ? "Gian hàng" : "Khác"}</p>
             </div>
           </div>
           {mapUrl && (
@@ -627,7 +655,7 @@ export default function BoothDetailPage() {
       {contextHolder}
 
       <Breadcrumb items={breadcrumbItems} className="mb-2 text-sm" />
-      <div className="bg-white border border-gray-200 rounded-xl p-5 mb-4">
+      <div className="bg-white border border-gray-200 rounded-xl p-5 mb-4 flex justify-between">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-lg">
@@ -651,6 +679,9 @@ export default function BoothDetailPage() {
 
           <div className="flex items-center gap-2">{renderActionButtons()}</div>
         </div>
+
+        <div className="flex items-center gap-2">{renderEditButtons()}</div>
+
       </div>
 
       <Tabs
@@ -658,6 +689,22 @@ export default function BoothDetailPage() {
         onChange={handleTabChange}
         items={tabItems}
         destroyInactiveTabPane
+      />
+
+      <BoothEditModal
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        booth={booth}
+        festivalId={booth?.festivalId}
+        mapId={location?.mapId}
+        onUpdated={(partial) => {
+          if (partial) {
+            setBooth((prev) => (prev ? { ...prev, ...partial } : partial));
+            if (partial.location) setLocation(partial.location);
+          }
+          setEditOpen(false);
+          // await fetchBoothDetail();
+        }}
       />
     </>
   );
