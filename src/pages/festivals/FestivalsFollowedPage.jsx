@@ -194,26 +194,28 @@ export default function FestivalsFollowedPage() {
                 </p>
               )}
 
-              <div className="flex items-center gap-3 mt-4 p-3 rounded-lg bg-gray-50">
-                <p className="text-sm font-medium text-gray-600 whitespace-nowrap">
+              <div className="flex flex-col gap-3 mt-4 p-3 rounded-lg bg-gray-50">
+                <p className="text-sm font-medium text-gray-600 whitespace-nowrap mb-0-important">
                   Đơn vị tổ chức:
                 </p>
 
-                {school.logoUrl ? (
-                  <img
-                    src={school.logoUrl}
-                    alt={school.name}
-                    className="w-12 h-12 rounded-full object-cover border shadow-sm"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center border shadow-sm">
-                    <School className="w-5 h-5 text-gray-500" />
-                  </div>
-                )}
+                <div className="flex flex-row items-center">
+                  {school.logoUrl ? (
+                    <img
+                      src={school.logoUrl}
+                      alt={school.name}
+                      className="w-12 h-12 rounded-full object-cover border shadow-sm"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center border shadow-sm">
+                      <School className="w-5 h-5 text-gray-500" />
+                    </div>
+                  )}
 
-                <span className="text-base font-semibold text-gray-900 line-clamp-1">
-                  {school.name}
-                </span>
+                  <span className="text-base font-semibold text-gray-900 line-clamp-1">
+                    {school.name}
+                  </span>
+                </div>
               </div>
 
               <div className="mt-4 space-y-2 text-sm">

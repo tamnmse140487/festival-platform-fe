@@ -212,6 +212,10 @@ code {
   margin: 0 !important;
 }
 
+.mb-0-important {
+  margin: 0 !important;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
   height: 10px;
 }

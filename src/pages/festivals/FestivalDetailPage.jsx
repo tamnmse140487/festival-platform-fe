@@ -31,7 +31,6 @@ import { menuItemServices } from "../../services/menuItemServices";
 import { imageServices } from "../../services/imageServices";
 import Button from "../../components/common/Button";
 import Card from "../../components/common/Card";
-import Modal from "../../components/common/Modal";
 import OverviewTab from "../../components/festivalDetail/OverviewTab";
 import ImagesTab from "../../components/festivalDetail/ImagesTab";
 import MapTab from "../../components/festivalDetail/MapTab";
@@ -169,6 +168,17 @@ const FestivalDetailPage = () => {
   const handleStatusUpdate = async (newStatus) => {
     try {
       setIsUpdatingStatus(true);
+
+      if (newStatus === FESTIVAL_STATUS.ONGOING) {
+        try {
+          const responseCheck = await festivalServices.canUpdateOngoing({ festivalId: parseInt(id) })
+
+        } catch (e) {
+          toast.error(e?.response?.data?.detail || e?.response?.data?.message)
+          return
+        }
+      }
+
       await festivalServices.update({ id: parseInt(id), status: newStatus });
       setFestival((prev) => ({ ...prev, status: newStatus }));
 
@@ -201,6 +211,8 @@ const FestivalDetailPage = () => {
     } catch (error) {
       console.error("Error updating festival status:", error);
       toast.error("Không thể cập nhật trạng thái lễ hội");
+      toast.error(error?.response?.data?.detail || error?.response?.data?.message);
+
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -463,7 +475,7 @@ const FestivalDetailPage = () => {
               )}
             </>
           )}
-       
+
           {hasRole([ROLE_NAME.SCHOOL_MANAGER]) &&
             festival.organizerSchoolId === user.schoolId && (
               <Button
@@ -525,11 +537,10 @@ const FestivalDetailPage = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === tab.id
-                      ? "border-blue-500 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
+                  className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
                 >
                   {tab.icon}
                   <span className="ml-2">{tab.label}</span>
@@ -539,7 +550,7 @@ const FestivalDetailPage = () => {
           </div>
 
           {activeTab === "overview" && <OverviewTab festival={festival} />}
-          
+
           {activeTab === "images" && (
             <ImagesTab festivalImages={festivalImages} loading={loading} />
           )}

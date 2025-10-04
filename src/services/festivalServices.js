@@ -9,4 +9,5 @@ export const festivalServices = {
     api.post("/festivals/calculate-commission", data),
   getDetailFestival: (festivalId) => api.get(`/festivals/${festivalId}`),
   editFestival: (data) => api.put(`/festivals/update-info`, data),
+  canUpdateOngoing: (params) => api.get("/festivals/can-update-ongoing", { params }),
 };
