@@ -41,19 +41,19 @@ export const BOOTH_STATUS = {
   APPROVED: "approved",
   REJECTED: "rejected",
   ACTIVE: "active",
-  CLOSED: "closed"
+  CLOSED: "closed",
 };
 
-export const BOOTH_STATUS_LABELS =[
-  {value: BOOTH_STATUS.PENDING, label: "Chờ duyệt"},
-  {value: BOOTH_STATUS.APPROVED, label: "Đã được duyệt"},
-  {value: BOOTH_STATUS.REJECTED, label: "Đã bị từ chối"},
-  {value: BOOTH_STATUS.ACTIVE, label: "Đang hoạt động"},
-  {value: BOOTH_STATUS.CLOSED, label: "Đã đóng"},
-]
+export const BOOTH_STATUS_LABELS = [
+  { value: BOOTH_STATUS.PENDING, label: "Chờ duyệt" },
+  { value: BOOTH_STATUS.APPROVED, label: "Đã được duyệt" },
+  { value: BOOTH_STATUS.REJECTED, label: "Đã bị từ chối" },
+  { value: BOOTH_STATUS.ACTIVE, label: "Đang hoạt động" },
+  { value: BOOTH_STATUS.CLOSED, label: "Đã đóng" },
+];
 
 export const ORDER_STATUS = {
-  COMPLETED: "Completed",
+  COMPLETED: "completed",
   PENDING: "pending",
   PAID: "paid",
   CANCELLED: "cancelled",
@@ -83,6 +83,44 @@ export const PAYMENT_TYPE = {
   TOPUP: "topup",
   REFUND: "refund",
   ORDER: "order",
+};
+
+export const PAYMENT_STATUS = {
+  PENDING: "pending",
+  SUCCESS: "success",
+  COMPLETED: "completed",
+  FAILED: "failed",
+};
+
+export const PAYMENT_STATUS_LABEL = {
+  [PAYMENT_STATUS.PENDING]: "Đang chờ thanh toán",
+  [PAYMENT_STATUS.SUCCESS]: "Thành công",
+  [PAYMENT_STATUS.COMPLETED]: "Hoàn thành",
+  [PAYMENT_STATUS.FAILED]: "Thanh toán thất bại",
+};
+
+export const REQUEST_STATUS = {
+  PENDING: "pending",
+  PROCESSED: "processed",
+};
+
+export const REQUEST_STATUS_LABEL = {
+  [REQUEST_STATUS.PENDING]: "Đang chờ xử lý",
+  [REQUEST_STATUS.PROCESSED]: "Đã xử lý",
+};
+
+export const IS_WITHDRAW_STATUS = {
+  TRUE: "true",
+  FALSE: "false",
+  PENDING: "pending",
+};
+
+export const REQUEST_TYPE = {
+  REFUND: "refund",
+};
+
+export const REQUEST_TYPE_LABEL = {
+  [REQUEST_TYPE.REFUND]: "Hoàn tiền",
 };
 
 export const HISTORY_TYPE = {
@@ -142,7 +180,7 @@ export const COLORS = [
   "#ef4444",
   "#06b6d4",
   "#a855f7",
-]; 
+];
 
 export const NOTIFICATION_EVENT = {
   FESTIVAL_REQUESTED: "festival_requested",

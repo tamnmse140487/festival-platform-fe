@@ -17,6 +17,7 @@ import {
   Handshake,
   SquareUser,
   TicketCheck,
+  RefreshCcw,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { ROLE_NAME } from "../../utils/constants";
@@ -92,6 +93,13 @@ const Sidebar = ({ isOpen, onClose }) => {
       icon: UserPen,
       path: "/app/accounts",
       roles: [ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.ADMIN],
+    },
+    {
+      id: "refunds",
+      label: "Yêu cầu hoàn tiền",
+      icon: RefreshCcw,
+      path: "/app/refunds",
+      roles: [ROLE_NAME.ADMIN],
     },
     {
       id: "groups",

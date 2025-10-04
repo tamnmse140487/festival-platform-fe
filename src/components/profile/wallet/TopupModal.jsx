@@ -1,20 +1,25 @@
-import React from 'react';
-import { X } from 'lucide-react';
-import Button from '../../../components/common/Button';
-import { paymentServices } from '../../../services/paymentServices';
-import { accountWalletHistoriesServices } from '../../../services/accountWalletHistoryServices';
-import { HISTORY_TYPE, PAYMENT_METHOD, PAYMENT_TYPE, TOPUP_PACKAGES } from '../../../utils/constants';
-import toast from 'react-hot-toast';
+import React from "react";
+import { X } from "lucide-react";
+import Button from "../../../components/common/Button";
+import { paymentServices } from "../../../services/paymentServices";
+import { accountWalletHistoriesServices } from "../../../services/accountWalletHistoryServices";
+import {
+  HISTORY_TYPE,
+  PAYMENT_METHOD,
+  PAYMENT_TYPE,
+  TOPUP_PACKAGES,
+} from "../../../utils/constants";
+import toast from "react-hot-toast";
 
-const TopupModal = ({ 
-  show, 
-  onClose, 
-  user, 
-  walletData, 
-  selectedAmount, 
-  setSelectedAmount, 
-  isProcessing, 
-  setIsProcessing 
+const TopupModal = ({
+  show,
+  onClose,
+  user,
+  walletData,
+  selectedAmount,
+  setSelectedAmount,
+  isProcessing,
+  setIsProcessing,
 }) => {
   if (!show) return null;
 
@@ -29,23 +34,26 @@ const TopupModal = ({
         paymentMethod: PAYMENT_METHOD.BANK,
         paymentType: PAYMENT_TYPE.TOPUP,
         amountPaid: selectedAmount,
-        description: 'Nap vi'
+        description: "Nap vi",
       };
 
       const paymentResponse = await paymentServices.create(paymentData);
 
       const checkoutUrl = paymentResponse.data?.checkoutUrl;
 
+      sessionStorage.setItem("topup_amount", String(selectedAmount));
+      sessionStorage.setItem("topup_walletId", String(walletData.walletId));
+      sessionStorage.setItem("topup_started_at", String(Date.now()));
+
       if (checkoutUrl) {
         window.location.href = checkoutUrl;
-        toast.success('Tạo link thanh toán thành công');
+        toast.success("Tạo link thanh toán thành công");
       } else {
-        toast.success('Tạo thanh toán thành công');
+        toast.success("Tạo thanh toán thành công");
       }
-
     } catch (error) {
-      console.error('Error during topup:', error);
-      toast.error('Có lỗi xảy ra khi nạp tiền. Vui lòng thử lại.');
+      console.error("Error during topup:", error);
+      toast.error("Có lỗi xảy ra khi nạp tiền. Vui lòng thử lại.");
     } finally {
       setIsProcessing(false);
     }
@@ -55,8 +63,13 @@ const TopupModal = ({
     <div className="mt-0-important fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
         <div className="flex items-center justify-between mb-6">
-          <h4 className="text-xl font-semibold text-gray-900">Nạp tiền vào ví</h4>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <h4 className="text-xl font-semibold text-gray-900">
+            Nạp tiền vào ví
+          </h4>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
             <X size={24} />
           </button>
         </div>
@@ -71,8 +84,8 @@ const TopupModal = ({
                 onClick={() => setSelectedAmount(pkg.value)}
                 className={`p-3 rounded-lg border-2 transition-all ${
                   selectedAmount === pkg.value
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? "border-blue-500 bg-blue-50 text-blue-700"
+                    : "border-gray-200 hover:border-gray-300"
                 }`}
               >
                 {pkg.label}
@@ -85,7 +98,7 @@ const TopupModal = ({
               <div className="flex justify-between items-center mb-2">
                 <span className="text-gray-600">Số tiền nạp:</span>
                 <span className="font-semibold">
-                  {selectedAmount.toLocaleString('vi-VN')} VND
+                  {selectedAmount.toLocaleString("vi-VN")} VND
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -104,7 +117,7 @@ const TopupModal = ({
               disabled={!selectedAmount || isProcessing}
               className="flex-1"
             >
-              {isProcessing ? 'Đang xử lý...' : 'Xác nhận nạp tiền'}
+              {isProcessing ? "Đang xử lý..." : "Xác nhận nạp tiền"}
             </Button>
           </div>
         </div>

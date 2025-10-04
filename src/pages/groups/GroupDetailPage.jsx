@@ -98,12 +98,12 @@ const GroupDetailPage = () => {
     ];
 
     if (booth?.status === BOOTH_STATUS.ACTIVE ||booth?.status === BOOTH_STATUS.CLOSED ) {
-      baseTabs.push({
-        id: "orders",
-        label: "Đơn hàng",
-        icon: <Receipt size={16} />,
-        path: "/orders",
-      });
+      // baseTabs.push({
+      //   id: "orders",
+      //   label: "Đơn hàng",
+      //   icon: <Receipt size={16} />,
+      //   path: "/orders",
+      // });
     }
 
     if (hasRole([ROLE_NAME.STUDENT, ROLE_NAME.TEACHER])) {

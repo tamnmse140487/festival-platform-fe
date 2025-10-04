@@ -8,4 +8,6 @@ export const boothServices = {
   updateReject: (params) => api.put(`/booths/reject`, {}, { params }),
   delete: (params) => api.delete(`/booths/delete`, { params }),
   updateBooth: (params, data) => api.put(`/booths/update`, data, { params }),
+  withdraw: (data) => api.post("/booths/withdraw-revenue", data),
+  canWithdrawRevenue: (params) => api.get("/booths/can-withdraw-revenue", { params }),
 };

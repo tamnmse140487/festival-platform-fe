@@ -22,6 +22,7 @@ import AdminFestivalDetail from "../pages/festivals/admin/AdminFestivalDetail";
 import GroupDetailPage from "../pages/groups/GroupDetailPage";
 import FestivalsFollowedPage from "../pages/festivals/FestivalsFollowedPage";
 import BoothDetailPage from "../pages/booths/BoothDetailPage";
+import RefundManagement from "../pages/refunds/RefundManagement";
 
 export const protectedRoutes = [
   // Dashboard
@@ -201,5 +202,12 @@ export const protectedRoutes = [
     path: "/app/accounts",
     element: <AccountManagementPage />,
     roles: [ROLE_NAME.ADMIN, ROLE_NAME.SCHOOL_MANAGER],
+  },
+
+  //Refunds
+  {
+    path: "/app/refunds",
+    element: <RefundManagement />,
+    roles: [ROLE_NAME.ADMIN],
   },
 ];
