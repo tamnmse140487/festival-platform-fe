@@ -56,6 +56,8 @@ export default function BoothEditModal({
     const [removedExistingIds, setRemovedExistingIds] = useState(new Set());
 
     const [existingItems, setExistingItems] = useState([]);
+    const [existingErrors, setExistingErrors] = useState({});
+    const [newItemErrors, setNewItemErrors] = useState({});
 
     useEffect(() => {
         if (!open || !booth) return;
@@ -117,6 +119,8 @@ export default function BoothEditModal({
                                 itemName = meta.itemName ?? itemName;
                                 description = meta.description ?? description;
                                 itemType = meta.itemType ?? itemType;
+                                x.minPrice = meta.minPrice;
+                                x.maxPrice = meta.maxPrice;
                             }
                         } catch { }
                     }
@@ -127,6 +131,8 @@ export default function BoothEditModal({
                         itemName,
                         description,
                         itemType,
+                        minPrice: x.minPrice,
+                        maxPrice: x.maxPrice,
                     };
                 })
             );
@@ -156,6 +162,57 @@ export default function BoothEditModal({
         setPickLocationOpen(true);
     };
 
+    const validateExistingField = (it, field, value) => {
+        let msg;
+        if (field === "customPrice") {
+            const v = Number(value ?? 0);
+            if (it.minPrice != null && v < Number(it.minPrice)) {
+                msg = `Giá phải ≥ ${Number(it.minPrice).toLocaleString()} đ`;
+            } else if (it.maxPrice != null && v > Number(it.maxPrice)) {
+                msg = `Giá phải ≤ ${Number(it.maxPrice).toLocaleString()} đ`;
+            }
+        }
+        if (field === "quantityLimit") {
+            const v = Number(value ?? 0);
+            if (v <= 0) msg = "Số lượng phải > 0";
+        }
+        setExistingErrors(prev => ({
+            ...prev,
+            [it.boothMenuItemId]: {
+                ...(prev[it.boothMenuItemId] || {}),
+                [field]: msg,
+            }
+        }));
+        return !msg;
+    };
+
+    const validateNewField = (id, meta, field, value) => {
+        let msg;
+        if (field === "customPrice") {
+            const v = Number(value ?? 0);
+            if (v <= 0) {
+                msg = "Giá phải > 0";
+            } else if (meta?.minPrice != null && v < Number(meta.minPrice)) {
+                msg = `Giá phải ≥ ${Number(meta.minPrice).toLocaleString()} đ`;
+            } else if (meta?.maxPrice != null && v > Number(meta.maxPrice)) {
+                msg = `Giá phải ≤ ${Number(meta.maxPrice).toLocaleString()} đ`;
+            }
+        }
+        if (field === "quantityLimit") {
+            const v = Number(value ?? 0);
+            if (v <= 0) msg = "Số lượng phải > 0";
+        }
+        setNewItemErrors(prev => ({
+            ...prev,
+            [id]: {
+                ...(prev[id] || {}),
+                [field]: msg,
+            }
+        }));
+        return !msg;
+    };
+
+
     const loadFestivalMenuItems = async () => {
         if (!festivalId) return;
         const resp = await festivalServices.get({ festivalId });
@@ -172,20 +229,27 @@ export default function BoothEditModal({
         setNewItemPrices((prev) => {
             const next = { ...prev };
             ids.forEach((id) => {
-                if (next[id] == null) next[id] = undefined;
+                if (next[id] == null) next[id] = 0;
             });
             return next;
         });
         setNewItemQuantities((prev) => {
             const next = { ...prev };
             ids.forEach((id) => {
-                if (next[id] == null) next[id] = undefined;
+                if (next[id] == null) next[id] = 0;
             });
             return next;
         });
     };
 
     const removeNewItem = (itemId) => {
+        const remainExisting = existingItems.filter(it => !removedExistingIds.has(it.boothMenuItemId)).length;
+        const after = remainExisting + (selectedNewItems.length - 1);
+        if (after < 1) {
+            toast.error("Gian hàng phải còn ít nhất 1 món.");
+            return;
+        }
+
         setSelectedNewItems((prev) => prev.filter((id) => id !== itemId));
         setNewItemPrices((prev) => {
             const n = { ...prev };
@@ -202,10 +266,28 @@ export default function BoothEditModal({
             delete n[itemId];
             return n;
         });
+        setNewItemErrors((prev) => {
+            const n = { ...prev };
+            delete n[itemId];
+            return n;
+        });
+    };
+
+
+    const canRemoveAfterThis = (boothMenuItemId) => {
+        const remainExisting = existingItems.filter(it => !removedExistingIds.has(it.boothMenuItemId) && it.boothMenuItemId !== boothMenuItemId).length;
+        const newCount = selectedNewItems.length;
+        return (remainExisting + newCount) > 0;
     };
 
     const toggleRemoveExisting = (boothMenuItemId) => {
-        setRemovedExistingIds((prev) => {
+        if (!removedExistingIds.has(boothMenuItemId)) {
+            if (!canRemoveAfterThis(boothMenuItemId)) {
+                toast.error("Gian hàng phải còn ít nhất 1 món.");
+                return;
+            }
+        }
+        setRemovedExistingIds(prev => {
             const n = new Set(prev);
             if (n.has(boothMenuItemId)) n.delete(boothMenuItemId);
             else n.add(boothMenuItemId);
@@ -216,13 +298,66 @@ export default function BoothEditModal({
     const onSubmit = async () => {
         try {
             const values = await form.validateFields();
+
+            const finalKeptExisting = existingItems.filter((it) => !removedExistingIds.has(it.boothMenuItemId));
+            const keptNewItemIds = selectedNewItems.filter(
+                (id) => Number(newItemPrices[id]) > 0 && Number(newItemQuantities[id]) > 0
+            );
+            if (finalKeptExisting.length + keptNewItemIds.length < 1) {
+                toast.error("Gian hàng phải còn ít nhất 1 món.");
+                return;
+            }
+
+            let hasError = false;
+            const nextExistingErrors = {};
+            for (const it of finalKeptExisting) {
+                const ePriceOk = validateExistingField(it, "customPrice", it.customPrice);
+                const eQtyOk = validateExistingField(it, "quantityLimit", it.quantityLimit);
+                if (!ePriceOk || !eQtyOk) hasError = true;
+                nextExistingErrors[it.boothMenuItemId] = {
+                    customPrice: existingErrors[it.boothMenuItemId]?.customPrice,
+                    quantityLimit: existingErrors[it.boothMenuItemId]?.quantityLimit,
+                };
+            }
+            setExistingErrors((prev) => ({ ...prev, ...nextExistingErrors }));
+
+            const nextNewErrors = {};
+            for (const id of keptNewItemIds) {
+                const meta = festivalMenuItems.find((m) => m.itemId === id);
+                const nPriceOk = validateNewField(id, meta, "customPrice", newItemPrices[id]);
+                const nQtyOk = validateNewField(id, meta, "quantityLimit", newItemQuantities[id]);
+                if (!nPriceOk || !nQtyOk) hasError = true;
+                nextNewErrors[id] = {
+                    customPrice: newItemErrors[id]?.customPrice,
+                    quantityLimit: newItemErrors[id]?.quantityLimit,
+                };
+            }
+            for (const id of selectedNewItems) {
+                const meta = festivalMenuItems.find((m) => m.itemId === id);
+                const price = Number(newItemPrices[id] ?? 0);
+                const qty = Number(newItemQuantities[id] ?? 0);
+                if (price <= 0) {
+                    validateNewField(id, meta, "customPrice", price);
+                    hasError = true;
+                }
+                if (qty <= 0) {
+                    validateNewField(id, meta, "quantityLimit", qty);
+                    hasError = true;
+                }
+            }
+            setNewItemErrors((prev) => ({ ...prev, ...nextNewErrors }));
+
+            if (hasError) {
+                toast.error("Vui lòng sửa các lỗi trước khi cập nhật.");
+                return;
+            }
+
             if (!selectedLocation) {
                 toast.error("Vui lòng chọn vị trí gian hàng");
                 return;
             }
 
             setSubmitting(true);
-
             const boothId = booth?.boothId;
 
             if (removedExistingIds.size > 0) {
@@ -251,10 +386,6 @@ export default function BoothEditModal({
                 );
                 await Promise.all(updPromises);
             }
-
-            const keptNewItemIds = selectedNewItems.filter(
-                (id) => newItemPrices[id] != null && newItemQuantities[id] != null
-            );
 
             let createdNewItems = [];
             if (keptNewItemIds.length > 0) {
@@ -302,58 +433,15 @@ export default function BoothEditModal({
                         boothName: values.boothName,
                         boothType: values.boothType,
                         description: values.description,
-                        location: {
-                            locationId: selectedLocation.locationId,
-                        },
-                        status: BOOTH_STATUS.PENDING
+                        location: { locationId: selectedLocation.locationId },
+                        status: BOOTH_STATUS.PENDING,
                     }
                 );
-
             } catch { }
-
-            const keptExistingForUI = existingItems
-                .filter((it) => !removedExistingIds.has(it.boothMenuItemId))
-                .map((it) => ({
-                    boothMenuItemId: it.boothMenuItemId,
-                    customPrice: it.customPrice,
-                    quantityLimit: it.quantityLimit,
-                    status: it.status,
-                    imageUrl: it.imageUrl || null,
-                    menuItemId: it.menuItemId,
-                    itemName: it.itemName,
-                    description: it.description,
-                    itemType: it.itemType,
-                }));
-
-            const createdForUI = createdNewItems.map((it) => ({
-                boothMenuItemId: it.boothMenuItemId,
-                customPrice: it.customPrice,
-                quantityLimit: it.quantityLimit,
-                status: it.status,
-                imageUrl: it.imageUrl || null,
-                menuItemId: it.menuItemId,
-            }));
-
-            const apiBooth = updatedBoothResp?.data?.data || {};
-
-            const partial = {
-                boothName: apiBooth.boothName ?? values.boothName,
-                boothType: apiBooth.boothType ?? values.boothType,
-                description: apiBooth.description ?? values.description,
-                location: apiBooth.location ?? {
-                    locationId: selectedLocation.locationId,
-                    locationName: selectedLocation.locationName,
-                    locationType: selectedLocation.locationType,
-                    coordinates: selectedLocation.coordinates,
-                },
-                boothMenuItems: [
-                    ...keptExistingForUI,
-                    ...createdForUI,
-                ],
-            };
-
+         
             toast.success("Cập nhật gian hàng thành công");
-            onUpdated(apiBooth);
+            onUpdated();
+
         } catch (err) {
             toast.error(err?.response?.data?.detail || err?.response?.data?.message);
             toast.error("Không thể cập nhật gian hàng");
@@ -361,6 +449,7 @@ export default function BoothEditModal({
             setSubmitting(false);
         }
     };
+
 
     return (
         <Modal
@@ -488,46 +577,61 @@ export default function BoothEditModal({
                                                 <div className="space-y-3">
                                                     <div>
                                                         <Text type="secondary">Giá bán</Text>
-                                                        <InputNumber
-                                                            min={0}
-                                                            value={it.customPrice}
-                                                            disabled={isRemoved}
-                                                            style={{ width: "100%" }}
-                                                            onChange={(v) =>
-                                                                setExistingItems((prev) =>
-                                                                    prev.map((x) =>
-                                                                        x.boothMenuItemId === it.boothMenuItemId
-                                                                            ? { ...x, customPrice: Number(v || 0) }
-                                                                            : x
-                                                                    )
-                                                                )
-                                                            }
-                                                            formatter={(v) =>
-                                                                `${Number(v || 0).toLocaleString()} đ`
-                                                            }
-                                                            parser={(v) =>
-                                                                String(v || "").replace(/[^\d]/g, "")
-                                                            }
-                                                        />
+                                                        <Form.Item
+                                                            validateStatus={existingErrors[it.boothMenuItemId]?.customPrice ? "error" : ""}
+                                                            help={existingErrors[it.boothMenuItemId]?.customPrice}
+                                                            style={{ marginBottom: 0 }}
+                                                        >
+                                                            <InputNumber
+                                                                min={0}
+                                                                value={it.customPrice}
+                                                                disabled={isRemoved}
+                                                                style={{ width: "100%" }}
+                                                                status={existingErrors[it.boothMenuItemId]?.customPrice ? "error" : ""}
+                                                                onChange={(v) => {
+                                                                    const val = Number(v || 0);
+                                                                    setExistingItems((prev) =>
+                                                                        prev.map((x) =>
+                                                                            x.boothMenuItemId === it.boothMenuItemId ? { ...x, customPrice: val } : x
+                                                                        )
+                                                                    );
+                                                                    validateExistingField({ ...it, customPrice: val }, "customPrice", val);
+                                                                }}
+                                                                formatter={(v) => `${Number(v || 0).toLocaleString()} đ`}
+                                                                parser={(v) => String(v || "").replace(/[^\d]/g, "")}
+                                                            />
+                                                        </Form.Item>
+                                                        {(it.minPrice != null || it.maxPrice != null) && (
+                                                            <div className="text-xs text-gray-500 mt-1">
+                                                                Khoảng giá: {Number(it.minPrice || 0).toLocaleString()} - {Number(it.maxPrice || 0).toLocaleString()} đ
+                                                            </div>
+                                                        )}
                                                     </div>
 
                                                     <div>
                                                         <Text type="secondary">Giới hạn SL</Text>
-                                                        <InputNumber
-                                                            min={0}
-                                                            value={it.quantityLimit}
-                                                            disabled={isRemoved}
-                                                            style={{ width: "100%" }}
-                                                            onChange={(v) =>
-                                                                setExistingItems((prev) =>
-                                                                    prev.map((x) =>
-                                                                        x.boothMenuItemId === it.boothMenuItemId
-                                                                            ? { ...x, quantityLimit: Number(v || 0) }
-                                                                            : x
-                                                                    )
-                                                                )
-                                                            }
-                                                        />
+                                                        <Form.Item
+                                                            validateStatus={existingErrors[it.boothMenuItemId]?.quantityLimit ? "error" : ""}
+                                                            help={existingErrors[it.boothMenuItemId]?.quantityLimit}
+                                                            style={{ marginBottom: 0 }}
+                                                        >
+                                                            <InputNumber
+                                                                min={0}
+                                                                value={it.quantityLimit}
+                                                                disabled={isRemoved}
+                                                                style={{ width: "100%" }}
+                                                                status={existingErrors[it.boothMenuItemId]?.quantityLimit ? "error" : ""}
+                                                                onChange={(v) => {
+                                                                    const val = Number(v || 0);
+                                                                    setExistingItems((prev) =>
+                                                                        prev.map((x) =>
+                                                                            x.boothMenuItemId === it.boothMenuItemId ? { ...x, quantityLimit: val } : x
+                                                                        )
+                                                                    );
+                                                                    validateExistingField({ ...it, quantityLimit: val }, "quantityLimit", val);
+                                                                }}
+                                                            />
+                                                        </Form.Item>
                                                     </div>
 
                                                     <div className="text-right">
@@ -606,38 +710,56 @@ export default function BoothEditModal({
                                                     <div className="space-y-3">
                                                         <div>
                                                             <Text type="secondary">Giá bán</Text>
-                                                            <InputNumber
-                                                                min={0}
-                                                                value={newItemPrices[id]}
-                                                                style={{ width: "100%" }}
-                                                                onChange={(v) =>
-                                                                    setNewItemPrices((prev) => ({
-                                                                        ...prev,
-                                                                        [id]: Number(v || 0),
-                                                                    }))
-                                                                }
-                                                                formatter={(v) =>
-                                                                    `${Number(v || 0).toLocaleString()} đ`
-                                                                }
-                                                                parser={(v) =>
-                                                                    String(v || "").replace(/[^\d]/g, "")
-                                                                }
-                                                            />
+                                                            <Form.Item
+                                                                validateStatus={newItemErrors[id]?.customPrice ? "error" : undefined}
+                                                                help={newItemErrors[id]?.customPrice}
+                                                                style={{ marginBottom: 0 }}
+                                                            >
+                                                                <InputNumber
+                                                                    min={0}
+                                                                    value={newItemPrices[id]}
+                                                                    style={{ width: "100%" }}
+                                                                    status={newItemErrors[id]?.customPrice ? "error" : ""}
+                                                                    onChange={(v) => {
+                                                                        const val = Number(v || 0);
+                                                                        setNewItemPrices((prev) => ({ ...prev, [id]: val }));
+                                                                        const meta = festivalMenuItems.find((m) => m.itemId === id);
+                                                                        validateNewField(id, meta, "customPrice", val);
+                                                                    }}
+                                                                    formatter={(v) => `${Number(v || 0).toLocaleString()} đ`}
+                                                                    parser={(v) => String(v || "").replace(/[^\d]/g, "")}
+                                                                />
+                                                            </Form.Item>
+                                                            {(() => {
+                                                                const meta = festivalMenuItems.find((m) => m.itemId === id);
+                                                                return meta ? (
+                                                                    <div className="text-xs text-gray-500 mt-1">
+                                                                        Khoảng giá: {Number(meta.minPrice || 0).toLocaleString()} - {Number(meta.maxPrice || 0).toLocaleString()} đ
+                                                                    </div>
+                                                                ) : null;
+                                                            })()}
                                                         </div>
 
                                                         <div>
                                                             <Text type="secondary">Giới hạn SL</Text>
-                                                            <InputNumber
-                                                                min={0}
-                                                                value={newItemQuantities[id]}
-                                                                style={{ width: "100%" }}
-                                                                onChange={(v) =>
-                                                                    setNewItemQuantities((prev) => ({
-                                                                        ...prev,
-                                                                        [id]: Number(v || 0),
-                                                                    }))
-                                                                }
-                                                            />
+                                                            <Form.Item
+                                                                validateStatus={newItemErrors[id]?.quantityLimit ? "error" : undefined}
+                                                                help={newItemErrors[id]?.quantityLimit}
+                                                                style={{ marginBottom: 0 }}
+                                                            >
+                                                                <InputNumber
+                                                                    min={0}
+                                                                    value={newItemQuantities[id]}
+                                                                    style={{ width: "100%" }}
+                                                                    status={newItemErrors[id]?.quantityLimit ? "error" : ""}
+                                                                    onChange={(v) => {
+                                                                        const val = Number(v || 0);
+                                                                        setNewItemQuantities((prev) => ({ ...prev, [id]: val }));
+                                                                        const meta = festivalMenuItems.find((m) => m.itemId === id);
+                                                                        validateNewField(id, meta, "quantityLimit", val);
+                                                                    }}
+                                                                />
+                                                            </Form.Item>
                                                         </div>
 
                                                         <div className="text-right">

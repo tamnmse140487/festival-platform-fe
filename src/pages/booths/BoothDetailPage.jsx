@@ -106,6 +106,7 @@ export default function BoothDetailPage() {
         toast.error("Không tìm thấy gian hàng");
         return;
       }
+      console.log("boothData: ", boothData)
       setBooth(boothData);
 
       const [festivalResp, locationResp] = await Promise.all([
@@ -697,13 +698,9 @@ export default function BoothDetailPage() {
         booth={booth}
         festivalId={booth?.festivalId}
         mapId={location?.mapId}
-        onUpdated={(partial) => {
-          if (partial) {
-            setBooth((prev) => (prev ? { ...prev, ...partial } : partial));
-            if (partial.location) setLocation(partial.location);
-          }
+        onUpdated={async () => {
           setEditOpen(false);
-          // await fetchBoothDetail();
+          await fetchBoothDetail();
         }}
       />
     </>
