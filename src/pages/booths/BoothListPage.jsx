@@ -334,7 +334,7 @@ const BoothDetailModal = ({ booth, onClose }) => {
   const tabs = [
     { id: 'info', label: 'Thông tin' },
     { id: 'menu', label: 'Thực đơn' },
-    { id: 'orders', label: 'Đơn hàng' },
+    // { id: 'orders', label: 'Đơn hàng' },
     { id: 'stats', label: 'Thống kê' }
   ];
 

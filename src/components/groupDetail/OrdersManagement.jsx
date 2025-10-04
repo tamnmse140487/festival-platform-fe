@@ -181,7 +181,7 @@ const OrdersManagement = ({ boothId }) => {
                     <Card size="small" className="bg-green-50 border-green-200">
                         <div className="flex items-center space-x-2">
                             <DollarSign size={16} className="text-green-600" />
-                            <span className="text-sm text-gray-600">Số dư gian hàng:</span>
+                            <span className="text-sm text-gray-600">Doanh thu gian hàng:</span>
                             <span className="font-medium text-lg text-green-600">
                                 {boothBalance.toLocaleString()}đ
                             </span>
