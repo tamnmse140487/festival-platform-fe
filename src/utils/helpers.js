@@ -66,6 +66,7 @@ export const getStatusBadge = (status, type = "default") => {
       pending: { label: "Chờ duyệt", class: "bg-yellow-100 text-yellow-800" },
       approved: { label: "Đã duyệt", class: "bg-green-100 text-green-800" },
       rejected: { label: "Đã từ chối", class: "bg-red-100 text-red-800" },
+      closed: { label: "Đã đóng", class: "bg-gray-100 text-gray-800" },
     },
     menuItem: {
       active: { label: "Hoạt động", class: "bg-green-100 text-green-800" },

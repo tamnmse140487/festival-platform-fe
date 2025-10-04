@@ -19,7 +19,7 @@ const BoothListPage = () => {
 
   const filteredBooths = mockBooths.filter(booth => {
     const matchesSearch = booth.booth_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         booth.group.group_name.toLowerCase().includes(searchTerm.toLowerCase());
+      booth.group.group_name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || booth.status === statusFilter;
     const matchesType = typeFilter === 'all' || booth.booth_type === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
@@ -35,7 +35,7 @@ const BoothListPage = () => {
     const approved = mockBooths.filter(b => b.status === 'approved').length;
     const pending = mockBooths.filter(b => b.status === 'pending').length;
     const rejected = mockBooths.filter(b => b.status === 'rejected').length;
-    
+
     return { total, approved, pending, rejected };
   };
 
@@ -47,15 +47,15 @@ const BoothListPage = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Quản lý Gian hàng</h1>
           <p className="text-gray-600 mt-1">
-            {hasRole([ROLE_NAME.SCHOOL_MANAGER]) 
-              ? 'Quản lý và phê duyệt các gian hàng trong lễ hội.' 
+            {hasRole([ROLE_NAME.SCHOOL_MANAGER])
+              ? 'Quản lý và phê duyệt các gian hàng trong lễ hội.'
               : hasRole([ROLE_NAME.TEACHER])
-              ? 'Theo dõi gian hàng của các nhóm được phân công.'
-              : 'Quản lý gian hàng của nhóm bạn.'
+                ? 'Theo dõi gian hàng của các nhóm được phân công.'
+                : 'Quản lý gian hàng của nhóm bạn.'
             }
           </p>
         </div>
-        
+
         {hasRole([ROLE_NAME.STUDENT]) && (
           <Button icon={<Plus size={20} />}>
             Đăng ký gian hàng
@@ -133,7 +133,7 @@ const BoothListPage = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              
+
               <div className="flex gap-2">
                 <select
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -145,7 +145,7 @@ const BoothListPage = () => {
                   <option value="pending">Chờ duyệt</option>
                   <option value="rejected">Từ chối</option>
                 </select>
-                
+
                 <select
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={typeFilter}
@@ -166,7 +166,7 @@ const BoothListPage = () => {
               <h3 className="text-lg font-medium text-gray-900 mb-2">Không tìm thấy gian hàng nào</h3>
               <p className="text-gray-600 mb-6">
                 {searchTerm || statusFilter !== 'all' || typeFilter !== 'all'
-                  ? 'Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.' 
+                  ? 'Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.'
                   : 'Chưa có gian hàng nào được đăng ký.'
                 }
               </p>
@@ -174,9 +174,9 @@ const BoothListPage = () => {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {filteredBooths.map(booth => (
-                <BoothCard 
-                  key={booth.id} 
-                  booth={booth} 
+                <BoothCard
+                  key={booth.id}
+                  booth={booth}
                   onViewDetails={handleViewDetails}
                   hasManagePermission={hasRole([ROLE_NAME.SCHOOL_MANAGER, ROLE_NAME.TEACHER])}
                 />
@@ -193,8 +193,8 @@ const BoothListPage = () => {
         size="lg"
       >
         {selectedBooth && (
-          <BoothDetailModal 
-            booth={selectedBooth} 
+          <BoothDetailModal
+            booth={selectedBooth}
             onClose={() => setShowDetailModal(false)}
           />
         )}
@@ -206,23 +206,28 @@ const BoothListPage = () => {
 const BoothCard = ({ booth, onViewDetails, hasManagePermission }) => {
   const getStatusBadge = (status) => {
     const badges = {
-      'approved': { 
-        label: 'Đã duyệt', 
-        class: 'bg-green-100 text-green-800', 
-        icon: <CheckCircle size={14} /> 
+      'approved': {
+        label: 'Đã duyệt',
+        class: 'bg-green-100 text-green-800',
+        icon: <CheckCircle size={14} />
       },
-      'pending': { 
-        label: 'Chờ duyệt', 
-        class: 'bg-yellow-100 text-yellow-800', 
-        icon: <Clock size={14} /> 
+      'pending': {
+        label: 'Chờ duyệt',
+        class: 'bg-yellow-100 text-yellow-800',
+        icon: <Clock size={14} />
       },
-      'rejected': { 
-        label: 'Từ chối', 
-        class: 'bg-red-100 text-red-800', 
-        icon: <X size={14} /> 
+      'rejected': {
+        label: 'Từ chối',
+        class: 'bg-red-100 text-red-800',
+        icon: <X size={14} />
+      },
+      'closed': {
+        label: 'Đã đóng',
+        class: 'bg-gray-100 text-gray-800',
+        icon: <X size={14} />
       }
     };
-    
+
     const badge = badges[status] || badges.pending;
     return (
       <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${badge.class}`}>
@@ -249,7 +254,7 @@ const BoothCard = ({ booth, onViewDetails, hasManagePermission }) => {
             <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
               <ShoppingCart className="w-8 h-8 text-blue-600" />
             </div>
-            
+
             <div className="flex-1">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-lg font-semibold text-gray-900">
@@ -257,7 +262,7 @@ const BoothCard = ({ booth, onViewDetails, hasManagePermission }) => {
                 </h3>
                 {getStatusBadge(booth.status)}
               </div>
-              
+
               <div className="space-y-1 text-sm text-gray-600">
                 <p><strong>Nhóm:</strong> {booth.group.group_name}</p>
                 <p><strong>Loại:</strong> {getTypeLabel(booth.booth_type)}</p>
@@ -278,12 +283,12 @@ const BoothCard = ({ booth, onViewDetails, hasManagePermission }) => {
               <div className="text-lg font-bold text-blue-600">{booth.points_balance}</div>
               <div className="text-xs text-blue-800">Điểm tích lũy</div>
             </div>
-            
+
             <div className="text-center p-3 bg-green-50 rounded-lg">
               <div className="text-lg font-bold text-green-600">{booth.total_orders}</div>
               <div className="text-xs text-green-800">Đơn hàng</div>
             </div>
-            
+
             <div className="text-center p-3 bg-purple-50 rounded-lg">
               <div className="text-lg font-bold text-purple-600">{booth.menu_items_count}</div>
               <div className="text-xs text-purple-800">Món ăn</div>
@@ -350,13 +355,12 @@ const BoothDetailModal = ({ booth, onClose }) => {
             <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
               {booth.booth_type}
             </span>
-            <span className={`px-2 py-1 text-xs rounded font-medium ${
-              booth.status === 'approved' ? 'bg-green-100 text-green-800' :
-              booth.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-              'bg-red-100 text-red-800'
-            }`}>
+            <span className={`px-2 py-1 text-xs rounded font-medium ${booth.status === 'approved' ? 'bg-green-100 text-green-800' :
+                booth.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-red-100 text-red-800'
+              }`}>
               {booth.status === 'approved' ? 'Đã duyệt' :
-               booth.status === 'pending' ? 'Chờ duyệt' : 'Từ chối'}
+                booth.status === 'pending' ? 'Chờ duyệt' : 'Từ chối'}
             </span>
           </div>
         </div>
@@ -368,11 +372,10 @@ const BoothDetailModal = ({ booth, onClose }) => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === tab.id
+              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
+                }`}
             >
               {tab.label}
             </button>
@@ -430,13 +433,13 @@ const BoothDetailModal = ({ booth, onClose }) => {
             </h4>
             <Button size="sm">Thêm món</Button>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {boothMenuItems.map(item => (
               <div key={item.id} className="border border-gray-200 rounded-lg p-4">
                 <div className="flex items-start space-x-3">
-                  <img 
-                    src={item.image_url} 
+                  <img
+                    src={item.image_url}
                     alt={item.item_name}
                     className="w-16 h-16 rounded-lg object-cover"
                   />
@@ -481,14 +484,14 @@ const BoothDetailModal = ({ booth, onClose }) => {
               </div>
               <div className="text-blue-800 font-medium">Điểm tích lũy</div>
             </div>
-            
+
             <div className="text-center p-6 bg-green-50 rounded-lg">
               <div className="text-3xl font-bold text-green-600 mb-2">
                 {booth.total_orders}
               </div>
               <div className="text-green-800 font-medium">Tổng đơn hàng</div>
             </div>
-            
+
             <div className="text-center p-6 bg-purple-50 rounded-lg">
               <div className="text-3xl font-bold text-purple-600 mb-2">
                 {booth.revenue.toLocaleString()}đ

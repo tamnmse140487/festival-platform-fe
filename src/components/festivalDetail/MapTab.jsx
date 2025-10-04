@@ -18,6 +18,7 @@ const getStatusBadge = (status) => {
     [BOOTH_STATUS.PENDING]: { label: "Chờ duyệt", class: "bg-yellow-100 text-yellow-800" },
     [BOOTH_STATUS.REJECTED]: { label: "Từ chối", class: "bg-red-100 text-red-800" },
     [BOOTH_STATUS.ACTIVE]: { label: "Hoạt động", class: "bg-blue-100 text-blue-800" },
+    [BOOTH_STATUS.CLOSED]: { label: "Đã đóng", class: "bg-gray-100 text-gray-800" },
   };
   const config = statusConfig[status] || statusConfig[BOOTH_STATUS.PENDING];
   return <span className={`px-2 py-1 text-xs font-medium rounded ${config.class}`}>{config.label}</span>;

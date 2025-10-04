@@ -609,7 +609,7 @@ export default function BoothDetailPage() {
     const items = [
       { key: "info", label: "Thông tin gian hàng", children: infoTab },
     ];
-    if (booth?.status === BOOTH_STATUS.ACTIVE) {
+    if (booth?.status === BOOTH_STATUS.ACTIVE || booth?.status === BOOTH_STATUS.CLOSED ) {
       items.push({
         key: "orders",
         label: "Hoá đơn",

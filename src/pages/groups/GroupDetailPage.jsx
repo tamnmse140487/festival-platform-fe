@@ -97,7 +97,7 @@ const GroupDetailPage = () => {
       },
     ];
 
-    if (booth?.status === BOOTH_STATUS.ACTIVE) {
+    if (booth?.status === BOOTH_STATUS.ACTIVE ||booth?.status === BOOTH_STATUS.CLOSED ) {
       baseTabs.push({
         id: "orders",
         label: "Đơn hàng",
