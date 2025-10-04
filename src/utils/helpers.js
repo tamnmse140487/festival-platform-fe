@@ -371,3 +371,7 @@ export const buildRevenueParams = ({
   if (festivalId) p.festival_id = festivalId;
   return p;
 };
+
+export const STATUS_LABEL_MAP = Object.fromEntries(
+  BOOTH_STATUS_LABELS.map((i) => [i.value, i.label])
+);

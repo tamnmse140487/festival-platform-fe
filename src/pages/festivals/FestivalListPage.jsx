@@ -139,7 +139,7 @@ const UserFestivalList = ({ user, hasRole }) => {
 
   const getFestivalImage = (festivalId) => {
     const images = festivalImages[festivalId] || [];
-    return images.length > 0 ? images[0].imageUrl : '/api/placeholder/400/300';
+    return images.length > 0 ? images[0].imageUrl : 'https://placehold.co/400x300?text=Festival&font=inter&font_size=24';
   };
 
   const getApprovalStatus = (festivalId) => {
@@ -476,7 +476,7 @@ const FestivalCard = ({ festival, user, hasRole, onDelete, formatDate, getStatus
           alt={festival.festivalName}
           className="w-full h-48 object-cover"
           onError={(e) => {
-            e.target.src = '/api/placeholder/400/300';
+            e.target.src = 'https://placehold.co/400x300?text=Festival&font=inter&font_size=24';
           }}
         />
         <div className="absolute top-4 left-4 ">{getStatusBadge(festival.status)}</div>
@@ -586,7 +586,7 @@ const FestivalListItem = ({ festival, user, hasRole, onDelete, formatDate, getSt
           alt={festival.festivalName}
           className="w-24 h-24 rounded-lg object-cover flex-shrink-0"
           onError={(e) => {
-            e.target.src = '/api/placeholder/400/300';
+            e.target.src = 'https://placehold.co/400x300?text=Festival&font=inter&font_size=24';
           }}
         />
 

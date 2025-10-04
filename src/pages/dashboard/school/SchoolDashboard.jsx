@@ -19,6 +19,7 @@ import {
   mapRevenueSeriesToRaw,
   buildSchoolParams,
   buildRevenueParams,
+  STATUS_LABEL_MAP,
 } from "../../../utils/helpers";
 import { statisticServices } from "../../../services/statisticsServices";
 import { festivalServices } from "../../../services/festivalServices";
@@ -119,7 +120,14 @@ export default function SchoolDashboard() {
           festivalId,
         });
         const bfRes = await statisticServices.getSchoolBoothFunnel(bfParams);
-        setBoothFunnel(bfRes?.data?.data || bfRes?.data || []);
+        const bfRaw = bfRes?.data?.data || bfRes?.data || [];
+
+        setBoothFunnel(
+          bfRaw.map((it) => ({
+            ...it,
+            statusLabel: STATUS_LABEL_MAP[it.status] || it.status,
+          }))
+        );
 
         const tbParams = {
           ...buildRevenueParams({ range: timeRange, schoolId }),
@@ -130,7 +138,7 @@ export default function SchoolDashboard() {
 
         const roParams = {
           school_id: schoolId,
-          ...(festivalId ? { festival_id: festivalId } : {}),
+          ...(festivalId ? { festivalId: festivalId } : {}),
           limit: 5,
         };
         const roRes = await statisticServices.getRecentOrders(roParams);
@@ -162,7 +170,7 @@ export default function SchoolDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-2">
+      {/* <div className="flex flex-wrap items-center gap-2">
         <div className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm">
           <Filter className="w-4 h-4" />
           <span className="text-zinc-600 dark:text-zinc-300">Bộ lọc:</span>
@@ -176,7 +184,7 @@ export default function SchoolDashboard() {
           onChange={(v) => setFestivalId(v || null)}
           placeholder="Tất cả lễ hội của trường"
         />
-      </div>
+      </div> */}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card
@@ -269,9 +277,12 @@ export default function SchoolDashboard() {
             <ResponsiveContainer>
               <BarChart data={boothFunnel}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="status" />
+                <XAxis dataKey="statusLabel" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip
+                  formatter={(v) => [v, "Số lượng"]}
+                  labelFormatter={(label) => `Trạng thái: ${label}`}
+                />
                 <Bar dataKey="count" fill="#f59e0b" />
               </BarChart>
             </ResponsiveContainer>
