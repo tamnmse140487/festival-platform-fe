@@ -201,33 +201,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm">
-          <Filter className="w-4 h-4" />
-          <span className="text-zinc-600 dark:text-zinc-300">Bộ lọc:</span>
-          <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
-        </div>
-
-        <FilterSelect
-          label="Trường"
-          items={schools}
-          value={schoolId}
-          onChange={(v) => {
-            setSchoolId(v || null);
-            setFestivalId(null);
-          }}
-          placeholder="Tất cả"
-        />
-
-        <FilterSelect
-          label="Lễ hội"
-          items={filteredFestivalItems}
-          value={festivalId}
-          onChange={(v) => setFestivalId(v || null)}
-          placeholder="Tất cả"
-        />
-      </div>
-
+    
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card
           title="Tổng số trường"
@@ -269,6 +243,33 @@ export default function AdminDashboard() {
           title="Tiền hoa hồng"
           icon={<Wallet className="w-4 h-4" />}
           value={currency(totals.commission)}
+        />
+      </div>
+
+       <div className="flex flex-wrap items-center gap-2">
+        <div className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm">
+          <Filter className="w-4 h-4" />
+          <span className="text-zinc-600 dark:text-zinc-300">Bộ lọc:</span>
+          <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
+        </div>
+
+        <FilterSelect
+          label="Trường"
+          items={schools}
+          value={schoolId}
+          onChange={(v) => {
+            setSchoolId(v || null);
+            setFestivalId(null);
+          }}
+          placeholder="Tất cả"
+        />
+
+        <FilterSelect
+          label="Lễ hội"
+          items={filteredFestivalItems}
+          value={festivalId}
+          onChange={(v) => setFestivalId(v || null)}
+          placeholder="Tất cả"
         />
       </div>
 
