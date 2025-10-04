@@ -210,9 +210,9 @@ export default function SchoolDashboard() {
           }
         />
         <Card
-          title="Nhóm / Thành viên"
+          title="Nhóm"
           icon={<Users className="w-4 h-4" />}
-          value={`${totals.groups} / ${totals.members}`}
+          value={`${totals.groups}`}
         />
         <Card
           title={`GMV (${TIME_RANGES[timeRange].label})`}
