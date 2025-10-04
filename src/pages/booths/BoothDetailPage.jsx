@@ -80,6 +80,7 @@ export default function BoothDetailPage() {
       [BOOTH_STATUS.PENDING]: { label: "Chờ duyệt", color: "gold" },
       [BOOTH_STATUS.REJECTED]: { label: "Từ chối", color: "red" },
       [BOOTH_STATUS.ACTIVE]: { label: "Hoạt động", color: "blue" },
+      [BOOTH_STATUS.CLOSED]: { label: "Đã đóng", color: "gray" },
     };
     const cfg = map[status] || map[BOOTH_STATUS.PENDING];
     return <Tag color={cfg.color}>{cfg.label}</Tag>;

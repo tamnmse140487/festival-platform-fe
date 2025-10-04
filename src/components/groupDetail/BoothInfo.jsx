@@ -33,6 +33,10 @@ const BoothInfo = ({ groupId }) => {
         label: "Hoạt động",
         class: "bg-blue-100 text-blue-800",
       },
+      [BOOTH_STATUS.CLOSED]: {
+        label: "Đã đóng",
+        class: "bg-gray-100 text-gray-800",
+      },
     };
     const config = statusConfig[status] || statusConfig[BOOTH_STATUS.PENDING];
     return (
