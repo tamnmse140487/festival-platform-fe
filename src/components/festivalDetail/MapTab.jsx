@@ -32,8 +32,8 @@ const MapTab = ({ festivalMap, mapLocations, festival, loading, menuItems = [] }
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [loadingBooths, setLoadingBooths] = useState(false);
   const [locationBooths, setLocationBooths] = useState([]);
-  const [boothMenuItemImages, setBoothMenuItemImages] = useState({}); // { [boothMenuItemId]: imageUrl }
-  const [menuItemDetails, setMenuItemDetails] = useState({}); // { [menuItemId]: { itemName, description } }
+  const [boothMenuItemImages, setBoothMenuItemImages] = useState({}); 
+  const [menuItemDetails, setMenuItemDetails] = useState({}); 
 
   const handleRegisterBoothModalClose = () => setShowRegisterBoothModal(false);
 
