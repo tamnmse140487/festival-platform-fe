@@ -609,7 +609,7 @@ export default function BoothDetailPage() {
     const items = [
       { key: "info", label: "Thông tin gian hàng", children: infoTab },
     ];
-    if (booth?.status === BOOTH_STATUS.ACTIVE || booth?.status === BOOTH_STATUS.CLOSED ) {
+    if (booth?.status === BOOTH_STATUS.ACTIVE || booth?.status === BOOTH_STATUS.CLOSED) {
       items.push({
         key: "orders",
         label: "Hoá đơn",
@@ -619,17 +619,17 @@ export default function BoothDetailPage() {
     return items;
   }, [booth?.status, booth?.boothId, infoTab]);
 
-  useEffect(() => {
-    if (
-      activeKey === "orders" &&
-      booth &&
-      booth.status !== BOOTH_STATUS.ACTIVE
-    ) {
-      setActiveKey("info");
-      const base = `/app/groups/${groupId}/booth/${boothId}`;
-      navigate(base, { replace: true });
-    }
-  }, [activeKey, booth?.status, groupId, boothId, navigate]);
+  // useEffect(() => {
+  //   if (
+  //     activeKey === "orders" &&
+  //     booth &&
+  //     (booth.status !== BOOTH_STATUS.ACTIVE || booth?.status === BOOTH_STATUS.CLOSED)
+  //   ) {
+  //     setActiveKey("info");
+  //     const base = `/app/groups/${groupId}/booth/${boothId}`;
+  //     navigate(base, { replace: true });
+  //   }
+  // }, [activeKey, booth?.status, groupId, boothId, navigate]);
 
   if (loading) {
     return (
