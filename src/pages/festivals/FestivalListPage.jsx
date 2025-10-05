@@ -151,7 +151,7 @@ const UserFestivalList = ({ user, hasRole }) => {
 
     try {
       setIsDeleting(true);
-      await festivalServices.delete({ id: deleteModal.festival.festivalId });
+      await festivalServices.softDelete({ id: deleteModal.festival.festivalId });
       toast.success('Xóa lễ hội thành công');
       setDeleteModal({ isOpen: false, festival: null });
       loadFestivals();
@@ -553,7 +553,8 @@ const FestivalCard = ({ festival, user, hasRole, onDelete, formatDate, getStatus
           </Link>
           {hasRole([ROLE_NAME.SCHOOL_MANAGER]) &&
             festival.status === FESTIVAL_STATUS.DRAFT &&
-            approvalData?.status === FESTIVAL_APPROVAL_STATUS.PENDING && (
+            // approvalData?.status === FESTIVAL_APPROVAL_STATUS.PENDING && 
+            (
               <>
                 <Link
                   to={`/app/festivals/${festival.festivalId}/edit`}

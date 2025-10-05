@@ -22,7 +22,7 @@ const AccountList = ({ accounts, loading, roles, roleIds, onRefresh }) => {
   const handleDelete = async (accountId) => {
     setDeletingIds(prev => new Set([...prev, accountId]))
     try {
-      await accountServices.delete({ id: accountId })
+      await accountServices.softDelete({ id: accountId })
       toast.success('Xóa tài khoản thành công')
       onRefresh()
     } catch (error) {

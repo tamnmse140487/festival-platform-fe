@@ -5,6 +5,7 @@ export const accountServices = {
   createStudent: (data) => api.post("/accounts/create-student", data),
   get: (params) => api.get("/accounts/search", { params }),
   delete: (params) => api.delete(`/accounts/delete`, { params }),
+  softDelete: (params) => api.delete(`/accounts/IsDelete`, { params }),
   update: (params, data) => api.put(`/accounts/update`, data, { params }),
   importAccounts: (formData) =>
     api.post("/accounts/import-accounts", formData, {
