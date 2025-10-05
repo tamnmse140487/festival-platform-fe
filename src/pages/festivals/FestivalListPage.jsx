@@ -553,7 +553,7 @@ const FestivalCard = ({ festival, user, hasRole, onDelete, formatDate, getStatus
           </Link>
           {hasRole([ROLE_NAME.SCHOOL_MANAGER]) &&
             festival.status === FESTIVAL_STATUS.DRAFT &&
-            // approvalData?.status === FESTIVAL_APPROVAL_STATUS.PENDING && 
+            approvalData?.status === FESTIVAL_APPROVAL_STATUS.PENDING && 
             (
               <>
                 <Link

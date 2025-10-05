@@ -98,7 +98,6 @@ const ProfilePage = () => {
         user.role === ROLE_NAME.SCHOOL_MANAGER &&
         user.schoolId
       ) {
-        //mới thêm
         const schoolResponse = await schoolServices.get({
           accountId: accountData.id,
         });

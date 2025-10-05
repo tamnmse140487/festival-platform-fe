@@ -146,7 +146,6 @@ const RefundManagement = () => {
         type: HISTORY_TYPE.REFUND,
       });
 
-      // ✅ Cập nhật ngay selectedReq để modal đổi UI tức thì
       setSelectedReq((prev) =>
         prev && (prev.id === id || prev.requestId === id)
           ? {
@@ -157,7 +156,6 @@ const RefundManagement = () => {
           : prev
       );
 
-      // (tuỳ chọn) đồng bộ lại list ngoài
       fetchRequests();
 
       toast.success("Đã xử lý hoàn tiền và cập nhật trạng thái");
