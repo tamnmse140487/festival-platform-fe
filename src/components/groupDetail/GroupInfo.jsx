@@ -18,10 +18,10 @@ const GroupInfo = ({ group, members }) => {
           <label className="text-sm font-medium text-gray-500">Số thành viên</label>
           <p className="text-gray-900 mt-1">{members.length} thành viên</p>
         </div>
-        <div>
+        {/* <div>
           <label className="text-sm font-medium text-gray-500">Ngân sách</label>
           <p className="text-gray-900 mt-1">{group.groupBudget?.toLocaleString() || 0}đ</p>
-        </div>
+        </div> */}
         <div>
           <label className="text-sm font-medium text-gray-500">Ngày tạo</label>
           <p className="text-gray-900 mt-1">{convertToVietnamTimeWithFormat(group.creationDate)}</p>

@@ -189,7 +189,7 @@ const CreateFestivalPage = () => {
   };
 
   const validateBusinessRules = (formData) => {
-    toast.error("Có thông tin nhập chưa đúng. Vui lòng kiểm tra lại!")
+    // toast.error("Có thông tin nhập chưa đúng. Vui lòng kiểm tra lại!")
     const list = [];
     const newInvalidMin = [];
 

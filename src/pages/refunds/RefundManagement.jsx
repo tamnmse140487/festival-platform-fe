@@ -9,6 +9,7 @@ import {
   Avatar,
   Modal,
   Descriptions,
+  Divider,
 } from "antd";
 import {
   MoreOutlined,
@@ -32,6 +33,7 @@ import {
 } from "../../utils/constants";
 import { accountWalletHistoriesServices } from "../../services/accountWalletHistoryServices";
 import { walletServices } from "../../services/walletServices";
+import { vietqrServices } from "../../services/atmServices";
 
 const { Search } = Input;
 
@@ -46,6 +48,26 @@ const RefundManagement = () => {
 
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedReq, setSelectedReq] = useState(null);
+  const [banksMap, setBanksMap] = useState({});
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const list = await vietqrServices.getBanks();
+        if (!mounted) return;
+        const map = {};
+        list.forEach((b) => {
+          const short = String(b.shortName || "").toUpperCase();
+          if (short) map[short] = { logo: b.logo, shortName: b.shortName };
+        });
+        setBanksMap(map);
+      } catch {}
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -108,29 +130,37 @@ const RefundManagement = () => {
       const walletId = parsed?.walletId;
       const balance = parsed?.balance || 0;
       const accountId = record?.accountId ?? record?.account?.id;
-      if (!walletId) {
-        throw new Error("Thiếu liên kết ví trong dữ liệu yêu cầu");
-      }
+      if (!walletId) throw new Error("Thiếu liên kết ví trong dữ liệu yêu cầu");
 
       await requestServices.update({
         requestId: id,
         status: REQUEST_STATUS.PROCESSED,
       });
 
-      await walletServices.update({
-        walletId: walletId,
-        balance: 0,
-      });
+      await walletServices.update({ walletId, balance: 0 });
 
       await accountWalletHistoriesServices.create({
-        accountId: accountId,
-        description: `Ví của bạn bị trừ ${balance} vì Admin đã chuyển tiền vào tài khoản ngân hàng của bạn`,
+        accountId,
+        description: `Ví của bạn bị trừ ${balance} VNĐ vì Admin đã chuyển tiền vào tài khoản ngân hàng của bạn`,
         amount: balance,
         type: HISTORY_TYPE.REFUND,
       });
 
-      toast.success("Đã xử lý hoàn tiền và cập nhật trạng thái");
+      // ✅ Cập nhật ngay selectedReq để modal đổi UI tức thì
+      setSelectedReq((prev) =>
+        prev && (prev.id === id || prev.requestId === id)
+          ? {
+              ...prev,
+              status: REQUEST_STATUS.PROCESSED,
+              updatedAt: new Date().toISOString(),
+            }
+          : prev
+      );
+
+      // (tuỳ chọn) đồng bộ lại list ngoài
       fetchRequests();
+
+      toast.success("Đã xử lý hoàn tiền và cập nhật trạng thái");
     } catch (e) {
       const msg =
         e?.response?.data?.detail ||
@@ -489,6 +519,41 @@ const RefundManagement = () => {
             {selectedReq?.account?.className || ""}
           </Descriptions.Item>
         </Descriptions>
+
+        <Divider />
+
+        {(() => {
+          const short = String(
+            selectedReq?.account?.atmName || ""
+          ).toUpperCase();
+          const bank = banksMap[short];
+          return (
+            <Descriptions
+              title="Thông tin chuyển khoản"
+              bordered
+              column={1}
+              size="small"
+            >
+              <Descriptions.Item label="Ngân hàng">
+                {bank ? (
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={bank.logo}
+                      alt={bank.shortName}
+                      className="w-6 h-6 object-contain"
+                    />
+                    <span className="font-medium">{bank.shortName}</span>
+                  </div>
+                ) : (
+                  selectedReq?.account?.atmName || "—"
+                )}
+              </Descriptions.Item>
+              <Descriptions.Item label="Số tài khoản">
+                {selectedReq?.account?.accountBankNumber || "—"}
+              </Descriptions.Item>
+            </Descriptions>
+          );
+        })()}
       </Modal>
     </div>
   );

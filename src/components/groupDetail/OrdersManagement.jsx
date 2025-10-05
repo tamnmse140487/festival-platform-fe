@@ -315,7 +315,7 @@ const OrdersManagement = ({ boothId }) => {
               </div>
             </Card>
             {
-              // isClosed &&
+              isClosed &&
               groupInfo && (
                 <>
                   {isLeader ? (

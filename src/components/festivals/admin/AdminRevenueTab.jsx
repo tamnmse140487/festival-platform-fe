@@ -366,12 +366,12 @@ const AdminRevenueTab = ({ festival }) => {
                       : formatPrice(calculateCommissionAmount())}
                   </span>
                 </div>
-                <div className="flex justify-between border-t pt-2">
+                {/* <div className="flex justify-between border-t pt-2">
                   <span className="text-gray-600">Lợi nhuận sau hoa hồng:</span>
                   <span className="font-bold text-purple-600">
                     {formatPrice(stats.profitAfterCommission)}
                   </span>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>

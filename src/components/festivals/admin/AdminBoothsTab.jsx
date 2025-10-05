@@ -316,12 +316,12 @@ const AdminBoothsTab = ({ festival }) => {
                               {group.className}
                             </span>
                           </div>
-                          <div className="flex justify-between">
+                          {/* <div className="flex justify-between">
                             <span className="text-gray-600">Group ID:</span>
                             <span className="font-mono text-xs">
                               {booth.groupId}
                             </span>
-                          </div>
+                          </div> */}
                         </div>
                       </div>
                     ) : (
